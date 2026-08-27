@@ -155,12 +155,19 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
 .hint{font-size:12px;color:var(--ink3);margin:8px 0 0}
 .hint.warn{color:var(--warn)}
 
-/* sketch */
-.padwrap{position:relative;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff;touch-action:none}
-@media (prefers-color-scheme: dark){ .padwrap{background:#f7f7f4} }
-#pad{display:block;width:100%;height:auto;touch-action:none;cursor:crosshair}
-.padbar{display:flex;gap:8px;align-items:center;margin:10px 0 0;flex-wrap:wrap}
-.padbar .spacer{flex:1 1 auto}
+/* flow sheet photos */
+.pgrid{display:flex;flex-wrap:wrap;gap:9px;margin:0 0 10px}
+.pgrid:empty{margin:0}
+.pgrid .ph{position:relative}
+.pgrid .ph img{width:104px;height:104px;object-fit:cover;border-radius:9px;border:1px solid var(--line);display:block}
+.pgrid.rec{display:block}
+.pgrid.rec .ph{margin:0 0 10px}
+.pgrid.rec .ph img{width:100%;height:auto;object-fit:contain;max-height:none}
+.phx{
+  position:absolute;top:-8px;right:-8px;width:28px;height:28px;border-radius:999px;
+  border:1px solid var(--line);background:var(--panel);color:var(--bad);
+  font-size:16px;font-weight:700;line-height:1;cursor:pointer
+}
 
 /* drafts */
 .draft{
@@ -242,10 +249,7 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
   .qlab{font-size:9px;margin:0 0 3px}
   .qnote{margin:4px 0 0}
 
-  /* the layout sketch gets the full width, the way it does on the paper form */
-  #cardSketch{column-span:all;break-inside:avoid}
-  #cardSketch .padwrap{border-color:#999}
-  #pad{width:100%;height:96mm;object-fit:contain}
+  .pgrid.rec .ph img{max-width:100%}
   .foot{margin:4px 0 0;column-span:all;font-size:9px;color:#000;break-before:avoid}
 
   /* a value longer than its box would be clipped, and this copy is the archive.
@@ -423,63 +427,20 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
     <h2><span class="n">6</span> Discharge Measurement</h2>
     <div class="chk" style="margin:0">
       <input type="checkbox" id="hasQ" data-k="hasQ">
-      <label class="inline" for="hasQ">Salt dilution measurement done on this visit</label>
+      <label class="inline" for="hasQ">Discharge measurement done on this visit</label>
     </div>
     <div id="qBody" class="hidden">
-    <div class="cols3" id="chPanels" style="margin-top:12px"></div>
-    <div class="row" style="margin-top:12px">
-      <div>
-        <label>Final Q Comp. (m&sup3;/s)</label>
-        <div class="withbtn">
-          <input type="text" data-k="finalQ" class="mono" inputmode="decimal">
-          <button class="btn now noprint" type="button" id="meanQBtn">Mean</button>
-        </div>
-      </div>
-      <div style="flex:0 1 130px"><label>QUnc. 95% (%)</label><input type="text" data-k="qunc" class="mono" inputmode="decimal"></div>
-      <div style="flex:0 1 110px"><label>Grade</label><input type="text" data-k="grade" class="mono"></div>
-    </div>
-    <p class="hint hidden" id="qHint"></p>
-    </div>
-  </div>
+      <h3 class="sub">Photo of the flow measurement sheet</h3>
+      <div class="pgrid" id="photoGrid"></div>
+      <button class="btn noprint" type="button" id="takePhotoBtn">&#128247; Take photo</button>
+      <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden" multiple>
+      <p class="hint">Fill the paper flow sheet as usual, then photograph it &mdash; the detail gets read
+      from the photo, never retyped. The photo travels inside the sent sheet.</p>
 
-  <!-- 7 metta -->
-  <div class="card hidden" id="cardMetta">
-    <h2><span class="n">7</span> Metta Data</h2>
-    <div class="row">
-      <div style="flex:0 1 130px"><label>Dose (kg)</label><input type="text" data-k="metta.dose" class="mono" inputmode="decimal"></div>
-      <div style="flex:0 1 150px">
-        <label>Time at Peak</label>
-        <div class="withbtn">
-          <input type="text" data-k="metta.peak" data-time="1" class="mono" inputmode="numeric" placeholder="12:35">
-          <button class="btn now" type="button" data-nowk="metta.peak">Now</button>
-        </div>
-      </div>
-      <div style="flex:0 1 160px"><label>Q Diff % <span class="ext">(1&minus;Ch.0/Ch.1)&times;100</span></label><input type="text" data-k="metta.qdiff" class="mono" inputmode="decimal"></div>
+      <h3 class="sub">Flow measurement Q&rsquo;s</h3>
+      <div id="qmRows"></div>
+      <p class="hint" id="qSpreadOut">Enter at least two Q&rsquo;s and the spread calculates itself.</p>
     </div>
-    <div class="chk">
-      <input type="checkbox" id="peakVid" data-k="metta.vid">
-      <label class="inline" for="peakVid">10 Sec SG Vid at Peak</label>
-    </div>
-    <h3 class="sub">Measurement quality</h3>
-    <div id="qualRows"></div>
-    <div class="f"><label>Measurement Comments</label><textarea data-k="qa.comments" style="min-height:64px"></textarea></div>
-  </div>
-
-  <!-- 8 sketch -->
-  <div class="card hidden" id="cardSketch">
-    <h2><span class="n">8</span> Measurement Layout</h2>
-    <div class="padwrap"><canvas id="pad"></canvas></div>
-    <div class="padbar noprint">
-      <button class="btn sm" type="button" id="undoBtn">Undo</button>
-      <button class="btn sm danger" type="button" id="clearPadBtn">Clear</button>
-      <span class="spacer"></span>
-      <div class="seg" id="penSeg">
-        <label><input type="radio" name="pen" value="2"><span>Fine</span></label>
-        <label><input type="radio" name="pen" value="3.5" checked><span>Med</span></label>
-        <label><input type="radio" name="pen" value="6"><span>Bold</span></label>
-      </div>
-    </div>
-    <p class="hint">Show where the sensors and the dose were, relative to the station, and where the sensors sit in the creek.</p>
   </div>
 
   <div class="actions noprint">
@@ -523,25 +484,16 @@ var SG_ANGLE={
 
 /* Measurement quality. Worded so No is always the answer that needs explaining,
    which is why the eddies question is phrased as "not affecting". */
-var QUAL=[
-  {k:"unique", lab:"Sensors in Unique Locations"},
-  {k:"mixing", lab:"Mixing Reach Adequate"},
-  {k:"pulse",  lab:"Pulse &lt;2&times;CFT &amp; Discernable"},
-  {k:"eddies", lab:"Eddies, Aeration Pooling or Recirculation <em>Not</em> Affecting Results"}
-];
 var PHOTOS=[["station","Station"],["sdmeter","SD Meter Loc."],["dosing","Dosing Loc."],
             ["mixing","Mixing Reach"],["wdxs","WD X-Section"]];
 var VIDEOS=[["station","Station, Control, US &amp; DS"],["arrsg","10 Sec Arrival SG"],
             ["depsg","10 Sec Departure SG"]];
-var CHF=[["sen","Sen #","text"],["r2","R² (>0.999)","decimal"],["cft","CFT","decimal"],
-         ["ecbg","EC<sub>BG</sub> (Start)","decimal"],["ecdrift","EC<sub>BG</sub> &lt;0.1 uS/cm","text"],
-         ["smooth","Data is Smooth","text"],["q","Q (m³/sec)","decimal"],["id","ID Save #","text"]];
 
 var STORE="kei-fieldsheet-v1";
 var $=function(id){ return document.getElementById(id); };
 /* App build. Bump on every version handed over, so a phone can be checked at a glance
    against the filename it came from. Separate from v1.15, which is the paper form. */
-var BUILD="5";
+var BUILD="6";
 var RECORD=!!BAKED;                 /* opened as a finished record, not the blank app */
 /* file_field_sheets.py opens the sheet as ...html#print to render the archive PDF.
    Headless Chrome never fires beforeprint, so the hi-res sketch has to be explicit. */
@@ -554,19 +506,13 @@ function blank(){
   var s={
     v:"1.15", site:"", date:todayISO(), tz:"-7", arrive:"", depart:"", tech:"", hasQ:false,
     reqs:[], sg:{a:sgSide(),d:sgSide()}, purpose:"", notes:"",
-    photos:{}, videos:{}, ch:[],
-    finalQ:"", qunc:"", grade:"",
-    metta:{dose:"",peak:"",vid:false,qdiff:""},
-    qa:{comments:""},
-    strokes:[]
+    photos:{}, videos:{},
+    qm:[], qspread:"", qspreadPct:"", qphotoIds:[]
   };
   for(var i=0;i<6;i++) s.reqs.push({on:false,txt:""});
-  QUAL.forEach(function(q){ s.qa[q.k]=""; s.qa[q.k+"Note"]=""; });
   PHOTOS.forEach(function(p){ s.photos[p[0]]=false; });
   VIDEOS.forEach(function(p){ s.videos[p[0]]=false; });
-  for(var j=0;j<3;j++){
-    var c={}; CHF.forEach(function(f){ c[f[0]]=""; }); s.ch.push(c);
-  }
+  for(var j=0;j<3;j++) s.qm.push({method:"",q:""});
   return s;
 }
 function todayISO(){
@@ -664,24 +610,147 @@ function buildReqs(){
       .map(function(v){ return '<option value="'+v+'">'; }).join("")+'</datalist>';
   host.innerHTML=html;
 }
-function buildQual(){
-  $("qualRows").innerHTML=QUAL.map(function(q){
-    return '<div class="qrow">'+
-      '<div class="qlab">'+q.lab+'</div>'+
-      '<div class="seg" data-seg="qa.'+q.k+'" data-opts="Yes|No"></div>'+
-      '<div class="qnote hidden" id="note_'+q.k+'">'+
-        '<label>Why not?</label>'+
-        '<textarea data-k="qa.'+q.k+'Note" style="min-height:52px"></textarea>'+
-      '</div></div>';
+var QMETHODS=["","Sensor 0","Sensor 1","Sensor 2","Midsection"];
+function buildQm(){
+  $("qmRows").innerHTML=[0,1,2].map(function(i){
+    return '<div class="row"><div style="flex:0 1 150px"><label>Method</label>'+
+      '<select data-k="qm.'+i+'.method">'+QMETHODS.map(function(m){
+        return '<option value="'+m+'">'+(m||"—")+"</option>"; }).join("")+'</select></div>'+
+      '<div><label>Q (m³/s)</label>'+
+      '<input type="text" data-k="qm.'+i+'.q" data-qspread="1" class="mono" inputmode="decimal"></div></div>';
   }).join("");
 }
-/* the note only matters when the answer is No */
-function syncQual(){
-  QUAL.forEach(function(q){
-    var el=$("note_"+q.k);
-    if(el) el.classList.toggle("hidden", get("qa."+q.k)!=="No");
+/* the one number the office wants at a glance: how far apart the measurements are */
+function autoSpread(){
+  var vals=[];
+  for(var i=0;i<3;i++){ var n=num(get("qm."+i+".q")); if(n!==null&&n>0) vals.push(n); }
+  var el=$("qSpreadOut");
+  if(vals.length<2){
+    set("qspread",""); set("qspreadPct","");
+    if(el){ el.className="hint"; el.textContent="Enter at least two Q’s and the spread calculates itself."; }
+    return;
+  }
+  var mx=Math.max.apply(null,vals), mn=Math.min.apply(null,vals);
+  var pct=(1-mn/mx)*100;
+  set("qspread",(mx-mn).toPrecision(3));
+  set("qspreadPct",pct.toFixed(1));
+  if(el){
+    el.className=pct>5?"hint warn":"hint";
+    el.textContent="Spread across "+vals.length+" measurements: "+(mx-mn).toPrecision(3)+
+      " m³/s ("+pct.toFixed(1)+"%)"+(pct>5?" — over 5%, note why in Notes.":"");
+  }
+}
+
+/* ---------- flow sheet photos ----------
+   Photos are far too big for localStorage, so they live in IndexedDB keyed by
+   draft id + photo id; the draft only carries the ids. On Finish & send they are
+   embedded in the record as data: URLs, so the sent file stays self-contained. */
+var IDB=null;
+function idb(){
+  return new Promise(function(res,rej){
+    if(IDB) return res(IDB);
+    var r=indexedDB.open("kei-fieldsheet",1);
+    r.onupgradeneeded=function(){ r.result.createObjectStore("photos"); };
+    r.onsuccess=function(){ IDB=r.result; res(IDB); };
+    r.onerror=function(){ rej(r.error||new Error("IndexedDB unavailable")); };
   });
 }
+function idbOp(mode,fn){
+  return idb().then(function(db){
+    return new Promise(function(res,rej){
+      var tx=db.transaction("photos",mode), st=tx.objectStore("photos");
+      var out=fn(st);
+      tx.oncomplete=function(){ res(out&&"result" in out?out.result:undefined); };
+      tx.onerror=function(){ rej(tx.error); };
+    });
+  });
+}
+function idbPut(k,v){ return idbOp("readwrite",function(st){ return st.put(v,k); }); }
+function idbGet(k){ return idbOp("readonly",function(st){ return st.get(k); }); }
+function idbDel(k){ return idbOp("readwrite",function(st){ return st.delete(k); }); }
+
+function photoKey(draftId,photoId){ return draftId+":"+photoId; }
+function deleteDraftPhotos(draft){
+  var ids=(draft.state&&draft.state.qphotoIds)||[];
+  ids.forEach(function(pid){ idbDel(photoKey(draft.id,pid)).catch(function(){}); });
+}
+
+var PHOTO_MAX=4;
+function downscalePhoto(file){
+  return new Promise(function(res,rej){
+    var url=URL.createObjectURL(file), img=new Image();
+    img.onload=function(){
+      var w=img.naturalWidth,h=img.naturalHeight,MAX=2200;
+      var sc=Math.min(1,MAX/Math.max(w,h));
+      var c=document.createElement("canvas");
+      c.width=Math.max(1,Math.round(w*sc)); c.height=Math.max(1,Math.round(h*sc));
+      c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+      URL.revokeObjectURL(url);
+      c.toBlob(function(b){ b?res(b):rej(new Error("could not encode the photo")); },"image/jpeg",0.85);
+    };
+    img.onerror=function(){ URL.revokeObjectURL(url); rej(new Error("that file is not a readable image")); };
+    img.src=url;
+  });
+}
+function addPhotoFile(file){
+  if(((S.qphotoIds)||[]).length>=PHOTO_MAX){
+    alert("That is already "+PHOTO_MAX+" photos on this sheet.");
+    return Promise.resolve();
+  }
+  return downscalePhoto(file).then(function(blob){
+    var pid="p"+Date.now().toString(36)+Math.floor(Math.random()*4096).toString(36);
+    return idbPut(photoKey(book.cur,pid),blob).then(function(){
+      S.qphotoIds=(S.qphotoIds||[]).concat([pid]);
+      touch(); drawPhotos();
+    });
+  }).catch(function(e){
+    alert("Couldn't save that photo — "+(e&&e.message?e.message:e)+". The sheet itself is unaffected.");
+  });
+}
+var photoUrls=[];
+function drawPhotos(){
+  var host=$("photoGrid");
+  if(!host) return;
+  photoUrls.forEach(function(u){ URL.revokeObjectURL(u); });
+  photoUrls=[];
+  if(RECORD){
+    host.className="pgrid rec";
+    host.innerHTML=((BAKED&&BAKED.qphotos)||[]).map(function(d){
+      return '<div class="ph"><img src="'+d+'" alt="flow measurement sheet"></div>';
+    }).join("")||'<p class="hint" style="margin:0">No photo was taken.</p>';
+    return;
+  }
+  var ids=(S&&S.qphotoIds)||[];
+  if(!ids.length){ host.innerHTML=""; return; }
+  host.innerHTML=ids.map(function(pid,i){
+    return '<div class="ph" data-pid="'+pid+'"><img alt="photo '+(i+1)+'">'+
+      '<button type="button" class="phx noprint" data-delphoto="'+pid+'">&times;</button></div>';
+  }).join("");
+  ids.forEach(function(pid){
+    idbGet(photoKey(book.cur,pid)).then(function(blob){
+      var cell=host.querySelector('[data-pid="'+pid+'"] img');
+      if(!cell) return;
+      if(!blob){ cell.parentNode.innerHTML='<span class="hint">photo missing</span>'; return; }
+      var u=URL.createObjectURL(blob);
+      photoUrls.push(u); cell.src=u;
+    }).catch(function(){});
+  });
+}
+function loadPhotoDataUrls(){
+  var ids=(S&&S.qphotoIds)||[];
+  return Promise.all(ids.map(function(pid){
+    return idbGet(photoKey(book.cur,pid)).then(function(blob){
+      if(!blob) return null;
+      return new Promise(function(res){
+        var r=new FileReader();
+        r.onload=function(){ res(r.result); };
+        r.onerror=function(){ res(null); };
+        r.readAsDataURL(blob);
+      });
+    }).catch(function(){ return null; });
+  })).then(function(list){ return list.filter(Boolean); });
+}
+
 function buildChecks(){
   function grid(host,list,base){
     host.innerHTML=list.map(function(p,i){
@@ -692,20 +761,6 @@ function buildChecks(){
   }
   grid($("photoChk"),PHOTOS,"photos");
   grid($("videoChk"),VIDEOS,"videos");
-}
-function buildCh(){
-  var host=$("chPanels"), html="";
-  for(var i=0;i<3;i++){
-    html+='<div class="panel"><h4>Ch. '+i+'</h4>';
-    CHF.forEach(function(f){
-      html+='<div class="f"><label>'+f[1]+'</label>'+
-            '<input type="text" data-k="ch.'+i+'.'+f[0]+'" class="mono" inputmode="'+f[2]+'"'+
-            (f[0]==="r2"?' data-r2="1"':'')+
-            (f[0]==="q"&&i<2?' data-qdiff="1"':'')+'></div>';
-    });
-    html+='</div>';
-  }
-  host.innerHTML=html;
 }
 function buildSegs(){
   var segs=document.querySelectorAll("[data-seg]");
@@ -730,18 +785,14 @@ function render(){
   });
   paintSegs();
   syncQ();
-  syncQual();
   showAngleNote();
-  flagR2();
-  redraw();
+  drawPhotos();
+  autoSpread();
 }
 /* most visits are SG and photos only — keep the salt-dilution half out of the way until it's needed */
 function syncQ(){
   var on=!!get("hasQ");
-  [["qBody"],["cardMetta"],["cardSketch"]].forEach(function(p){
-    var el=$(p[0]); if(el) el.classList.toggle("hidden",!on);
-  });
-  if(on) fitPad();
+  var el=$("qBody"); if(el) el.classList.toggle("hidden",!on);
 }
 /* :has() does the highlight on modern browsers; this keeps it visible everywhere else */
 function paintSegs(){
@@ -756,15 +807,14 @@ function bind(){
     if(el.hasAttribute&&el.hasAttribute("data-k")){
       set(el.getAttribute("data-k"), el.type==="checkbox"?el.checked:el.value);
       if(el.hasAttribute("data-calc")) autoCalc(el.getAttribute("data-calc"));
-      if(el.hasAttribute("data-qdiff")) autoQDiff();
-      if(el.hasAttribute("data-r2")) flagR2();
+      if(el.hasAttribute("data-qspread")) autoSpread();
       touch();
     }
   });
   document.addEventListener("change",function(e){
     var el=e.target;
     if(el.hasAttribute&&el.hasAttribute("data-radio")){
-      if(el.checked){ set(el.getAttribute("data-radio"),el.value); paintSegs(); syncQual(); touch(); }
+      if(el.checked){ set(el.getAttribute("data-radio"),el.value); paintSegs(); touch(); }
       return;
     }
     if(el.name==="pen"){ paintSegs(); return; }
@@ -849,33 +899,6 @@ function showAngleNote(){
   else if(m)  h.textContent=S.site+" leans — angle "+m+" filled in, so Calc’d SG = SG × "+m+". Type over it if it has been re-surveyed.";
   else        h.textContent=S.site+" has a vertical gauge, so there is no angle correction and no Calc’d SG.";
 }
-/* Q Diff % = (1 - Qs/QL) x 100, taken from Ch.0 and Ch.1.
-   Checked against the Apex Lower 2026-08-08 sheet: 0.16848 / 0.17229 -> 2.2%. */
-function autoQDiff(){
-  var qs=num(get("ch.0.q")), ql=num(get("ch.1.q"));
-  var f=document.querySelector('[data-k="metta.qdiff"]');
-  if(qs===null||ql===null||ql===0) return;
-  var prev=get("metta.qdiffAuto");
-  var cur=String(get("metta.qdiff")||"");
-  if(cur!==""&&cur!==prev) return;              /* typed over by hand — leave it */
-  var out=((1-qs/ql)*100).toFixed(1);
-  set("metta.qdiff",out);
-  set("metta.qdiffAuto",out);
-  if(f) f.value=out;
-}
-function flagR2(){
-  var qs=document.querySelectorAll("[data-r2]"), bad=0;
-  Array.prototype.forEach.call(qs,function(el){
-    var n=num(el.value);
-    var off=(n!==null&&n<0.999);
-    el.classList.toggle("warnf",off);
-    if(off) bad++;
-  });
-  var h=$("qHint");
-  if(bad){ h.className="hint warn"; h.textContent="R² below 0.999 on "+bad+" channel"+(bad>1?"s":"")+" — note why in Measurement Comments."; }
-  else h.className="hint hidden";
-}
-
 /* ---------- drafts UI ---------- */
 function drawDrafts(){
   if(RECORD) return;
@@ -898,108 +921,6 @@ function esc(s){
   return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 }
 
-/* ---------- sketch pad ---------- */
-var pad,ctx,strokes=[],drawing=false,cur=null,penW=3.5;
-function setupPad(){
-  pad=$("pad"); ctx=pad.getContext("2d");
-  fitPad();
-  if(PRINTMODE) return;   /* fixed at print resolution — nothing may resize it */
-  /* the pad can be laid out at zero width (background tab, print, rotation).
-     Watch the box instead of trusting one measurement at boot. */
-  if(window.ResizeObserver){
-    new ResizeObserver(function(){ fitPad(); }).observe(pad.parentNode);
-  }
-  window.addEventListener("resize",fitPad);
-  window.addEventListener("orientationchange",function(){ setTimeout(fitPad,120); });
-  pad.addEventListener("pointerdown",function(e){
-    e.preventDefault();
-    pad.setPointerCapture(e.pointerId);
-    drawing=true;
-    cur={w:penW,p:[ptOf(e)]};
-    strokes.push(cur);
-  });
-  pad.addEventListener("pointermove",function(e){
-    if(!drawing) return;
-    e.preventDefault();
-    cur.p.push(ptOf(e));
-    redraw();
-  });
-  function end(e){
-    if(!drawing) return;
-    drawing=false;
-    if(cur&&cur.p.length<2) cur.p.push(cur.p[0]);
-    S.strokes=strokes;
-    touch();
-    redraw();
-  }
-  pad.addEventListener("pointerup",end);
-  pad.addEventListener("pointercancel",end);
-  pad.addEventListener("pointerleave",end);
-
-  $("undoBtn").addEventListener("click",function(){
-    strokes.pop(); S.strokes=strokes; touch(); redraw();
-  });
-  $("clearPadBtn").addEventListener("click",function(){
-    if(strokes.length&&!confirm("Clear the whole sketch?")) return;
-    strokes=[]; S.strokes=strokes; touch(); redraw();
-  });
-  $("penSeg").addEventListener("change",function(e){
-    if(e.target.name==="pen") penW=parseFloat(e.target.value);
-  });
-}
-var padW=0,padH=0;
-function fitPad(){
-  var w=pad.parentNode.clientWidth;
-  if(!w){                                  /* not laid out yet — try again next frame */
-    requestAnimationFrame(function(){ if(pad.parentNode.clientWidth) fitPad(); });
-    return;
-  }
-  var h=Math.round(w*0.62);
-  if(w===padW&&h===padH) return;
-  padW=w; padH=h;
-  var r=window.devicePixelRatio||1;
-  pad.style.height=h+"px";
-  pad.width=Math.round(w*r); pad.height=Math.round(h*r);
-  redraw();                                /* paintTo works in device pixels */
-}
-function ptOf(e){
-  var b=pad.getBoundingClientRect();
-  return [ (e.clientX-b.left)/b.width, (e.clientY-b.top)/b.height ];
-}
-/* Strokes are stored 0..1, so the same sketch paints at any resolution. */
-function paintTo(w,h){
-  if(!ctx) return;
-  ctx.setTransform(1,0,0,1,0,0);
-  ctx.clearRect(0,0,w,h);
-  ctx.fillStyle="#ffffff"; ctx.fillRect(0,0,w,h);
-  ctx.strokeStyle="#16202a"; ctx.lineCap="round"; ctx.lineJoin="round";
-  var unit=padW?(w/padW):1;               /* keep pen weight proportional */
-  strokes.forEach(function(s){
-    if(!s.p||!s.p.length) return;
-    ctx.lineWidth=(s.w||3.5)*unit;
-    ctx.beginPath();
-    ctx.moveTo(s.p[0][0]*w,s.p[0][1]*h);
-    for(var i=1;i<s.p.length;i++) ctx.lineTo(s.p[i][0]*w,s.p[i][1]*h);
-    ctx.stroke();
-  });
-}
-function redraw(){ if(ctx) paintTo(pad.width,pad.height); }
-
-/* A phone-sized canvas looks soft on paper. Repaint big for the print, then undo it. */
-function printRes(on){
-  if(!pad) return;
-  if(on){
-    if(!padW) padW=360;                   /* reference width, so pen weight stays sane */
-    pad.width=1800; pad.height=Math.round(1800*0.62);
-    pad.style.height="auto";
-    paintTo(pad.width,pad.height);
-  }else{
-    padW=0; padH=0;
-    fitPad();
-  }
-}
-window.addEventListener("beforeprint",function(){ printRes(true); });
-window.addEventListener("afterprint",function(){ printRes(false); });
 
 /* Text boxes clip whatever doesn't fit. On the archive copy that would quietly
    lose field notes, so swap every one for a block that wraps. Print render only. */
@@ -1018,7 +939,7 @@ function fileName(){
   var site=(S.site||"Unassigned").replace(/[\\\/:*?"<>|]/g,"-");
   return (S.date||todayISO())+"_"+site+".html";
 }
-function buildFile(){
+function buildFile(photos){
   var clone=document.documentElement.cloneNode(true);
   function pick(s){ return clone.querySelector(s); }
   /* hide, never remove — init() in the saved copy still wires these up */
@@ -1038,6 +959,8 @@ function buildFile(){
   var payload=JSON.parse(JSON.stringify(S));
   payload.savedAt=new Date().toISOString();
   payload.build=BUILD;
+  delete payload.qphotoIds;               /* IndexedDB keys mean nothing off this phone */
+  payload.qphotos=photos||[];
   var json=JSON.stringify(payload).replace(/<\//g,"<\\/");
   var re=/var BAKED=[^\n]*?;\/\*BAKEDCFG\*\//;
   if(!re.test(html)) return null;
@@ -1045,7 +968,16 @@ function buildFile(){
 }
 function finish(){
   if(!S.site){ alert("Choose a station first — the file is named after it."); return; }
-  var html=buildFile();
+  if(RECORD){ finishWith((BAKED&&BAKED.qphotos)||[]); return; }
+  loadPhotoDataUrls().then(function(photos){
+    if(photos.length<((S.qphotoIds||[]).length)){
+      if(!confirm("Some photos could not be read from storage and will be missing from the sent sheet. Send anyway?")) return;
+    }
+    finishWith(photos);
+  }).catch(function(){ finishWith([]); });
+}
+function finishWith(photos){
+  var html=buildFile(photos);
   if(!html){ alert("Couldn't prepare the file — the page source has been altered."); return; }
   var name=fileName();
   var blob=new Blob([html],{type:"text/html"});
@@ -1142,25 +1074,24 @@ function setupApp(){
 /* ---------- boot ---------- */
 function startSheet(state,id){
   S=state;
-  strokes=(S.strokes&&S.strokes.length)?S.strokes:[];
-  S.strokes=strokes;
   if(!RECORD){ book.cur=id; saveBook(); }
   render();
   drawDrafts();
   window.scrollTo(0,0);
 }
 function init(){
-  buildSites(); buildReqs(); buildQual(); buildChecks(); buildCh(); buildSegs();
+  buildSites(); buildReqs(); buildQm(); buildChecks(); buildSegs();
   book=loadBook();
 
   if(RECORD){
     $("draftsCard").classList.add("hidden");
     S=BAKED;
-    strokes=S.strokes||[]; S.strokes=strokes;
     var b=$("recBanner");
     b.className="banner";
     b.textContent="Completed field sheet — "+(S.site||"")+"  "+(S.date||"")+(S.tech?"  ·  "+S.tech:"");
     pill("Record","ok");
+    autoSpread();
+    var tp=$("takePhotoBtn"); if(tp) tp.classList.add("hidden");
   }else{
     var d=currentDraft();
     if(d){ S=d.state; }
@@ -1171,11 +1102,9 @@ function init(){
       book.drafts.unshift({id:book.cur,state:S,updated:Date.now()});
       saveBook();
     }
-    strokes=S.strokes||[]; S.strokes=strokes;
     pill("Saved","ok");
   }
 
-  setupPad();
   bind();
   render();
   drawDrafts();
@@ -1200,6 +1129,7 @@ function init(){
     if(x){
       var did=x.getAttribute("data-del");
       if(!confirm("Delete this sheet from the phone? It cannot be undone.")) return;
+      book.drafts.filter(function(d){ return d.id===did; }).forEach(deleteDraftPhotos);
       book.drafts=book.drafts.filter(function(d){ return d.id!==did; });
       if(book.cur===did){
         if(book.drafts.length) startSheet(book.drafts[0].state,book.drafts[0].id);
@@ -1220,18 +1150,23 @@ function init(){
     set("sg.d.grade",get("sg.a.grade"));
     render(); touch();
   });
-  $("meanQBtn").addEventListener("click",function(){
-    var vals=[];
-    for(var i=0;i<3;i++){ var n=num(get("ch."+i+".q")); if(n!==null) vals.push(n); }
-    if(!vals.length){ alert("No channel Q values to average yet."); return; }
-    var m=vals.reduce(function(a,b){ return a+b; },0)/vals.length;
-    var out=m>=1?m.toFixed(3):m.toFixed(5);
-    set("finalQ",out);
-    document.querySelector('[data-k="finalQ"]').value=out;
-    touch();
-  });
   $("printBtn").addEventListener("click",function(){ window.print(); });
   $("finishBtn").addEventListener("click",finish);
+  $("takePhotoBtn").addEventListener("click",function(){ $("photoInput").click(); });
+  $("photoInput").addEventListener("change",function(){
+    var files=Array.prototype.slice.call(this.files||[]);
+    this.value="";
+    files.reduce(function(chain,f){ return chain.then(function(){ return addPhotoFile(f); }); },Promise.resolve());
+  });
+  $("photoGrid").addEventListener("click",function(e){
+    var b=e.target.closest?e.target.closest("[data-delphoto]"):null;
+    if(!b) return;
+    if(!confirm("Remove this photo from the sheet?")) return;
+    var pid=b.getAttribute("data-delphoto");
+    S.qphotoIds=(S.qphotoIds||[]).filter(function(x){ return x!==pid; });
+    idbDel(photoKey(book.cur,pid)).catch(function(){});
+    touch(); drawPhotos();
+  });
 
   window.addEventListener("beforeunload",function(){ if(!RECORD) commit(); });
   /* iOS home-screen apps never fire beforeunload on swipe-away; hidden/pagehide
@@ -1243,7 +1178,7 @@ function init(){
 
   $("buildTag").textContent="build "+BUILD;
   setupApp();
-  if(PRINTMODE){ printRes(true); flattenForPrint(); }
+  if(PRINTMODE) flattenForPrint();
 }
 init();
 </script>
