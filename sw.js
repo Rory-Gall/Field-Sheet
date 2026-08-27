@@ -2,7 +2,7 @@
    CACHE carries the build number — bump it together with var BUILD in index.html.
    A byte-different sw.js is what makes phones pick up a new build. */
 "use strict";
-var CACHE = "kei-fieldsheet-b9";
+var CACHE = "kei-fieldsheet-b10";
 var ASSETS = [
   "./",
   "./index.html",

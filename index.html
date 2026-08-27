@@ -465,7 +465,8 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
       <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden" multiple>
       <p class="hint bad hidden" id="photoIncomplete"></p>
       <p class="hint">Fill the paper flow sheet as usual, then photograph it &mdash; the detail gets read
-      from the photo, never retyped. The photo travels inside the sent sheet.</p>
+      from the photo, never retyped. For a bucket run, sketch where the measurement was
+      taken and photograph the sketch. The photo travels inside the sent sheet.</p>
 
       <h3 class="sub">Preliminary Q&rsquo;s</h3>
       <div class="row" id="qmRows"></div>
@@ -532,7 +533,7 @@ var STORE="kei-fieldsheet-v1";
 var $=function(id){ return document.getElementById(id); };
 /* App build. Bump on every version handed over, so a phone can be checked at a glance
    against the filename it came from. Separate from v1.15, which is the paper form. */
-var BUILD="9";
+var BUILD="10";
 var RECORD=!!BAKED;                 /* opened as a finished record, not the blank app */
 /* file_field_sheets.py opens the sheet as ...html#print to render the archive PDF.
    Headless Chrome never fires beforeprint, so the hi-res sketch has to be explicit. */
@@ -1100,8 +1101,9 @@ function validateVisit(){
     var nPhotos=RECORD?((BAKED&&BAKED.qphotos)||[]).length:((S.qphotoIds||[]).length);
     var pnote=$("photoIncomplete");
     if(pnote){
-      /* salt and midsection have paper worksheets to photograph; bucket has none */
-      if(!nPhotos&&ft!=="bucket"){
+      /* every method: salt/midsection photograph the worksheet, bucket photographs
+         a sketch of where the measurement was taken */
+      if(!nPhotos){
         pnote.textContent="Not sent — take the photo of the flow measurement sheet.";
         pnote.classList.remove("hidden");
         missing.push(["#takePhotoBtn","Flow sheet photo"]);
