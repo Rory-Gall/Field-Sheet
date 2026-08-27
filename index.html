@@ -309,7 +309,16 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
         <label><input type="radio" name="flowq" value="no"><span>No</span></label>
       </div>
     </div>
+    <div class="flowq hidden" id="ftypeRow" style="margin-top:8px">
+      <div class="flabel">Which method?</div>
+      <div class="seg" id="ftypeSeg">
+        <label><input type="radio" name="ftypeq" value="salt"><span>Salt dilution</span></label>
+        <label><input type="radio" name="ftypeq" value="mid"><span>Midsection</span></label>
+        <label><input type="radio" name="ftypeq" value="bucket"><span>Bucket</span></label>
+      </div>
+    </div>
     <p class="hint bad hidden" id="flowIncomplete"></p>
+    <p class="hint bad hidden" id="ftypeIncomplete"></p>
   </div>
 
   <!-- 1 visit -->
@@ -418,6 +427,7 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
         <button class="btn sm noprint" type="button" id="sameAsArrival">Same reading as arrival</button>
       </div>
     </div>
+    <p class="hint bad hidden" id="sgIncomplete"></p>
     <p class="hint" id="calcHint">Calc&rsquo;d SG fills in as SG &times; SG Angle. Type over it if the site does it differently.</p>
   </div>
 
@@ -457,10 +467,16 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
       <p class="hint">Fill the paper flow sheet as usual, then photograph it &mdash; the detail gets read
       from the photo, never retyped. The photo travels inside the sent sheet.</p>
 
-      <h3 class="sub">Flow measurement Q&rsquo;s</h3>
-      <div id="qmRows"></div>
+      <h3 class="sub">Preliminary Q&rsquo;s</h3>
+      <div class="row" id="qmRows"></div>
       <p class="hint bad hidden" id="qmIncomplete"></p>
       <p class="hint" id="qSpreadOut">Enter at least two Q&rsquo;s and the spread calculates itself.</p>
+      <p class="hint">Quick-and-dirty field values &mdash; enough to check the runs agree and to
+      have numbers on paper if equipment fails. The office fills Reviewed Q after processing.</p>
+      <div class="f" style="margin-top:8px;max-width:200px">
+        <label>Reviewed Q (m&sup3;/s) <span class="ext">(office)</span></label>
+        <input type="text" data-k="reviewedQ" class="mono" inputmode="decimal">
+      </div>
     </div>
   </div>
 
@@ -506,8 +522,9 @@ var SG_ANGLE={
 /* Measurement quality. Worded so No is always the answer that needs explaining,
    which is why the eddies question is phrased as "not affecting". */
 var PHOTOS=[["station","Station, Control, US &amp; DS"],
-            ["sdmeter","SD Meter Loc.",1],["dosing","Dosing Loc.",1],
-            ["mixing","Mixing Reach",1],["wdxs","WD X-Section",1]];
+            ["sdmeter","SD Meter Loc.","salt"],["dosing","Dosing Loc.","salt"],
+            ["mixing","Mixing Reach","salt"],["wdxs","WD X-Section","mid"],
+            ["bucketloc","Measurement Loc.","bucket"]];
 var VIDEOS=[["station","Station, Control, US &amp; DS"],["arrsg","10 Sec Arrival SG"],
             ["depsg","10 Sec Departure SG"]];
 
@@ -515,7 +532,7 @@ var STORE="kei-fieldsheet-v1";
 var $=function(id){ return document.getElementById(id); };
 /* App build. Bump on every version handed over, so a phone can be checked at a glance
    against the filename it came from. Separate from v1.15, which is the paper form. */
-var BUILD="8";
+var BUILD="9";
 var RECORD=!!BAKED;                 /* opened as a finished record, not the blank app */
 /* file_field_sheets.py opens the sheet as ...html#print to render the archive PDF.
    Headless Chrome never fires beforeprint, so the hi-res sketch has to be explicit. */
@@ -526,15 +543,14 @@ var S=null, saveTimer=null, book=null;
 function blank(){
   function sgSide(){ return {time:"",sg:"",err:"",ang:"",calc:"",rev:"",revErr:"",grade:""}; }
   var s={
-    v:"1.15", site:"", date:todayISO(), tz:"-7", arrive:"", depart:"", tech:"", flow:"",
+    v:"1.15", site:"", date:todayISO(), tz:"-7", arrive:"", depart:"", tech:"", flow:"", ftype:"",
     reqs:[], sg:{a:sgSide(),d:sgSide()}, purpose:"", notes:"",
     photos:{}, videos:{},
-    qm:[], qspread:"", qspreadPct:"", qphotoIds:[]
+    pq:["","","","",""], reviewedQ:"", qspread:"", qspreadPct:"", qphotoIds:[]
   };
   for(var i=0;i<6;i++) s.reqs.push({on:false,txt:""});
   PHOTOS.forEach(function(p){ s.photos[p[0]]=false; });
   VIDEOS.forEach(function(p){ s.videos[p[0]]=false; });
-  for(var j=0;j<3;j++) s.qm.push({method:"",q:""});
   return s;
 }
 function todayISO(){
@@ -649,20 +665,16 @@ function syncReqWhy(showAll){
   }
   return unresolved;
 }
-var QMETHODS=["","Sensor 0","Sensor 1","Sensor 2","Midsection"];
 function buildQm(){
-  $("qmRows").innerHTML=[0,1,2].map(function(i){
-    return '<div class="row"><div style="flex:0 1 150px"><label>Method</label>'+
-      '<select data-k="qm.'+i+'.method">'+QMETHODS.map(function(m){
-        return '<option value="'+m+'">'+(m||"—")+"</option>"; }).join("")+'</select></div>'+
-      '<div><label>Q (m³/s)</label>'+
-      '<input type="text" data-k="qm.'+i+'.q" data-qspread="1" class="mono" inputmode="decimal"></div></div>';
+  $("qmRows").innerHTML=[0,1,2,3,4].map(function(i){
+    return '<div style="flex:1 1 30%;min-width:96px"><label>Q'+(i+1)+' (m³/s)</label>'+
+      '<input type="text" data-k="pq.'+i+'" data-qspread="1" class="mono" inputmode="decimal"></div>';
   }).join("");
 }
 /* the one number the office wants at a glance: how far apart the measurements are */
 function autoSpread(){
   var vals=[];
-  for(var i=0;i<3;i++){ var n=num(get("qm."+i+".q")); if(n!==null&&n>0) vals.push(n); }
+  for(var i=0;i<5;i++){ var n=num(get("pq."+i)); if(n!==null&&n>0) vals.push(n); }
   var el=$("qSpreadOut");
   if(vals.length<2){
     set("qspread",""); set("qspreadPct","");
@@ -794,7 +806,7 @@ function buildChecks(){
   function grid(host,list,base){
     host.innerHTML=list.map(function(p,i){
       var id=base+"_"+p[0];
-      return '<div class="chk'+(p[2]?" qonly hidden":"")+'"><input type="checkbox" id="'+id+'" data-k="'+base+'.'+p[0]+'">'+
+      return '<div class="chk'+(p[2]?' qonly hidden" data-show="'+p[2]:'')+'"><input type="checkbox" id="'+id+'" data-k="'+base+'.'+p[0]+'">'+
              '<label class="inline" for="'+id+'">'+p[1]+'</label></div>';
     }).join("");
   }
@@ -820,6 +832,13 @@ function render(){
     if(S.flow===undefined||S.flow==="") S.flow=(S.hasQ?"yes":"");
     delete S.hasQ;
   }
+  if(S&&S.qm){                      /* builds 6-8 had method+Q rows */
+    if(!S.pq) S.pq=["","","","",""];
+    S.qm.forEach(function(row,i){ if(i<5&&row&&row.q&&!S.pq[i]) S.pq[i]=row.q; });
+    delete S.qm;
+  }
+  if(S&&S.reviewedQ===undefined) S.reviewedQ="";
+  if(S&&S.ftype===undefined) S.ftype="";
   Array.prototype.forEach.call(document.querySelectorAll("[data-k]"),function(el){
     var v=get(el.getAttribute("data-k"));
     if(el.type==="checkbox") el.checked=!!v;
@@ -831,6 +850,9 @@ function render(){
   var fy=document.querySelector('#flowSeg input[value="yes"]');
   var fn=document.querySelector('#flowSeg input[value="no"]');
   if(fy&&fn){ fy.checked=(S.flow==="yes"); fn.checked=(S.flow==="no"); }
+  Array.prototype.forEach.call(document.querySelectorAll('#ftypeSeg input'),function(el2){
+    el2.checked=(el2.value===S.ftype);
+  });
   paintSegs();
   syncQ();
   showAngleNote();
@@ -846,9 +868,12 @@ function render(){
 /* most visits are SG and photos only — keep the salt-dilution half out of the way until it's needed */
 function syncQ(){
   var on=(get("flow")==="yes");
+  var t=get("ftype");
   var el=$("cardQ"); if(el) el.classList.toggle("hidden",!on);
+  var tr=$("ftypeRow"); if(tr) tr.classList.toggle("hidden",!on);
   Array.prototype.forEach.call(document.querySelectorAll(".qonly"),function(q){
-    q.classList.toggle("hidden",!on);
+    var kinds=q.getAttribute("data-show");
+    q.classList.toggle("hidden",!(on&&(!kinds||kinds===t)));
   });
 }
 /* :has() does the highlight on modern browsers; this keeps it visible everywhere else */
@@ -1062,32 +1087,61 @@ function validateVisit(){
     }else fNote.classList.add("hidden");
   }
   if(flow==="yes"){
+    var ft=get("ftype");
+    var ftSeg=$("ftypeSeg"), ftNote=$("ftypeIncomplete");
+    if(ftSeg) ftSeg.classList.toggle("missing",ft==="");
+    if(ftNote){
+      if(ft===""){
+        ftNote.textContent="Not sent — pick the measurement method.";
+        ftNote.classList.remove("hidden");
+        missing.push(["#ftypeSeg","Measurement method"]);
+      }else ftNote.classList.add("hidden");
+    }
     var nPhotos=RECORD?((BAKED&&BAKED.qphotos)||[]).length:((S.qphotoIds||[]).length);
     var pnote=$("photoIncomplete");
     if(pnote){
-      if(!nPhotos){
+      /* salt and midsection have paper worksheets to photograph; bucket has none */
+      if(!nPhotos&&ft!=="bucket"){
         pnote.textContent="Not sent — take the photo of the flow measurement sheet.";
         pnote.classList.remove("hidden");
         missing.push(["#takePhotoBtn","Flow sheet photo"]);
       }else pnote.classList.add("hidden");
     }
     var anyQ=false;
-    for(var qi=0;qi<3;qi++){ if(num(get("qm."+qi+".q"))!==null) anyQ=true; }
+    for(var qi=0;qi<5;qi++){ if(num(get("pq."+qi))!==null) anyQ=true; }
     Array.prototype.forEach.call(document.querySelectorAll('#qmRows input'),function(el2){
       el2.classList.toggle("missing",!anyQ);
     });
     var qnote=$("qmIncomplete");
     if(qnote){
       if(!anyQ){
-        qnote.textContent="Not sent — enter at least one flow measurement Q.";
+        qnote.textContent="Not sent — enter at least one preliminary Q.";
         qnote.classList.remove("hidden");
-        missing.push(['[data-k="qm.0.q"]',"Flow measurement Q"]);
+        missing.push(['[data-k="pq.0"]',"Preliminary Q"]);
       }else qnote.classList.add("hidden");
+    }
+    /* a flow measurement without a staff gauge reading can't be rated later */
+    var sgOK=(String(get("sg.a.time")||"").trim()!==""&&String(get("sg.a.sg")||"").trim()!=="")||
+             (String(get("sg.d.time")||"").trim()!==""&&String(get("sg.d.sg")||"").trim()!=="");
+    ["sg.a.time","sg.a.sg"].forEach(function(k){
+      var el4=document.querySelector('[data-k="'+k+'"]');
+      if(el4) el4.classList.toggle("missing",!sgOK);
+    });
+    var sgNote=$("sgIncomplete");
+    if(sgNote){
+      if(!sgOK){
+        sgNote.textContent="Not sent — a flow measurement needs a staff gauge reading (time and SG) from around when it was done.";
+        sgNote.classList.remove("hidden");
+        missing.push(['[data-k="sg.a.time"]',"Staff gauge reading"]);
+      }else sgNote.classList.add("hidden");
     }
   }else{
     var pn=$("photoIncomplete"); if(pn) pn.classList.add("hidden");
     var qn=$("qmIncomplete"); if(qn) qn.classList.add("hidden");
-    Array.prototype.forEach.call(document.querySelectorAll('#qmRows input'),function(el3){
+    var fn2=$("ftypeIncomplete"); if(fn2) fn2.classList.add("hidden");
+    var sn=$("sgIncomplete"); if(sn) sn.classList.add("hidden");
+    var fseg=$("ftypeSeg"); if(fseg) fseg.classList.remove("missing");
+    Array.prototype.forEach.call(document.querySelectorAll('#qmRows input, [data-k="sg.a.time"], [data-k="sg.a.sg"]'),function(el3){
       el3.classList.remove("missing");
     });
   }
@@ -1097,7 +1151,8 @@ function validateVisit(){
 /* any red state on screen updates live as the tech fixes things */
 function revalidateIfFlagged(){
   var flagged=["visitIncomplete","reqIncomplete","reqConfirm","purposeIncomplete",
-               "flowIncomplete","photoIncomplete","qmIncomplete"].some(function(id){
+               "flowIncomplete","ftypeIncomplete","photoIncomplete","qmIncomplete",
+               "sgIncomplete"].some(function(id){
     var el=$(id); return el&&el.className.indexOf("hidden")===-1;
   });
   if(flagged) validateVisit();
@@ -1336,6 +1391,11 @@ function init(){
   $("flowSeg").addEventListener("change",function(e){
     if(e.target.name!=="flowq") return;
     set("flow",e.target.value);
+    paintSegs(); syncQ(); revalidateIfFlagged(); touch();
+  });
+  $("ftypeSeg").addEventListener("change",function(e){
+    if(e.target.name!=="ftypeq") return;
+    set("ftype",e.target.value);
     paintSegs(); syncQ(); revalidateIfFlagged(); touch();
   });
   $("takePhotoBtn").addEventListener("click",function(){ $("photoInput").click(); });
