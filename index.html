@@ -91,6 +91,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
 input.warnf{border-color:var(--warn);background:var(--warn-bg)}
 input.missing,select.missing{border-color:var(--bad);background:var(--bad-bg)}
 .seg.missing label{border-color:var(--bad);background:var(--bad-bg)}
+.chk.confirm input[type=text]{border-color:var(--warn);background:var(--warn-bg)}
 .hint.bad{color:var(--bad);font-weight:600}
 input[readonly]{color:var(--ink2);background:var(--line2)}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
@@ -356,6 +357,7 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
     <h2><span class="n">2</span> Site Requirements / Work Completed</h2>
     <div id="reqRows"></div>
     <p class="hint bad hidden" id="reqIncomplete"></p>
+    <p class="hint warn hidden" id="reqConfirm"></p>
   </div>
 
   <!-- 3 staff gauge -->
@@ -513,7 +515,7 @@ var STORE="kei-fieldsheet-v1";
 var $=function(id){ return document.getElementById(id); };
 /* App build. Bump on every version handed over, so a phone can be checked at a glance
    against the filename it came from. Separate from v1.15, which is the paper form. */
-var BUILD="7";
+var BUILD="8";
 var RECORD=!!BAKED;                 /* opened as a finished record, not the blank app */
 /* file_field_sheets.py opens the sheet as ...html#print to render the archive PDF.
    Headless Chrome never fires beforeprint, so the hi-res sketch has to be explicit. */
@@ -601,7 +603,6 @@ function commit(){
   if(!d){ d={id:book.cur||newId(),state:S,updated:0}; book.cur=d.id; book.drafts.unshift(d); }
   d.state=S;
   d.updated=Date.now();
-  book.tech=S.tech||book.tech;
   book.tz=S.tz||book.tz;
   saveBook();
   drawDrafts();
@@ -620,12 +621,33 @@ function buildSites(){
 function buildReqs(){
   var host=$("reqRows"), html="";
   for(var i=0;i<6;i++){
-    html+='<div class="chk">'+
+    html+='<div class="chk" id="reqrow_'+i+'">'+
       '<input type="checkbox" data-k="reqs.'+i+'.on" aria-label="Requirement '+(i+1)+' done">'+
       '<input type="text" data-k="reqs.'+i+'.txt" autocomplete="off" aria-label="Requirement '+(i+1)+'">'+
+      '</div>'+
+      '<div class="qnote hidden" id="reqwhy_'+i+'">'+
+        '<label>Not done &mdash; why?</label>'+
+        '<input type="text" data-k="reqs.'+i+'.why" autocomplete="off">'+
       '</div>';
   }
   host.innerHTML=html;
+}
+/* written-in but unticked rows: fine to leave unticked, but only with a reason.
+   The "why" line appears on a send attempt, or whenever a saved reason exists. */
+function syncReqWhy(showAll){
+  var unresolved=[];
+  for(var i=0;i<6;i++){
+    var txt=String(get("reqs."+i+".txt")||"").trim();
+    var on=!!get("reqs."+i+".on");
+    var why=String(get("reqs."+i+".why")||"").trim();
+    var needs=(txt!==""&&!on);
+    var box=$("reqwhy_"+i), row=$("reqrow_"+i);
+    if(box) box.classList.toggle("hidden",!(needs&&(showAll||why!=="")));
+    var flag=needs&&showAll&&why==="";
+    if(row) row.classList.toggle("confirm",flag);
+    if(flag) unresolved.push(i);
+  }
+  return unresolved;
 }
 var QMETHODS=["","Sensor 0","Sensor 1","Sensor 2","Midsection"];
 function buildQm(){
@@ -814,6 +836,7 @@ function render(){
   showAngleNote();
   drawPhotos();
   autoSpread();
+  syncReqWhy(false);
   ["a","d"].forEach(function(side){
     var row=$("angRow_"+side);
     if(row) row.classList.toggle("hidden",!SG_ANGLE[S.site]);
@@ -1003,6 +1026,17 @@ function validateVisit(){
   }
   if(!anyReq) missing.push(["reqs.0.txt","Work Completed"]);
 
+  /* written-in but unticked needs an explicit "didn't get to it because..." */
+  var unresolved=syncReqWhy(true);
+  var cNote=$("reqConfirm");
+  if(cNote){
+    if(unresolved.length){
+      cNote.textContent="Not sent — written in but not ticked: tick the box if it was done, or write why it wasn’t.";
+      cNote.classList.remove("hidden");
+      missing.push(['[data-k="reqs.'+unresolved[0]+'.why"]',"Unfinished work reason"]);
+    }else cNote.classList.add("hidden");
+  }
+
   /* section 4: the purpose is the one line the office reads first */
   var hasPurpose=String(get("purpose")||"").trim()!=="";
   var pEl=document.querySelector('[data-k="purpose"]');
@@ -1062,7 +1096,7 @@ function validateVisit(){
 
 /* any red state on screen updates live as the tech fixes things */
 function revalidateIfFlagged(){
-  var flagged=["visitIncomplete","reqIncomplete","purposeIncomplete",
+  var flagged=["visitIncomplete","reqIncomplete","reqConfirm","purposeIncomplete",
                "flowIncomplete","photoIncomplete","qmIncomplete"].some(function(id){
     var el=$(id); return el&&el.className.indexOf("hidden")===-1;
   });
@@ -1244,7 +1278,7 @@ function init(){
     if(d){ S=d.state; }
     else{
       S=blank();
-      S.tech=book.tech||""; S.tz=book.tz||"-7";
+      S.tz=book.tz||"-7";
       book.cur=newId();
       book.drafts.unshift({id:book.cur,state:S,updated:Date.now()});
       saveBook();
@@ -1259,7 +1293,7 @@ function init(){
   $("newSheetBtn").addEventListener("click",function(){
     commit();
     var s=blank();
-    s.tech=book.tech||""; s.tz=book.tz||"-7";
+    s.tz=book.tz||"-7";
     var id=newId();
     book.drafts.unshift({id:id,state:s,updated:Date.now()});
     startSheet(s,id);
@@ -1281,7 +1315,7 @@ function init(){
       if(book.cur===did){
         if(book.drafts.length) startSheet(book.drafts[0].state,book.drafts[0].id);
         else{
-          var s2=blank(); s2.tech=book.tech||""; s2.tz=book.tz||"-7";
+          var s2=blank(); s2.tz=book.tz||"-7";
           var nid=newId();
           book.drafts.push({id:nid,state:s2,updated:Date.now()});
           startSheet(s2,nid);
