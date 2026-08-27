@@ -474,6 +474,15 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
       <p class="hint" id="qSpreadOut">Enter at least two Q&rsquo;s and the spread calculates itself.</p>
       <p class="hint">Quick-and-dirty field values &mdash; enough to check the runs agree and to
       have numbers on paper if equipment fails. The office fills Reviewed Q after processing.</p>
+      <h3 class="sub">SG during measurement</h3>
+      <div class="row">
+        <div><label>Time</label><div class="withbtn">
+          <input type="text" data-k="sg.m.time" data-time="1" class="mono" inputmode="numeric" placeholder="12:35">
+          <button class="btn now" type="button" data-nowk="sg.m.time">Now</button></div></div>
+        <div style="flex:0 1 140px"><label>SG (m)</label><input type="text" data-k="sg.m.sg" class="mono" inputmode="decimal"></div>
+      </div>
+      <p class="hint">Read the staff gauge around the measurement if you can &mdash; otherwise an
+      arrival or departure reading covers the requirement.</p>
       <div class="f" style="margin-top:8px;max-width:200px">
         <label>Reviewed Q (m&sup3;/s) <span class="ext">(office)</span></label>
         <input type="text" data-k="reviewedQ" class="mono" inputmode="decimal">
@@ -533,7 +542,7 @@ var STORE="kei-fieldsheet-v1";
 var $=function(id){ return document.getElementById(id); };
 /* App build. Bump on every version handed over, so a phone can be checked at a glance
    against the filename it came from. Separate from v1.15, which is the paper form. */
-var BUILD="11";
+var BUILD="12";
 var RECORD=!!BAKED;                 /* opened as a finished record, not the blank app */
 /* file_field_sheets.py opens the sheet as ...html#print to render the archive PDF.
    Headless Chrome never fires beforeprint, so the hi-res sketch has to be explicit. */
@@ -545,7 +554,7 @@ function blank(){
   function sgSide(){ return {time:"",sg:"",err:"",ang:"",calc:"",rev:"",revErr:"",grade:""}; }
   var s={
     v:"1.15", site:"", date:todayISO(), tz:"-7", arrive:"", depart:"", tech:"", flow:"", ftype:"",
-    reqs:[], sg:{a:sgSide(),d:sgSide()}, purpose:"", notes:"",
+    reqs:[], sg:{a:sgSide(),d:sgSide(),m:{time:"",sg:""}}, purpose:"", notes:"",
     photos:{}, videos:{},
     pq:["","","","",""], reviewedQ:"", qspread:"", qspreadPct:"", qphotoIds:[]
   };
@@ -839,6 +848,7 @@ function render(){
     delete S.qm;
   }
   if(S&&S.reviewedQ===undefined) S.reviewedQ="";
+  if(S&&S.sg&&!S.sg.m) S.sg.m={time:"",sg:""};
   if(S&&S.ftype===undefined) S.ftype="";
   Array.prototype.forEach.call(document.querySelectorAll("[data-k]"),function(el){
     var v=get(el.getAttribute("data-k"));
@@ -1123,8 +1133,9 @@ function validateVisit(){
       }else qnote.classList.add("hidden");
     }
     /* a flow measurement without a staff gauge reading can't be rated later */
-    var sgOK=(String(get("sg.a.time")||"").trim()!==""&&String(get("sg.a.sg")||"").trim()!=="")||
-             (String(get("sg.d.time")||"").trim()!==""&&String(get("sg.d.sg")||"").trim()!=="");
+    var sgOK=["a","d","m"].some(function(sd){
+      return String(get("sg."+sd+".time")||"").trim()!==""&&String(get("sg."+sd+".sg")||"").trim()!=="";
+    });
     ["sg.a.time","sg.a.sg"].forEach(function(k){
       var el4=document.querySelector('[data-k="'+k+'"]');
       if(el4) el4.classList.toggle("missing",!sgOK);
@@ -1132,7 +1143,7 @@ function validateVisit(){
     var sgNote=$("sgIncomplete");
     if(sgNote){
       if(!sgOK){
-        sgNote.textContent="Not sent — a flow measurement needs a staff gauge reading (time and SG) from around when it was done.";
+        sgNote.textContent="Not sent — a flow measurement needs a timed staff gauge reading: arrival, departure, or during the measurement.";
         sgNote.classList.remove("hidden");
         missing.push(['[data-k="sg.a.time"]',"Staff gauge reading"]);
       }else sgNote.classList.add("hidden");
