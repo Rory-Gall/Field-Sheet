@@ -39,7 +39,7 @@
 html,body{margin:0;padding:0}
 body{
   background:var(--bg); color:var(--ink);
-  font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   -webkit-text-size-adjust:100%;
   padding:0 0 96px;
 }
@@ -47,7 +47,7 @@ body{
 
 header.top{
   background:var(--panel); border-bottom:1px solid var(--line);
-  padding:10px 0; margin-bottom:12px; position:sticky; top:0; z-index:30;
+  padding:8px 0; margin-bottom:8px; position:sticky; top:0; z-index:30;
 }
 header.top .wrap{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .brand{font-weight:700;letter-spacing:.2px;font-size:15px;white-space:nowrap}
@@ -65,38 +65,41 @@ header.top .wrap{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 
 .card{
   background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
-  box-shadow:var(--shadow); padding:14px; margin:0 0 12px;
+  box-shadow:var(--shadow); padding:11px; margin:0 0 8px;
 }
 .card h2{
-  font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink3);
-  margin:0 0 12px;font-weight:700;display:flex;align-items:center;gap:8px
+  font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);
+  margin:0 0 8px;font-weight:700;display:flex;align-items:center;gap:8px
 }
 .card h2 .n{
   background:var(--accent);color:var(--accent-ink);border-radius:5px;
   min-width:18px;height:18px;padding:0 4px;display:inline-flex;align-items:center;justify-content:center;
   font-size:11px;letter-spacing:0
 }
-h3.sub{font-size:13px;font-weight:700;color:var(--ink2);margin:14px 0 8px}
+h3.sub{font-size:13px;font-weight:700;color:var(--ink2);margin:10px 0 6px}
 h3.sub:first-of-type{margin-top:0}
 
-label{display:block;font-size:12px;font-weight:600;color:var(--ink2);margin:0 0 4px}
+label{display:block;font-size:11px;font-weight:600;color:var(--ink2);margin:0 0 3px}
 input[type=text],input[type=date],select,textarea{
-  width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:9px;
+  width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;
   background:var(--bg);color:var(--ink);font-size:16px;font-family:inherit;
   font-variant-numeric:tabular-nums
 }
-textarea{min-height:88px;resize:vertical;line-height:1.5}
+textarea{min-height:68px;resize:vertical;line-height:1.45}
 select{appearance:none;-webkit-appearance:none;background-image:none}
 input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
 input.warnf{border-color:var(--warn);background:var(--warn-bg)}
+input.missing,select.missing{border-color:var(--bad);background:var(--bad-bg)}
+.seg.missing label{border-color:var(--bad);background:var(--bad-bg)}
+.hint.bad{color:var(--bad);font-weight:600}
 input[readonly]{color:var(--ink2);background:var(--line2)}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 
-.row{display:flex;gap:9px;flex-wrap:wrap;margin:0 0 10px}
+.row{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 7px}
 .row>div{flex:1 1 120px;min-width:104px}
 .row.tight>div{min-width:78px}
 .row:last-child{margin-bottom:0}
-.f{margin:0 0 10px}
+.f{margin:0 0 7px}
 .f:last-child{margin-bottom:0}
 
 .withbtn{display:flex;gap:6px}
@@ -116,7 +119,7 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
 .seg{display:flex;flex-wrap:wrap;gap:6px}
 .seg label{
   display:inline-flex;align-items:center;justify-content:center;margin:0;
-  border:1px solid var(--line);border-radius:999px;padding:8px 12px;
+  border:1px solid var(--line);border-radius:999px;padding:7px 11px;
   font-size:13px;font-weight:600;color:var(--ink2);background:var(--bg);
   cursor:pointer;-webkit-tap-highlight-color:transparent
 }
@@ -126,34 +129,38 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
 .seg label:has(input:checked) span,.seg label.on span{color:var(--accent-ink)}
 
 /* checkbox rows */
-.chk{display:flex;align-items:center;gap:10px;margin:0 0 8px}
+.chk{display:flex;align-items:center;gap:9px;margin:0 0 4px}
 .chk input[type=checkbox]{
   width:30px;height:30px;flex:0 0 30px;margin:7px 0;accent-color:var(--accent)
 }
 .chk input[type=text]{flex:1 1 auto;min-width:0}
 .chk label.inline{
-  margin:0;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;
-  padding:12px 0;flex:1 1 auto;-webkit-tap-highlight-color:transparent
+  margin:0;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;
+  padding:9px 0;flex:1 1 auto;-webkit-tap-highlight-color:transparent
 }
-.chkgrid{display:flex;flex-wrap:wrap;gap:8px 14px}
+.chkgrid{display:flex;flex-wrap:wrap;gap:2px 12px}
 .chkgrid .chk{margin:0;flex:1 1 150px}
 
 /* measurement-quality yes/no rows */
-.qrow{border-top:1px solid var(--line2);padding:10px 0 0;margin:10px 0 0}
+.qrow{border-top:1px solid var(--line2);padding:7px 0 0;margin:7px 0 0}
 .qrow:first-child{border-top:0;padding-top:0;margin-top:0}
 .qlab{font-size:13px;font-weight:600;color:var(--ink);margin:0 0 7px}
 .qlab em{font-style:normal;text-decoration:underline}
 .qnote{margin:9px 0 0}
 .ext{color:var(--ink3);font-weight:500;font-size:11px}
 
-.panel{border:1px solid var(--line2);border-radius:10px;padding:12px;margin:0 0 10px;background:var(--bg)}
-.panel h4{margin:0 0 10px;font-size:13px;font-weight:700;color:var(--accent)}
+.panel{border:1px solid var(--line2);border-radius:9px;padding:9px;margin:0 0 7px;background:var(--bg)}
+.panel h4{margin:0 0 7px;font-size:13px;font-weight:700;color:var(--accent)}
 /* On screen the sheet is always one column, at every width including landscape.
    You fill SG arrival at the start of a visit and departure at the end, and the
    channels one after another — side by side would break that reading order.
    The printed archive copy still uses two columns; see the print block below. */
-.hint{font-size:12px;color:var(--ink3);margin:8px 0 0}
+.hint{font-size:11px;color:var(--ink3);margin:6px 0 0}
 .hint.warn{color:var(--warn)}
+
+/* the flow question */
+.flowq{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.flabel{font-size:14px;font-weight:700;flex:1 1 auto}
 
 /* flow sheet photos */
 .pgrid{display:flex;flex-wrap:wrap;gap:9px;margin:0 0 10px}
@@ -292,6 +299,18 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
     <p class="hint">Everything is saved on this device as you type. Nothing is sent anywhere.</p>
   </div>
 
+  <!-- flow question — answers shape everything below -->
+  <div class="card" id="flowCard">
+    <div class="flowq">
+      <div class="flabel">Flow measurement this visit?</div>
+      <div class="seg" id="flowSeg">
+        <label><input type="radio" name="flowq" value="yes"><span>Yes</span></label>
+        <label><input type="radio" name="flowq" value="no"><span>No</span></label>
+      </div>
+    </div>
+    <p class="hint bad hidden" id="flowIncomplete"></p>
+  </div>
+
   <!-- 1 visit -->
   <div class="card">
     <h2><span class="n">1</span> Visit</h2>
@@ -329,13 +348,14 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
       <label for="techF">Technician&rsquo;s Initials</label>
       <input type="text" id="techF" data-k="tech" autocapitalize="characters" autocomplete="off" placeholder="RG">
     </div>
+    <p class="hint bad hidden" id="visitIncomplete"></p>
   </div>
 
   <!-- 2 requirements -->
   <div class="card">
     <h2><span class="n">2</span> Site Requirements / Work Completed</h2>
     <div id="reqRows"></div>
-    <p class="hint">Common: SD SFM &middot; Data DL &middot; SG readings &middot; Photos &middot; Brushing</p>
+    <p class="hint bad hidden" id="reqIncomplete"></p>
   </div>
 
   <!-- 3 staff gauge -->
@@ -355,9 +375,9 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
           <div><label>SG (m)</label><input type="text" data-k="sg.a.sg" data-calc="a" class="mono" inputmode="decimal"></div>
           <div><label>Error (&plusmn;mm)</label><input type="text" data-k="sg.a.err" class="mono" inputmode="decimal"></div>
         </div>
-        <div class="row tight">
-          <div><label>SG Angle</label><input type="text" data-k="sg.a.ang" data-calc="a" class="mono" inputmode="decimal"></div>
-          <div><label>Calc&rsquo;d SG</label><input type="text" data-k="sg.a.calc" class="mono" inputmode="decimal"></div>
+        <div class="row tight hidden" id="angRow_a">
+          <div><label>SG Angle <span class="ext">(set per station)</span></label><input type="text" data-k="sg.a.ang" class="mono" readonly tabindex="-1"></div>
+          <div><label>Calc&rsquo;d SG <span class="ext">(auto)</span></label><input type="text" data-k="sg.a.calc" class="mono" readonly tabindex="-1"></div>
         </div>
         <div class="row tight">
           <div><label>Reviewed SG (m) <span class="ext">(office)</span></label><input type="text" data-k="sg.a.rev" class="mono" inputmode="decimal"></div>
@@ -381,9 +401,9 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
           <div><label>SG (m)</label><input type="text" data-k="sg.d.sg" data-calc="d" class="mono" inputmode="decimal"></div>
           <div><label>Error (&plusmn;mm)</label><input type="text" data-k="sg.d.err" class="mono" inputmode="decimal"></div>
         </div>
-        <div class="row tight">
-          <div><label>SG Angle</label><input type="text" data-k="sg.d.ang" data-calc="d" class="mono" inputmode="decimal"></div>
-          <div><label>Calc&rsquo;d SG</label><input type="text" data-k="sg.d.calc" class="mono" inputmode="decimal"></div>
+        <div class="row tight hidden" id="angRow_d">
+          <div><label>SG Angle <span class="ext">(set per station)</span></label><input type="text" data-k="sg.d.ang" class="mono" readonly tabindex="-1"></div>
+          <div><label>Calc&rsquo;d SG <span class="ext">(auto)</span></label><input type="text" data-k="sg.d.calc" class="mono" readonly tabindex="-1"></div>
         </div>
         <div class="row tight">
           <div><label>Reviewed SG (m) <span class="ext">(office)</span></label><input type="text" data-k="sg.d.rev" class="mono" inputmode="decimal"></div>
@@ -403,8 +423,9 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
   <div class="card">
     <h2><span class="n">4</span> Notes</h2>
     <div class="f">
-      <label for="purposeF">Main Purpose for SV</label>
-      <input type="text" id="purposeF" data-k="purpose" placeholder="SD SFM / Data DL">
+      <label for="purposeF">Main Purpose for Site Visit</label>
+      <input type="text" id="purposeF" data-k="purpose">
+      <p class="hint bad hidden" id="purposeIncomplete"></p>
     </div>
     <div class="f">
       <label for="notesF">Notes</label>
@@ -423,22 +444,20 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
   </div>
 
   <!-- 6 discharge -->
-  <div class="card">
+  <div class="card hidden" id="cardQ">
     <h2><span class="n">6</span> Discharge Measurement</h2>
-    <div class="chk" style="margin:0">
-      <input type="checkbox" id="hasQ" data-k="hasQ">
-      <label class="inline" for="hasQ">Discharge measurement done on this visit</label>
-    </div>
-    <div id="qBody" class="hidden">
+    <div id="qBody">
       <h3 class="sub">Photo of the flow measurement sheet</h3>
       <div class="pgrid" id="photoGrid"></div>
       <button class="btn noprint" type="button" id="takePhotoBtn">&#128247; Take photo</button>
       <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden" multiple>
+      <p class="hint bad hidden" id="photoIncomplete"></p>
       <p class="hint">Fill the paper flow sheet as usual, then photograph it &mdash; the detail gets read
       from the photo, never retyped. The photo travels inside the sent sheet.</p>
 
       <h3 class="sub">Flow measurement Q&rsquo;s</h3>
       <div id="qmRows"></div>
+      <p class="hint bad hidden" id="qmIncomplete"></p>
       <p class="hint" id="qSpreadOut">Enter at least two Q&rsquo;s and the spread calculates itself.</p>
     </div>
   </div>
@@ -484,8 +503,9 @@ var SG_ANGLE={
 
 /* Measurement quality. Worded so No is always the answer that needs explaining,
    which is why the eddies question is phrased as "not affecting". */
-var PHOTOS=[["station","Station"],["sdmeter","SD Meter Loc."],["dosing","Dosing Loc."],
-            ["mixing","Mixing Reach"],["wdxs","WD X-Section"]];
+var PHOTOS=[["station","Station, Control, US &amp; DS"],
+            ["sdmeter","SD Meter Loc.",1],["dosing","Dosing Loc.",1],
+            ["mixing","Mixing Reach",1],["wdxs","WD X-Section",1]];
 var VIDEOS=[["station","Station, Control, US &amp; DS"],["arrsg","10 Sec Arrival SG"],
             ["depsg","10 Sec Departure SG"]];
 
@@ -493,7 +513,7 @@ var STORE="kei-fieldsheet-v1";
 var $=function(id){ return document.getElementById(id); };
 /* App build. Bump on every version handed over, so a phone can be checked at a glance
    against the filename it came from. Separate from v1.15, which is the paper form. */
-var BUILD="6";
+var BUILD="7";
 var RECORD=!!BAKED;                 /* opened as a finished record, not the blank app */
 /* file_field_sheets.py opens the sheet as ...html#print to render the archive PDF.
    Headless Chrome never fires beforeprint, so the hi-res sketch has to be explicit. */
@@ -504,7 +524,7 @@ var S=null, saveTimer=null, book=null;
 function blank(){
   function sgSide(){ return {time:"",sg:"",err:"",ang:"",calc:"",rev:"",revErr:"",grade:""}; }
   var s={
-    v:"1.15", site:"", date:todayISO(), tz:"-7", arrive:"", depart:"", tech:"", hasQ:false,
+    v:"1.15", site:"", date:todayISO(), tz:"-7", arrive:"", depart:"", tech:"", flow:"",
     reqs:[], sg:{a:sgSide(),d:sgSide()}, purpose:"", notes:"",
     photos:{}, videos:{},
     qm:[], qspread:"", qspreadPct:"", qphotoIds:[]
@@ -602,12 +622,9 @@ function buildReqs(){
   for(var i=0;i<6;i++){
     html+='<div class="chk">'+
       '<input type="checkbox" data-k="reqs.'+i+'.on" aria-label="Requirement '+(i+1)+' done">'+
-      '<input type="text" data-k="reqs.'+i+'.txt" list="reqList" autocomplete="off" aria-label="Requirement '+(i+1)+'">'+
+      '<input type="text" data-k="reqs.'+i+'.txt" autocomplete="off" aria-label="Requirement '+(i+1)+'">'+
       '</div>';
   }
-  html+='<datalist id="reqList">'+
-    ["SD SFM","Data DL","SG readings","Photos","Brushing","Site maintenance","Sensor swap"]
-      .map(function(v){ return '<option value="'+v+'">'; }).join("")+'</datalist>';
   host.innerHTML=html;
 }
 var QMETHODS=["","Sensor 0","Sensor 1","Sensor 2","Midsection"];
@@ -701,7 +718,7 @@ function addPhotoFile(file){
     var pid="p"+Date.now().toString(36)+Math.floor(Math.random()*4096).toString(36);
     return idbPut(photoKey(book.cur,pid),blob).then(function(){
       S.qphotoIds=(S.qphotoIds||[]).concat([pid]);
-      touch(); drawPhotos();
+      touch(); drawPhotos(); revalidateIfFlagged();
     });
   }).catch(function(e){
     alert("Couldn't save that photo — "+(e&&e.message?e.message:e)+". The sheet itself is unaffected.");
@@ -755,7 +772,7 @@ function buildChecks(){
   function grid(host,list,base){
     host.innerHTML=list.map(function(p,i){
       var id=base+"_"+p[0];
-      return '<div class="chk"><input type="checkbox" id="'+id+'" data-k="'+base+'.'+p[0]+'">'+
+      return '<div class="chk'+(p[2]?" qonly hidden":"")+'"><input type="checkbox" id="'+id+'" data-k="'+base+'.'+p[0]+'">'+
              '<label class="inline" for="'+id+'">'+p[1]+'</label></div>';
     }).join("");
   }
@@ -775,6 +792,12 @@ function buildSegs(){
 
 /* ---------- render / bind ---------- */
 function render(){
+  /* drafts from build 6 carried a hasQ checkbox; checked maps to Yes, unchecked
+     maps to unanswered so the new forced question still gets a deliberate answer */
+  if(S&&("hasQ" in S)){
+    if(S.flow===undefined||S.flow==="") S.flow=(S.hasQ?"yes":"");
+    delete S.hasQ;
+  }
   Array.prototype.forEach.call(document.querySelectorAll("[data-k]"),function(el){
     var v=get(el.getAttribute("data-k"));
     if(el.type==="checkbox") el.checked=!!v;
@@ -783,16 +806,27 @@ function render(){
   Array.prototype.forEach.call(document.querySelectorAll("[data-radio]"),function(el){
     el.checked=(get(el.getAttribute("data-radio"))===el.value);
   });
+  var fy=document.querySelector('#flowSeg input[value="yes"]');
+  var fn=document.querySelector('#flowSeg input[value="no"]');
+  if(fy&&fn){ fy.checked=(S.flow==="yes"); fn.checked=(S.flow==="no"); }
   paintSegs();
   syncQ();
   showAngleNote();
   drawPhotos();
   autoSpread();
+  ["a","d"].forEach(function(side){
+    var row=$("angRow_"+side);
+    if(row) row.classList.toggle("hidden",!SG_ANGLE[S.site]);
+  });
+  showAngleNote();
 }
 /* most visits are SG and photos only — keep the salt-dilution half out of the way until it's needed */
 function syncQ(){
-  var on=!!get("hasQ");
-  var el=$("qBody"); if(el) el.classList.toggle("hidden",!on);
+  var on=(get("flow")==="yes");
+  var el=$("cardQ"); if(el) el.classList.toggle("hidden",!on);
+  Array.prototype.forEach.call(document.querySelectorAll(".qonly"),function(q){
+    q.classList.toggle("hidden",!on);
+  });
 }
 /* :has() does the highlight on modern browsers; this keeps it visible everywhere else */
 function paintSegs(){
@@ -808,6 +842,7 @@ function bind(){
       set(el.getAttribute("data-k"), el.type==="checkbox"?el.checked:el.value);
       if(el.hasAttribute("data-calc")) autoCalc(el.getAttribute("data-calc"));
       if(el.hasAttribute("data-qspread")) autoSpread();
+      revalidateIfFlagged();
       touch();
     }
   });
@@ -820,7 +855,6 @@ function bind(){
     if(el.name==="pen"){ paintSegs(); return; }
     if(el.hasAttribute&&el.hasAttribute("data-k")){
       set(el.getAttribute("data-k"), el.type==="checkbox"?el.checked:el.value);
-      if(el.id==="hasQ") syncQ();
       if(el.id==="siteSel") applySiteAngle();
       touch();
     }
@@ -878,15 +912,16 @@ function autoCalc(side){
 /* The gauge angle belongs to the station, not the visit, so fill it from the table
    as soon as a station is picked. A hand-typed angle is never overwritten. */
 function applySiteAngle(){
+  /* the angle belongs to the station and is hard-coded — the fields are read-only
+     and only exist on screen at the four leaning-gauge stations */
   var m=SG_ANGLE[S.site]||"";
   ["a","d"].forEach(function(side){
-    var cur=String(get("sg."+side+".ang")||"");
-    var prev=String(get("sg."+side+".angAuto")||"");
-    if(cur!==""&&cur!==prev) return;
     set("sg."+side+".ang",m);
     set("sg."+side+".angAuto",m);
     var f=document.querySelector('[data-k="sg.'+side+'.ang"]');
     if(f) f.value=m;
+    var row=$("angRow_"+side);
+    if(row) row.classList.toggle("hidden",!m);
     autoCalc(side);
   });
   showAngleNote();
@@ -934,6 +969,106 @@ function flattenForPrint(){
   });
 }
 
+/* Section 1 must be complete before a sheet can leave the phone (Rory, build 7).
+   Red state only exists after a failed send, then clears live as fields fill. */
+var VISIT_REQ=[["site","Station Name"],["date","Date"],["tz","Notes Time Zone"],
+               ["arrive","Arrival Time"],["depart","Departure Time"],["tech","Technician’s Initials"]];
+function validateVisit(){
+  var missing=[];
+  VISIT_REQ.forEach(function(f){
+    var el=document.querySelector('[data-k="'+f[0]+'"]');
+    var ok=String(get(f[0])||"").trim()!=="";
+    if(el) el.classList.toggle("missing",!ok);
+    if(!ok) missing.push(f);
+  });
+  var note=$("visitIncomplete");
+  if(note){
+    if(missing.length){
+      note.textContent="Not sent — still missing: "+missing.map(function(f){ return f[1]; }).join(", ")+".";
+      note.classList.remove("hidden");
+    }else note.classList.add("hidden");
+  }
+
+  /* section 2: there is always something to write in */
+  var anyReq=(S.reqs||[]).some(function(r){ return String(r.txt||"").trim()!==""; });
+  var reqNote=$("reqIncomplete");
+  Array.prototype.forEach.call(document.querySelectorAll('#reqRows input[type=text]'),function(el){
+    el.classList.toggle("missing",!anyReq);
+  });
+  if(reqNote){
+    if(!anyReq){
+      reqNote.textContent="Not sent — write in at least one thing that was done on this visit.";
+      reqNote.classList.remove("hidden");
+    }else reqNote.classList.add("hidden");
+  }
+  if(!anyReq) missing.push(["reqs.0.txt","Work Completed"]);
+
+  /* section 4: the purpose is the one line the office reads first */
+  var hasPurpose=String(get("purpose")||"").trim()!=="";
+  var pEl=document.querySelector('[data-k="purpose"]');
+  if(pEl) pEl.classList.toggle("missing",!hasPurpose);
+  var pNote=$("purposeIncomplete");
+  if(pNote){
+    if(!hasPurpose){
+      pNote.textContent="Not sent — write the main purpose of the visit.";
+      pNote.classList.remove("hidden");
+    }else pNote.classList.add("hidden");
+  }
+  if(!hasPurpose) missing.push(["purpose","Main Purpose"]);
+
+  /* the flow question must be answered, and Yes carries obligations */
+  var flow=get("flow");
+  var seg=$("flowSeg"), fNote=$("flowIncomplete");
+  if(seg) seg.classList.toggle("missing",flow!=="yes"&&flow!=="no");
+  if(fNote){
+    if(flow!=="yes"&&flow!=="no"){
+      fNote.textContent="Not sent — answer the flow measurement question.";
+      fNote.classList.remove("hidden");
+      missing.unshift(["#flowSeg","Flow measurement question"]);
+    }else fNote.classList.add("hidden");
+  }
+  if(flow==="yes"){
+    var nPhotos=RECORD?((BAKED&&BAKED.qphotos)||[]).length:((S.qphotoIds||[]).length);
+    var pnote=$("photoIncomplete");
+    if(pnote){
+      if(!nPhotos){
+        pnote.textContent="Not sent — take the photo of the flow measurement sheet.";
+        pnote.classList.remove("hidden");
+        missing.push(["#takePhotoBtn","Flow sheet photo"]);
+      }else pnote.classList.add("hidden");
+    }
+    var anyQ=false;
+    for(var qi=0;qi<3;qi++){ if(num(get("qm."+qi+".q"))!==null) anyQ=true; }
+    Array.prototype.forEach.call(document.querySelectorAll('#qmRows input'),function(el2){
+      el2.classList.toggle("missing",!anyQ);
+    });
+    var qnote=$("qmIncomplete");
+    if(qnote){
+      if(!anyQ){
+        qnote.textContent="Not sent — enter at least one flow measurement Q.";
+        qnote.classList.remove("hidden");
+        missing.push(['[data-k="qm.0.q"]',"Flow measurement Q"]);
+      }else qnote.classList.add("hidden");
+    }
+  }else{
+    var pn=$("photoIncomplete"); if(pn) pn.classList.add("hidden");
+    var qn=$("qmIncomplete"); if(qn) qn.classList.add("hidden");
+    Array.prototype.forEach.call(document.querySelectorAll('#qmRows input'),function(el3){
+      el3.classList.remove("missing");
+    });
+  }
+  return missing;
+}
+
+/* any red state on screen updates live as the tech fixes things */
+function revalidateIfFlagged(){
+  var flagged=["visitIncomplete","reqIncomplete","purposeIncomplete",
+               "flowIncomplete","photoIncomplete","qmIncomplete"].some(function(id){
+    var el=$(id); return el&&el.className.indexOf("hidden")===-1;
+  });
+  if(flagged) validateVisit();
+}
+
 /* ---------- finish & send ---------- */
 function fileName(){
   var site=(S.site||"Unassigned").replace(/[\\\/:*?"<>|]/g,"-");
@@ -967,7 +1102,19 @@ function buildFile(photos){
   return html.replace(re,function(){ return "var BAKED="+json+";/*"+"BAKEDCFG"+"*/"; });
 }
 function finish(){
-  if(!S.site){ alert("Choose a station first — the file is named after it."); return; }
+  var missing=validateVisit();
+  if(missing.length){
+    var sel0=missing[0][0];
+    var first=sel0.charAt(0)==="#"||sel0.charAt(0)==="["
+      ? document.querySelector(sel0)
+      : document.querySelector('[data-k="'+sel0+'"]');
+    if(first){
+      first.scrollIntoView({block:"center"});   /* instant — smooth stalls in throttled tabs */
+      setTimeout(function(){ try{ first.focus({preventScroll:true}); }catch(e){} },400);
+    }
+    pill("Sheet not sent","dirty");
+    return;
+  }
   if(RECORD){ finishWith((BAKED&&BAKED.qphotos)||[]); return; }
   loadPhotoDataUrls().then(function(photos){
     if(photos.length<((S.qphotoIds||[]).length)){
@@ -1152,6 +1299,11 @@ function init(){
   });
   $("printBtn").addEventListener("click",function(){ window.print(); });
   $("finishBtn").addEventListener("click",finish);
+  $("flowSeg").addEventListener("change",function(e){
+    if(e.target.name!=="flowq") return;
+    set("flow",e.target.value);
+    paintSegs(); syncQ(); revalidateIfFlagged(); touch();
+  });
   $("takePhotoBtn").addEventListener("click",function(){ $("photoInput").click(); });
   $("photoInput").addEventListener("change",function(){
     var files=Array.prototype.slice.call(this.files||[]);
@@ -1165,7 +1317,7 @@ function init(){
     var pid=b.getAttribute("data-delphoto");
     S.qphotoIds=(S.qphotoIds||[]).filter(function(x){ return x!==pid; });
     idbDel(photoKey(book.cur,pid)).catch(function(){});
-    touch(); drawPhotos();
+    touch(); drawPhotos(); revalidateIfFlagged();
   });
 
   window.addEventListener("beforeunload",function(){ if(!RECORD) commit(); });
