@@ -1029,6 +1029,10 @@ function buildFile(){
          (S.tech?"  ·  "+S.tech:""); }
   var sh=pick("#sendHint"); if(sh) sh.className="hint noprint hidden";
   var fb=pick("#finishBtn"); if(fb) fb.textContent="Re-send sheet";
+  /* the install banner / update pill may be showing right now — a record must
+     never carry them, it is the archive copy of a visit, not an app */
+  var ib=pick("#installBanner"); if(ib) ib.className="banner warn hidden noprint";
+  var up=pick("#updatePill"); if(up) up.className="hidden noprint";
 
   var html="<!doctype html>\n"+clone.outerHTML;
   var payload=JSON.parse(JSON.stringify(S));
@@ -1052,7 +1056,13 @@ function finish(){
       if(navigator.canShare({files:[file]})){
         navigator.share({files:[file],title:name})
           .then(function(){ pill("Sent","ok"); })
-          .catch(function(){ download(blob,name); });
+          .catch(function(err){
+            /* backing out of the share sheet is a cancel — saying "saved"
+               there would be a lie, and the download fallback is flaky in
+               installed iOS apps anyway */
+            if(err&&err.name==="AbortError"){ pill("Send cancelled — sheet kept","dirty"); return; }
+            download(blob,name);
+          });
         return;
       }
     }catch(e){}
@@ -1081,7 +1091,7 @@ function showInstallUI(){
   if(STANDALONE) return;
   var b=$("installBanner"); if(!b) return;
   $("installMsg").innerHTML=IOS
-    ? "Working from a browser tab &mdash; sheets are not safe here and offline won&rsquo;t work. Tap <b>Share</b>, then <b>Add to Home Screen</b>."
+    ? "Install before filling anything in: tap <b>Share</b>, then <b>Add to Home Screen</b>. Sheets typed in this tab will NOT follow into the installed app &mdash; <b>Finish &amp; send</b> any open sheet first."
     : "Install this on the phone so it opens from an icon and works with no signal.";
   $("installBtn").classList.toggle("hidden",IOS||!deferredInstall);
   b.classList.remove("hidden");
@@ -1089,13 +1099,26 @@ function showInstallUI(){
 function setupApp(){
   if(!HOSTED||RECORD||PRINTMODE) return;
   if("serviceWorker" in navigator){
-    navigator.serviceWorker.register("sw.js").catch(function(){});
-    var hadController=!!navigator.serviceWorker.controller;
-    navigator.serviceWorker.addEventListener("controllerchange",function(){
-      /* first install taking control is not an update — only later takeovers are */
-      if(hadController) $("updatePill").classList.remove("hidden");
-      hadController=true;
-    });
+    navigator.serviceWorker.register("sw.js").then(function(reg){
+      /* a NEW worker reaching "activated" while an OLD one was already active
+         is the one true signal of an update — survives hard reloads, where
+         navigator.serviceWorker.controller is null despite an active worker */
+      function offerWhenActivated(w){
+        if(!w) return;
+        w.addEventListener("statechange",function(){
+          if(w.state==="activated") $("updatePill").classList.remove("hidden");
+        });
+      }
+      if(reg.waiting&&reg.active) $("updatePill").classList.remove("hidden");
+      reg.addEventListener("updatefound",function(){
+        if(reg.active) offerWhenActivated(reg.installing);
+      });
+    }).catch(function(){});
+  }
+  /* drafts must survive the OS cleaning house — installed apps are usually
+     granted this automatically, but ask rather than assume */
+  if(navigator.storage&&navigator.storage.persist){
+    navigator.storage.persist().catch(function(){});
   }
   window.addEventListener("beforeinstallprompt",function(e){
     e.preventDefault();
@@ -1211,6 +1234,12 @@ function init(){
   $("finishBtn").addEventListener("click",finish);
 
   window.addEventListener("beforeunload",function(){ if(!RECORD) commit(); });
+  /* iOS home-screen apps never fire beforeunload on swipe-away; hidden/pagehide
+     do fire, and without this the last ~400 ms of typing (the debounce) is lost */
+  document.addEventListener("visibilitychange",function(){
+    if(document.visibilityState==="hidden"&&!RECORD){ clearTimeout(saveTimer); commit(); }
+  });
+  window.addEventListener("pagehide",function(){ if(!RECORD){ clearTimeout(saveTimer); commit(); } });
 
   $("buildTag").textContent="build "+BUILD;
   setupApp();
