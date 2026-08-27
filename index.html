@@ -1,0 +1,1222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>KEI - Field Sheet</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#f4f6f8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#12161a" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Field Sheet">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<style>
+:root{
+  --bg:#f4f6f8; --panel:#ffffff; --ink:#101418; --ink2:#4a5561; --ink3:#78848f;
+  --line:#d8dee5; --line2:#eaeef2;
+  --accent:#0b6b8a; --accent-ink:#ffffff;
+  --good:#1a7f45; --good-bg:#e4f4ea;
+  --warn:#a86a00; --warn-bg:#fdf0d9;
+  --bad:#b3261e; --bad-bg:#fbe6e4;
+  --shadow:0 1px 2px rgba(16,20,24,.07), 0 4px 14px rgba(16,20,24,.06);
+  --r:12px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#12161a; --panel:#1b2127; --ink:#eef2f5; --ink2:#b3bfc9; --ink3:#8494a1;
+    --line:#2e373f; --line2:#242b32;
+    --accent:#3aa8cc; --accent-ink:#08222b;
+    --good:#5fd493; --good-bg:#12321f;
+    --warn:#e8b25a; --warn-bg:#33260d;
+    --bad:#f2867d; --bad-bg:#391916;
+    --shadow:none;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-text-size-adjust:100%;
+  padding:0 0 96px;
+}
+.wrap{max-width:900px;margin:0 auto;padding:0 12px}
+
+header.top{
+  background:var(--panel); border-bottom:1px solid var(--line);
+  padding:10px 0; margin-bottom:12px; position:sticky; top:0; z-index:30;
+}
+header.top .wrap{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.brand{font-weight:700;letter-spacing:.2px;font-size:15px;white-space:nowrap}
+.brand span{color:var(--ink3);font-weight:500}
+.brand .build{
+  font-size:11px;font-weight:700;color:var(--accent);border:1px solid currentColor;
+  border-radius:999px;padding:1px 7px;margin-left:2px;letter-spacing:.02em
+}
+.pill{
+  margin-left:auto;font-size:12px;font-weight:600;padding:4px 9px;border-radius:999px;
+  background:var(--line2);color:var(--ink3);white-space:nowrap
+}
+.pill.ok{background:var(--good-bg);color:var(--good)}
+.pill.dirty{background:var(--warn-bg);color:var(--warn)}
+
+.card{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  box-shadow:var(--shadow); padding:14px; margin:0 0 12px;
+}
+.card h2{
+  font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink3);
+  margin:0 0 12px;font-weight:700;display:flex;align-items:center;gap:8px
+}
+.card h2 .n{
+  background:var(--accent);color:var(--accent-ink);border-radius:5px;
+  min-width:18px;height:18px;padding:0 4px;display:inline-flex;align-items:center;justify-content:center;
+  font-size:11px;letter-spacing:0
+}
+h3.sub{font-size:13px;font-weight:700;color:var(--ink2);margin:14px 0 8px}
+h3.sub:first-of-type{margin-top:0}
+
+label{display:block;font-size:12px;font-weight:600;color:var(--ink2);margin:0 0 4px}
+input[type=text],input[type=date],select,textarea{
+  width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:9px;
+  background:var(--bg);color:var(--ink);font-size:16px;font-family:inherit;
+  font-variant-numeric:tabular-nums
+}
+textarea{min-height:88px;resize:vertical;line-height:1.5}
+select{appearance:none;-webkit-appearance:none;background-image:none}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+input.warnf{border-color:var(--warn);background:var(--warn-bg)}
+input[readonly]{color:var(--ink2);background:var(--line2)}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+
+.row{display:flex;gap:9px;flex-wrap:wrap;margin:0 0 10px}
+.row>div{flex:1 1 120px;min-width:104px}
+.row.tight>div{min-width:78px}
+.row:last-child{margin-bottom:0}
+.f{margin:0 0 10px}
+.f:last-child{margin-bottom:0}
+
+.withbtn{display:flex;gap:6px}
+.withbtn input{flex:1 1 auto;min-width:0}
+.btn{
+  border:1px solid var(--line);background:var(--panel);color:var(--ink);
+  border-radius:9px;padding:10px 12px;font-size:14px;font-weight:600;font-family:inherit;
+  cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent
+}
+.btn:active{transform:translateY(1px)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.sm{padding:11px 12px;font-size:13px}
+.btn.now{padding:10px 11px;font-size:13px;color:var(--accent);font-weight:700}
+.btn.danger{color:var(--bad)}
+
+/* segmented radios */
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg label{
+  display:inline-flex;align-items:center;justify-content:center;margin:0;
+  border:1px solid var(--line);border-radius:999px;padding:8px 12px;
+  font-size:13px;font-weight:600;color:var(--ink2);background:var(--bg);
+  cursor:pointer;-webkit-tap-highlight-color:transparent
+}
+.seg input{position:absolute;opacity:0;width:0;height:0}
+.seg input:checked+span{color:var(--accent-ink)}
+.seg label:has(input:checked),.seg label.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.seg label:has(input:checked) span,.seg label.on span{color:var(--accent-ink)}
+
+/* checkbox rows */
+.chk{display:flex;align-items:center;gap:10px;margin:0 0 8px}
+.chk input[type=checkbox]{
+  width:30px;height:30px;flex:0 0 30px;margin:7px 0;accent-color:var(--accent)
+}
+.chk input[type=text]{flex:1 1 auto;min-width:0}
+.chk label.inline{
+  margin:0;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;
+  padding:12px 0;flex:1 1 auto;-webkit-tap-highlight-color:transparent
+}
+.chkgrid{display:flex;flex-wrap:wrap;gap:8px 14px}
+.chkgrid .chk{margin:0;flex:1 1 150px}
+
+/* measurement-quality yes/no rows */
+.qrow{border-top:1px solid var(--line2);padding:10px 0 0;margin:10px 0 0}
+.qrow:first-child{border-top:0;padding-top:0;margin-top:0}
+.qlab{font-size:13px;font-weight:600;color:var(--ink);margin:0 0 7px}
+.qlab em{font-style:normal;text-decoration:underline}
+.qnote{margin:9px 0 0}
+.ext{color:var(--ink3);font-weight:500;font-size:11px}
+
+.panel{border:1px solid var(--line2);border-radius:10px;padding:12px;margin:0 0 10px;background:var(--bg)}
+.panel h4{margin:0 0 10px;font-size:13px;font-weight:700;color:var(--accent)}
+/* On screen the sheet is always one column, at every width including landscape.
+   You fill SG arrival at the start of a visit and departure at the end, and the
+   channels one after another — side by side would break that reading order.
+   The printed archive copy still uses two columns; see the print block below. */
+.hint{font-size:12px;color:var(--ink3);margin:8px 0 0}
+.hint.warn{color:var(--warn)}
+
+/* sketch */
+.padwrap{position:relative;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff;touch-action:none}
+@media (prefers-color-scheme: dark){ .padwrap{background:#f7f7f4} }
+#pad{display:block;width:100%;height:auto;touch-action:none;cursor:crosshair}
+.padbar{display:flex;gap:8px;align-items:center;margin:10px 0 0;flex-wrap:wrap}
+.padbar .spacer{flex:1 1 auto}
+
+/* drafts */
+.draft{
+  display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--line);
+  border-radius:9px;margin:0 0 8px;background:var(--bg)
+}
+.draft .d1{flex:1 1 auto;min-width:0}
+.draft .dn{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.draft .dd{font-size:12px;color:var(--ink3)}
+.draft.cur{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin:14px 0 0}
+.actions .btn{flex:1 1 auto}
+
+.banner{
+  border-radius:var(--r);padding:12px 14px;margin:0 0 12px;font-size:14px;
+  background:var(--good-bg);color:var(--good);border:1px solid currentColor;font-weight:600
+}
+#updatePill{
+  position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:60;
+  background:var(--accent);color:var(--accent-ink);border:0;border-radius:999px;
+  padding:13px 20px;font-size:14px;font-weight:600;font-family:inherit;
+  box-shadow:0 4px 14px rgba(0,0,0,.3);cursor:pointer
+}
+.banner.warn{
+  background:var(--warn-bg);color:var(--warn);
+  display:flex;gap:10px;align-items:center;font-weight:500
+}
+.banner.warn b{font-weight:700}
+.banner.warn .btn{
+  flex:0 0 auto;border-color:currentColor;color:inherit;background:transparent;font-weight:700
+}
+.foot{color:var(--ink3);font-size:12px;text-align:center;margin:18px 0 0;line-height:1.7}
+.hidden{display:none !important}
+
+/* The printed sheet is the archive copy that lands beside the old scans, so it
+   wants to read like the paper form: dense, two columns, one big sketch box. */
+@media print{
+  @page{ size:letter; margin:11mm 9mm; }
+  body{background:#fff;color:#000;padding:0;font-size:10px;line-height:1.3}
+  header.top{position:static;border:0;padding:0 0 6px;margin:0 0 8px;border-bottom:1px solid #999}
+  .brand{font-size:12px}
+  .noprint,.pill,.hint,.btn,datalist{display:none !important}
+
+  .wrap{max-width:none;padding:0;column-count:2;column-gap:7mm}
+  .card{
+    break-inside:avoid;-webkit-column-break-inside:avoid;
+    box-shadow:none;border-color:#999;border-radius:5px;
+    padding:7px 8px;margin:0 0 6px;background:#fff
+  }
+  .card h2{font-size:8px;margin:0 0 5px;color:#000;letter-spacing:.06em}
+  .card h2 .n{background:#000;color:#fff;min-width:13px;height:13px;font-size:8px}
+  h3.sub{font-size:9px;margin:8px 0 4px}
+  .banner{column-span:all;padding:5px 8px;font-size:10px;margin:0 0 7px;background:#fff;color:#000}
+
+  label{font-size:7.5px;margin:0 0 1px;color:#000}
+  input[type=text],input[type=date],select,textarea{
+    padding:2px 4px;font-size:10px;border-radius:3px;border-color:#999;background:#fff;color:#000
+  }
+  input[readonly]{background:#fff}
+  textarea{min-height:38px}
+  .f,.row{margin:0 0 4px}
+  .withbtn{display:block}
+  .panel{padding:6px 7px;margin:0 0 5px;background:#fff;border-color:#bbb}
+  .panel h4{font-size:9px;margin:0 0 5px;color:#000}
+  .cols2,.cols3{display:flex;gap:5px}
+  .cols2>*,.cols3>*{flex:1 1 0;min-width:0;margin-bottom:0}
+
+  .seg{gap:3px}
+  .seg label{padding:1px 5px;font-size:8px;border-color:#999;background:#fff;color:#000}
+  .seg label:has(input:checked),.seg label.on{background:#000;border-color:#000;color:#fff}
+  .seg label:has(input:checked) span,.seg label.on span{color:#fff}
+
+  .chk{gap:6px;margin:0 0 3px}
+  .chk input[type=checkbox]{width:12px;height:12px;flex:0 0 12px;margin:0}
+  .chk label.inline{padding:1px 0;font-size:9px}
+  .chkgrid{gap:2px 10px}
+  .qrow{padding-top:4px;margin-top:4px}
+  .qlab{font-size:9px;margin:0 0 3px}
+  .qnote{margin:4px 0 0}
+
+  /* the layout sketch gets the full width, the way it does on the paper form */
+  #cardSketch{column-span:all;break-inside:avoid}
+  #cardSketch .padwrap{border-color:#999}
+  #pad{width:100%;height:96mm;object-fit:contain}
+  .foot{margin:4px 0 0;column-span:all;font-size:9px;color:#000;break-before:avoid}
+
+  /* a value longer than its box would be clipped, and this copy is the archive.
+     PRINTMODE swaps every field for one of these, which wraps instead. */
+  .printval{
+    border:1px solid #999;border-radius:3px;padding:2px 4px;min-height:15px;
+    font-size:10px;line-height:1.25;white-space:pre-wrap;overflow-wrap:anywhere;background:#fff
+  }
+  .printval.tall{min-height:36px}
+  .printval:empty{min-height:15px}
+  .chk .printval,.withbtn .printval{flex:1 1 auto;min-width:0}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">KEI <span>/ Field Sheet v1.15</span> <span class="build" id="buildTag"></span></div>
+    <div class="pill" id="statePill">Ready</div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="banner hidden" id="recBanner"></div>
+
+  <div class="banner warn hidden noprint" id="installBanner">
+    <div id="installMsg" style="flex:1 1 auto"></div>
+    <button class="btn sm hidden" id="installBtn" type="button">Install</button>
+  </div>
+
+  <!-- drafts -->
+  <div class="card noprint" id="draftsCard">
+    <h2><span class="n">&#9776;</span> Sheets on this phone</h2>
+    <div id="draftList"></div>
+    <div class="actions">
+      <button class="btn pri" type="button" id="newSheetBtn">New sheet</button>
+    </div>
+    <p class="hint">Everything is saved on this device as you type. Nothing is sent anywhere.</p>
+  </div>
+
+  <!-- 1 visit -->
+  <div class="card">
+    <h2><span class="n">1</span> Visit</h2>
+    <div class="f">
+      <label for="siteSel">Station Name</label>
+      <select id="siteSel" data-k="site"><option value="">— choose a station —</option></select>
+    </div>
+    <div class="row">
+      <div>
+        <label for="dateF">Date</label>
+        <input type="date" id="dateF" data-k="date">
+      </div>
+      <div style="flex:0 1 150px">
+        <label for="tzF">Notes Time Zone (GMT)</label>
+        <input type="text" id="tzF" data-k="tz" class="mono" inputmode="text" placeholder="-7">
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label for="arriveF">Arrival Time</label>
+        <div class="withbtn">
+          <input type="text" id="arriveF" data-k="arrive" data-time="1" class="mono" inputmode="numeric" placeholder="12:00">
+          <button class="btn now" type="button" data-now="arriveF">Now</button>
+        </div>
+      </div>
+      <div>
+        <label for="departF">Departure Time</label>
+        <div class="withbtn">
+          <input type="text" id="departF" data-k="depart" data-time="1" class="mono" inputmode="numeric" placeholder="13:00">
+          <button class="btn now" type="button" data-now="departF">Now</button>
+        </div>
+      </div>
+    </div>
+    <div class="f">
+      <label for="techF">Technician&rsquo;s Initials</label>
+      <input type="text" id="techF" data-k="tech" autocapitalize="characters" autocomplete="off" placeholder="RG">
+    </div>
+  </div>
+
+  <!-- 2 requirements -->
+  <div class="card">
+    <h2><span class="n">2</span> Site Requirements / Work Completed</h2>
+    <div id="reqRows"></div>
+    <p class="hint">Common: SD SFM &middot; Data DL &middot; SG readings &middot; Photos &middot; Brushing</p>
+  </div>
+
+  <!-- 3 staff gauge -->
+  <div class="card">
+    <h2><span class="n">3</span> Staff Gauge</h2>
+    <div class="cols2">
+      <div class="panel" id="sgA">
+        <h4>SG Arrival</h4>
+        <div class="f">
+          <label>Time</label>
+          <div class="withbtn">
+            <input type="text" data-k="sg.a.time" data-time="1" class="mono" inputmode="numeric" placeholder="12:13">
+            <button class="btn now" type="button" data-nowk="sg.a.time">Now</button>
+          </div>
+        </div>
+        <div class="row tight">
+          <div><label>SG (m)</label><input type="text" data-k="sg.a.sg" data-calc="a" class="mono" inputmode="decimal"></div>
+          <div><label>Error (&plusmn;mm)</label><input type="text" data-k="sg.a.err" class="mono" inputmode="decimal"></div>
+        </div>
+        <div class="row tight">
+          <div><label>SG Angle</label><input type="text" data-k="sg.a.ang" data-calc="a" class="mono" inputmode="decimal"></div>
+          <div><label>Calc&rsquo;d SG</label><input type="text" data-k="sg.a.calc" class="mono" inputmode="decimal"></div>
+        </div>
+        <div class="row tight">
+          <div><label>Reviewed SG (m) <span class="ext">(office)</span></label><input type="text" data-k="sg.a.rev" class="mono" inputmode="decimal"></div>
+          <div><label>&plusmn;mm</label><input type="text" data-k="sg.a.revErr" class="mono" inputmode="decimal"></div>
+        </div>
+        <div class="f">
+          <label>SG Read Grade</label>
+          <div class="seg" data-seg="sg.a.grade" data-opts="Poor|Fair|Good|Very Good|Excellent"></div>
+        </div>
+      </div>
+      <div class="panel" id="sgD">
+        <h4>SG Departure</h4>
+        <div class="f">
+          <label>Time</label>
+          <div class="withbtn">
+            <input type="text" data-k="sg.d.time" data-time="1" class="mono" inputmode="numeric" placeholder="12:57">
+            <button class="btn now" type="button" data-nowk="sg.d.time">Now</button>
+          </div>
+        </div>
+        <div class="row tight">
+          <div><label>SG (m)</label><input type="text" data-k="sg.d.sg" data-calc="d" class="mono" inputmode="decimal"></div>
+          <div><label>Error (&plusmn;mm)</label><input type="text" data-k="sg.d.err" class="mono" inputmode="decimal"></div>
+        </div>
+        <div class="row tight">
+          <div><label>SG Angle</label><input type="text" data-k="sg.d.ang" data-calc="d" class="mono" inputmode="decimal"></div>
+          <div><label>Calc&rsquo;d SG</label><input type="text" data-k="sg.d.calc" class="mono" inputmode="decimal"></div>
+        </div>
+        <div class="row tight">
+          <div><label>Reviewed SG (m) <span class="ext">(office)</span></label><input type="text" data-k="sg.d.rev" class="mono" inputmode="decimal"></div>
+          <div><label>&plusmn;mm</label><input type="text" data-k="sg.d.revErr" class="mono" inputmode="decimal"></div>
+        </div>
+        <div class="f">
+          <label>SG Read Grade</label>
+          <div class="seg" data-seg="sg.d.grade" data-opts="Poor|Fair|Good|Very Good|Excellent"></div>
+        </div>
+        <button class="btn sm noprint" type="button" id="sameAsArrival">Same reading as arrival</button>
+      </div>
+    </div>
+    <p class="hint" id="calcHint">Calc&rsquo;d SG fills in as SG &times; SG Angle. Type over it if the site does it differently.</p>
+  </div>
+
+  <!-- 4 notes -->
+  <div class="card">
+    <h2><span class="n">4</span> Notes</h2>
+    <div class="f">
+      <label for="purposeF">Main Purpose for SV</label>
+      <input type="text" id="purposeF" data-k="purpose" placeholder="SD SFM / Data DL">
+    </div>
+    <div class="f">
+      <label for="notesF">Notes</label>
+      <textarea id="notesF" data-k="notes"></textarea>
+    </div>
+  </div>
+
+  <!-- 5 360 -->
+  <div class="card">
+    <h2><span class="n">5</span> 360 Capture</h2>
+    <h3 class="sub">360 Photos</h3>
+    <div class="chkgrid" id="photoChk"></div>
+    <h3 class="sub">360 Videos</h3>
+    <div class="chkgrid" id="videoChk"></div>
+    <p class="hint">Shoot the QR site marker in at least one 360 photo &mdash; that is what files the media.</p>
+  </div>
+
+  <!-- 6 discharge -->
+  <div class="card">
+    <h2><span class="n">6</span> Discharge Measurement</h2>
+    <div class="chk" style="margin:0">
+      <input type="checkbox" id="hasQ" data-k="hasQ">
+      <label class="inline" for="hasQ">Salt dilution measurement done on this visit</label>
+    </div>
+    <div id="qBody" class="hidden">
+    <div class="cols3" id="chPanels" style="margin-top:12px"></div>
+    <div class="row" style="margin-top:12px">
+      <div>
+        <label>Final Q Comp. (m&sup3;/s)</label>
+        <div class="withbtn">
+          <input type="text" data-k="finalQ" class="mono" inputmode="decimal">
+          <button class="btn now noprint" type="button" id="meanQBtn">Mean</button>
+        </div>
+      </div>
+      <div style="flex:0 1 130px"><label>QUnc. 95% (%)</label><input type="text" data-k="qunc" class="mono" inputmode="decimal"></div>
+      <div style="flex:0 1 110px"><label>Grade</label><input type="text" data-k="grade" class="mono"></div>
+    </div>
+    <p class="hint hidden" id="qHint"></p>
+    </div>
+  </div>
+
+  <!-- 7 metta -->
+  <div class="card hidden" id="cardMetta">
+    <h2><span class="n">7</span> Metta Data</h2>
+    <div class="row">
+      <div style="flex:0 1 130px"><label>Dose (kg)</label><input type="text" data-k="metta.dose" class="mono" inputmode="decimal"></div>
+      <div style="flex:0 1 150px">
+        <label>Time at Peak</label>
+        <div class="withbtn">
+          <input type="text" data-k="metta.peak" data-time="1" class="mono" inputmode="numeric" placeholder="12:35">
+          <button class="btn now" type="button" data-nowk="metta.peak">Now</button>
+        </div>
+      </div>
+      <div style="flex:0 1 160px"><label>Q Diff % <span class="ext">(1&minus;Ch.0/Ch.1)&times;100</span></label><input type="text" data-k="metta.qdiff" class="mono" inputmode="decimal"></div>
+    </div>
+    <div class="chk">
+      <input type="checkbox" id="peakVid" data-k="metta.vid">
+      <label class="inline" for="peakVid">10 Sec SG Vid at Peak</label>
+    </div>
+    <h3 class="sub">Measurement quality</h3>
+    <div id="qualRows"></div>
+    <div class="f"><label>Measurement Comments</label><textarea data-k="qa.comments" style="min-height:64px"></textarea></div>
+  </div>
+
+  <!-- 8 sketch -->
+  <div class="card hidden" id="cardSketch">
+    <h2><span class="n">8</span> Measurement Layout</h2>
+    <div class="padwrap"><canvas id="pad"></canvas></div>
+    <div class="padbar noprint">
+      <button class="btn sm" type="button" id="undoBtn">Undo</button>
+      <button class="btn sm danger" type="button" id="clearPadBtn">Clear</button>
+      <span class="spacer"></span>
+      <div class="seg" id="penSeg">
+        <label><input type="radio" name="pen" value="2"><span>Fine</span></label>
+        <label><input type="radio" name="pen" value="3.5" checked><span>Med</span></label>
+        <label><input type="radio" name="pen" value="6"><span>Bold</span></label>
+      </div>
+    </div>
+    <p class="hint">Show where the sensors and the dose were, relative to the station, and where the sensors sit in the creek.</p>
+  </div>
+
+  <div class="actions noprint">
+    <button class="btn pri" type="button" id="finishBtn">Finish &amp; send sheet</button>
+    <button class="btn" type="button" id="printBtn">Print / PDF</button>
+  </div>
+  <p class="hint noprint" id="sendHint">Sends the finished sheet to the OneDrive app (or to Downloads if sharing isn&rsquo;t available).</p>
+
+  <p class="foot">
+    cbwmf@LivingLakesCanada.ca<br>
+    Slow is Smooth, &amp; Smooth is Fast
+  </p>
+</div>
+
+<button id="updatePill" class="hidden noprint" type="button">Updated &mdash; tap to reload</button>
+
+<script>
+"use strict";
+var BAKED=null;/*BAKEDCFG*/
+
+var SITES=["CoN_5-Mile at MOE","CoN_Anderson & Fell","CoN_Anderson Reservoir","CoN_Anderson at Elwyn",
+"CoN_Anderson at Gordon","CoN_Consumption","CoN_Cottonwood","CoN_MtnStn Resevoir",
+"CoN_Nelson CS Meteorological Data","CoN_Selous LB","CoN_Selous Reservoir","HPWPS_Harrop",
+"HPWPS_Narrows","HPWPS_Procter","HPWPS_Slater","LLC_Akokli at Bridge","LLC_Akokli at Pool",
+"LLC_Apex Lower","LLC_Apex Upper","LLC_Apex Wetland","LLC_Beaver Wetland","LLC_Beaver at Bubbles",
+"LLC_Beaver at Village","LLC_Blueberry at Columbia","LLC_Blueberry at Pulson","LLC_Bonanza",
+"LLC_Caribou Forest","LLC_Caribou Hwy","LLC_Dumont","LLC_Gray","LLC_Hanna","LLC_Kelly",
+"LLC_McDonald Forest","LLC_Slocan Lk at New Denver","LLC_Slocan Lk at Slocan","LLC_Summit Lk at Ck",
+"LLC_Topping","LLC_VOW-16","LLC_VOW-17","LLC_Wolverton Lower","SIFCo_Alba at Culvert",
+"SIFCo_Winlaw","Tsenbo_Ross"];
+
+/* Staff gauge angle multipliers, per Rory 2026-08-20. Calc'd SG = SG x multiplier.
+   Every site not listed here has a vertical gauge and takes no angle correction.
+   Update this table when a gauge is re-surveyed or a leaning gauge is straightened. */
+var SG_ANGLE={
+  "CoN_Anderson & Fell":    "0.976",
+  "CoN_Anderson at Gordon": "0.988",
+  "LLC_Apex Lower":         "0.977",
+  "LLC_Kelly":              "0.828"
+};
+
+/* Measurement quality. Worded so No is always the answer that needs explaining,
+   which is why the eddies question is phrased as "not affecting". */
+var QUAL=[
+  {k:"unique", lab:"Sensors in Unique Locations"},
+  {k:"mixing", lab:"Mixing Reach Adequate"},
+  {k:"pulse",  lab:"Pulse &lt;2&times;CFT &amp; Discernable"},
+  {k:"eddies", lab:"Eddies, Aeration Pooling or Recirculation <em>Not</em> Affecting Results"}
+];
+var PHOTOS=[["station","Station"],["sdmeter","SD Meter Loc."],["dosing","Dosing Loc."],
+            ["mixing","Mixing Reach"],["wdxs","WD X-Section"]];
+var VIDEOS=[["station","Station, Control, US &amp; DS"],["arrsg","10 Sec Arrival SG"],
+            ["depsg","10 Sec Departure SG"]];
+var CHF=[["sen","Sen #","text"],["r2","R² (>0.999)","decimal"],["cft","CFT","decimal"],
+         ["ecbg","EC<sub>BG</sub> (Start)","decimal"],["ecdrift","EC<sub>BG</sub> &lt;0.1 uS/cm","text"],
+         ["smooth","Data is Smooth","text"],["q","Q (m³/sec)","decimal"],["id","ID Save #","text"]];
+
+var STORE="kei-fieldsheet-v1";
+var $=function(id){ return document.getElementById(id); };
+/* App build. Bump on every version handed over, so a phone can be checked at a glance
+   against the filename it came from. Separate from v1.15, which is the paper form. */
+var BUILD="5";
+var RECORD=!!BAKED;                 /* opened as a finished record, not the blank app */
+/* file_field_sheets.py opens the sheet as ...html#print to render the archive PDF.
+   Headless Chrome never fires beforeprint, so the hi-res sketch has to be explicit. */
+var PRINTMODE=/(^|[?#&])print\b/.test(location.search+location.hash);
+var S=null, saveTimer=null, book=null;
+
+/* ---------- state ---------- */
+function blank(){
+  function sgSide(){ return {time:"",sg:"",err:"",ang:"",calc:"",rev:"",revErr:"",grade:""}; }
+  var s={
+    v:"1.15", site:"", date:todayISO(), tz:"-7", arrive:"", depart:"", tech:"", hasQ:false,
+    reqs:[], sg:{a:sgSide(),d:sgSide()}, purpose:"", notes:"",
+    photos:{}, videos:{}, ch:[],
+    finalQ:"", qunc:"", grade:"",
+    metta:{dose:"",peak:"",vid:false,qdiff:""},
+    qa:{comments:""},
+    strokes:[]
+  };
+  for(var i=0;i<6;i++) s.reqs.push({on:false,txt:""});
+  QUAL.forEach(function(q){ s.qa[q.k]=""; s.qa[q.k+"Note"]=""; });
+  PHOTOS.forEach(function(p){ s.photos[p[0]]=false; });
+  VIDEOS.forEach(function(p){ s.videos[p[0]]=false; });
+  for(var j=0;j<3;j++){
+    var c={}; CHF.forEach(function(f){ c[f[0]]=""; }); s.ch.push(c);
+  }
+  return s;
+}
+function todayISO(){
+  var d=new Date(), p=function(n){ return String(n).padStart(2,"0"); };
+  return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate());
+}
+function nowHM(){
+  var d=new Date(), p=function(n){ return String(n).padStart(2,"0"); };
+  return p(d.getHours())+":"+p(d.getMinutes());
+}
+function get(path){
+  var parts=path.split("."), o=S;
+  for(var i=0;i<parts.length;i++){
+    if(o==null) return "";
+    o=o[/^\d+$/.test(parts[i])?Number(parts[i]):parts[i]];
+  }
+  return o==null?"":o;
+}
+function set(path,val){
+  var parts=path.split("."), o=S;
+  for(var i=0;i<parts.length-1;i++){
+    var k=/^\d+$/.test(parts[i])?Number(parts[i]):parts[i];
+    if(o[k]==null) o[k]={};
+    o=o[k];
+  }
+  o[parts[parts.length-1]]=val;
+}
+
+/* ---------- storage ---------- */
+function loadBook(){
+  if(RECORD) return {tech:"",tz:"-7",cur:null,drafts:[]};
+  try{
+    var raw=localStorage.getItem(STORE);
+    if(raw){
+      var b=JSON.parse(raw);
+      if(b && b.drafts) return b;
+    }
+  }catch(e){}
+  return {tech:"",tz:"-7",cur:null,drafts:[]};
+}
+function saveBook(){
+  if(RECORD) return;
+  try{ localStorage.setItem(STORE,JSON.stringify(book)); }catch(e){}
+}
+function newId(){
+  return "s"+Date.now().toString(36)+Math.floor(Math.random()*4096).toString(36);
+}
+function currentDraft(){
+  for(var i=0;i<book.drafts.length;i++) if(book.drafts[i].id===book.cur) return book.drafts[i];
+  return null;
+}
+function pill(txt,cls){
+  var p=$("statePill");
+  p.textContent=txt;
+  p.className="pill"+(cls?" "+cls:"");
+}
+function touch(){
+  if(RECORD){ pill("Record — unsaved edits","dirty"); return; }
+  pill("Saving…","dirty");
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(commit,400);
+}
+function commit(){
+  if(RECORD) return;
+  var d=currentDraft();
+  if(!d){ d={id:book.cur||newId(),state:S,updated:0}; book.cur=d.id; book.drafts.unshift(d); }
+  d.state=S;
+  d.updated=Date.now();
+  book.tech=S.tech||book.tech;
+  book.tz=S.tz||book.tz;
+  saveBook();
+  drawDrafts();
+  pill("Saved "+nowHM(),"ok");
+}
+
+/* ---------- build the repeated bits ---------- */
+function buildSites(){
+  var sel=$("siteSel");
+  SITES.forEach(function(s){
+    var o=document.createElement("option");
+    o.value=s; o.textContent=s;
+    sel.appendChild(o);
+  });
+}
+function buildReqs(){
+  var host=$("reqRows"), html="";
+  for(var i=0;i<6;i++){
+    html+='<div class="chk">'+
+      '<input type="checkbox" data-k="reqs.'+i+'.on" aria-label="Requirement '+(i+1)+' done">'+
+      '<input type="text" data-k="reqs.'+i+'.txt" list="reqList" autocomplete="off" aria-label="Requirement '+(i+1)+'">'+
+      '</div>';
+  }
+  html+='<datalist id="reqList">'+
+    ["SD SFM","Data DL","SG readings","Photos","Brushing","Site maintenance","Sensor swap"]
+      .map(function(v){ return '<option value="'+v+'">'; }).join("")+'</datalist>';
+  host.innerHTML=html;
+}
+function buildQual(){
+  $("qualRows").innerHTML=QUAL.map(function(q){
+    return '<div class="qrow">'+
+      '<div class="qlab">'+q.lab+'</div>'+
+      '<div class="seg" data-seg="qa.'+q.k+'" data-opts="Yes|No"></div>'+
+      '<div class="qnote hidden" id="note_'+q.k+'">'+
+        '<label>Why not?</label>'+
+        '<textarea data-k="qa.'+q.k+'Note" style="min-height:52px"></textarea>'+
+      '</div></div>';
+  }).join("");
+}
+/* the note only matters when the answer is No */
+function syncQual(){
+  QUAL.forEach(function(q){
+    var el=$("note_"+q.k);
+    if(el) el.classList.toggle("hidden", get("qa."+q.k)!=="No");
+  });
+}
+function buildChecks(){
+  function grid(host,list,base){
+    host.innerHTML=list.map(function(p,i){
+      var id=base+"_"+p[0];
+      return '<div class="chk"><input type="checkbox" id="'+id+'" data-k="'+base+'.'+p[0]+'">'+
+             '<label class="inline" for="'+id+'">'+p[1]+'</label></div>';
+    }).join("");
+  }
+  grid($("photoChk"),PHOTOS,"photos");
+  grid($("videoChk"),VIDEOS,"videos");
+}
+function buildCh(){
+  var host=$("chPanels"), html="";
+  for(var i=0;i<3;i++){
+    html+='<div class="panel"><h4>Ch. '+i+'</h4>';
+    CHF.forEach(function(f){
+      html+='<div class="f"><label>'+f[1]+'</label>'+
+            '<input type="text" data-k="ch.'+i+'.'+f[0]+'" class="mono" inputmode="'+f[2]+'"'+
+            (f[0]==="r2"?' data-r2="1"':'')+
+            (f[0]==="q"&&i<2?' data-qdiff="1"':'')+'></div>';
+    });
+    html+='</div>';
+  }
+  host.innerHTML=html;
+}
+function buildSegs(){
+  var segs=document.querySelectorAll("[data-seg]");
+  Array.prototype.forEach.call(segs,function(el){
+    var path=el.getAttribute("data-seg");
+    var name=path.replace(/\./g,"_");
+    el.innerHTML=el.getAttribute("data-opts").split("|").map(function(o){
+      return '<label><input type="radio" name="'+name+'" value="'+o+'" data-radio="'+path+'"><span>'+o+'</span></label>';
+    }).join("");
+  });
+}
+
+/* ---------- render / bind ---------- */
+function render(){
+  Array.prototype.forEach.call(document.querySelectorAll("[data-k]"),function(el){
+    var v=get(el.getAttribute("data-k"));
+    if(el.type==="checkbox") el.checked=!!v;
+    else el.value=(v===null||v===undefined)?"":v;
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-radio]"),function(el){
+    el.checked=(get(el.getAttribute("data-radio"))===el.value);
+  });
+  paintSegs();
+  syncQ();
+  syncQual();
+  showAngleNote();
+  flagR2();
+  redraw();
+}
+/* most visits are SG and photos only — keep the salt-dilution half out of the way until it's needed */
+function syncQ(){
+  var on=!!get("hasQ");
+  [["qBody"],["cardMetta"],["cardSketch"]].forEach(function(p){
+    var el=$(p[0]); if(el) el.classList.toggle("hidden",!on);
+  });
+  if(on) fitPad();
+}
+/* :has() does the highlight on modern browsers; this keeps it visible everywhere else */
+function paintSegs(){
+  Array.prototype.forEach.call(document.querySelectorAll(".seg label"),function(l){
+    var i=l.querySelector("input");
+    l.classList.toggle("on",!!(i&&i.checked));
+  });
+}
+function bind(){
+  document.addEventListener("input",function(e){
+    var el=e.target;
+    if(el.hasAttribute&&el.hasAttribute("data-k")){
+      set(el.getAttribute("data-k"), el.type==="checkbox"?el.checked:el.value);
+      if(el.hasAttribute("data-calc")) autoCalc(el.getAttribute("data-calc"));
+      if(el.hasAttribute("data-qdiff")) autoQDiff();
+      if(el.hasAttribute("data-r2")) flagR2();
+      touch();
+    }
+  });
+  document.addEventListener("change",function(e){
+    var el=e.target;
+    if(el.hasAttribute&&el.hasAttribute("data-radio")){
+      if(el.checked){ set(el.getAttribute("data-radio"),el.value); paintSegs(); syncQual(); touch(); }
+      return;
+    }
+    if(el.name==="pen"){ paintSegs(); return; }
+    if(el.hasAttribute&&el.hasAttribute("data-k")){
+      set(el.getAttribute("data-k"), el.type==="checkbox"?el.checked:el.value);
+      if(el.id==="hasQ") syncQ();
+      if(el.id==="siteSel") applySiteAngle();
+      touch();
+    }
+  });
+  /* time normalising on blur */
+  document.addEventListener("blur",function(e){
+    var el=e.target;
+    if(el.hasAttribute&&el.hasAttribute("data-time")){
+      var t=normTime(el.value);
+      if(t!==el.value){ el.value=t; set(el.getAttribute("data-k"),t); touch(); }
+    }
+  },true);
+  /* Now buttons */
+  document.addEventListener("click",function(e){
+    var b=e.target.closest?e.target.closest("[data-now],[data-nowk]"):null;
+    if(!b) return;
+    var t=nowHM();
+    if(b.hasAttribute("data-now")){
+      var el=$(b.getAttribute("data-now"));
+      el.value=t; set(el.getAttribute("data-k"),t);
+    }else{
+      var path=b.getAttribute("data-nowk");
+      var f=document.querySelector('[data-k="'+path+'"]');
+      if(f) f.value=t;
+      set(path,t);
+    }
+    touch();
+  });
+}
+function normTime(s){
+  s=String(s||"").trim();
+  if(!s) return "";
+  var d=s.replace(/[^\d]/g,"");
+  if(d.length===3) return d[0]+":"+d.slice(1);
+  if(d.length===4) return d.slice(0,2)+":"+d.slice(2);
+  return s;
+}
+function num(v){
+  var n=parseFloat(String(v).replace(/[^\d.\-+eE]/g,""));
+  return isFinite(n)?n:null;
+}
+function autoCalc(side){
+  var sg=num(get("sg."+side+".sg")), ang=num(get("sg."+side+".ang"));
+  var f=document.querySelector('[data-k="sg.'+side+'.calc"]');
+  var prev=get("sg."+side+".calcAuto");
+  var cur=String(get("sg."+side+".calc")||"");
+  if(cur!==""&&cur!==prev) return;              /* typed over by hand — leave it */
+  /* blank rather than stale when there's no angle to apply */
+  var out=(sg===null||ang===null)?"":(sg*ang).toFixed(3);
+  set("sg."+side+".calc",out);
+  set("sg."+side+".calcAuto",out);
+  if(f) f.value=out;
+}
+
+/* The gauge angle belongs to the station, not the visit, so fill it from the table
+   as soon as a station is picked. A hand-typed angle is never overwritten. */
+function applySiteAngle(){
+  var m=SG_ANGLE[S.site]||"";
+  ["a","d"].forEach(function(side){
+    var cur=String(get("sg."+side+".ang")||"");
+    var prev=String(get("sg."+side+".angAuto")||"");
+    if(cur!==""&&cur!==prev) return;
+    set("sg."+side+".ang",m);
+    set("sg."+side+".angAuto",m);
+    var f=document.querySelector('[data-k="sg.'+side+'.ang"]');
+    if(f) f.value=m;
+    autoCalc(side);
+  });
+  showAngleNote();
+}
+function showAngleNote(){
+  var h=$("calcHint");
+  if(!h) return;
+  var m=SG_ANGLE[S.site];
+  if(!S.site) h.textContent="Calc’d SG fills in as SG × SG Angle once you pick a station.";
+  else if(m)  h.textContent=S.site+" leans — angle "+m+" filled in, so Calc’d SG = SG × "+m+". Type over it if it has been re-surveyed.";
+  else        h.textContent=S.site+" has a vertical gauge, so there is no angle correction and no Calc’d SG.";
+}
+/* Q Diff % = (1 - Qs/QL) x 100, taken from Ch.0 and Ch.1.
+   Checked against the Apex Lower 2026-08-08 sheet: 0.16848 / 0.17229 -> 2.2%. */
+function autoQDiff(){
+  var qs=num(get("ch.0.q")), ql=num(get("ch.1.q"));
+  var f=document.querySelector('[data-k="metta.qdiff"]');
+  if(qs===null||ql===null||ql===0) return;
+  var prev=get("metta.qdiffAuto");
+  var cur=String(get("metta.qdiff")||"");
+  if(cur!==""&&cur!==prev) return;              /* typed over by hand — leave it */
+  var out=((1-qs/ql)*100).toFixed(1);
+  set("metta.qdiff",out);
+  set("metta.qdiffAuto",out);
+  if(f) f.value=out;
+}
+function flagR2(){
+  var qs=document.querySelectorAll("[data-r2]"), bad=0;
+  Array.prototype.forEach.call(qs,function(el){
+    var n=num(el.value);
+    var off=(n!==null&&n<0.999);
+    el.classList.toggle("warnf",off);
+    if(off) bad++;
+  });
+  var h=$("qHint");
+  if(bad){ h.className="hint warn"; h.textContent="R² below 0.999 on "+bad+" channel"+(bad>1?"s":"")+" — note why in Measurement Comments."; }
+  else h.className="hint hidden";
+}
+
+/* ---------- drafts UI ---------- */
+function drawDrafts(){
+  if(RECORD) return;
+  var host=$("draftList");
+  if(!book.drafts.length){ host.innerHTML='<p class="hint" style="margin:0">No sheets yet. Start one below.</p>'; return; }
+  host.innerHTML=book.drafts.map(function(d){
+    var st=d.state||{};
+    var nm=st.site||"(no station yet)";
+    var when=st.date||"";
+    var t=[st.arrive,st.depart].filter(Boolean).join("–");
+    return '<div class="draft'+(d.id===book.cur?" cur":"")+'" data-id="'+d.id+'">'+
+      '<div class="d1"><div class="dn">'+esc(nm)+'</div>'+
+      '<div class="dd">'+esc(when+(t?"  "+t:""))+'</div></div>'+
+      (d.id===book.cur?'':'<button class="btn sm" type="button" data-open="'+d.id+'">Open</button>')+
+      '<button class="btn sm danger" type="button" data-del="'+d.id+'">&times;</button>'+
+      '</div>';
+  }).join("");
+}
+function esc(s){
+  return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+/* ---------- sketch pad ---------- */
+var pad,ctx,strokes=[],drawing=false,cur=null,penW=3.5;
+function setupPad(){
+  pad=$("pad"); ctx=pad.getContext("2d");
+  fitPad();
+  if(PRINTMODE) return;   /* fixed at print resolution — nothing may resize it */
+  /* the pad can be laid out at zero width (background tab, print, rotation).
+     Watch the box instead of trusting one measurement at boot. */
+  if(window.ResizeObserver){
+    new ResizeObserver(function(){ fitPad(); }).observe(pad.parentNode);
+  }
+  window.addEventListener("resize",fitPad);
+  window.addEventListener("orientationchange",function(){ setTimeout(fitPad,120); });
+  pad.addEventListener("pointerdown",function(e){
+    e.preventDefault();
+    pad.setPointerCapture(e.pointerId);
+    drawing=true;
+    cur={w:penW,p:[ptOf(e)]};
+    strokes.push(cur);
+  });
+  pad.addEventListener("pointermove",function(e){
+    if(!drawing) return;
+    e.preventDefault();
+    cur.p.push(ptOf(e));
+    redraw();
+  });
+  function end(e){
+    if(!drawing) return;
+    drawing=false;
+    if(cur&&cur.p.length<2) cur.p.push(cur.p[0]);
+    S.strokes=strokes;
+    touch();
+    redraw();
+  }
+  pad.addEventListener("pointerup",end);
+  pad.addEventListener("pointercancel",end);
+  pad.addEventListener("pointerleave",end);
+
+  $("undoBtn").addEventListener("click",function(){
+    strokes.pop(); S.strokes=strokes; touch(); redraw();
+  });
+  $("clearPadBtn").addEventListener("click",function(){
+    if(strokes.length&&!confirm("Clear the whole sketch?")) return;
+    strokes=[]; S.strokes=strokes; touch(); redraw();
+  });
+  $("penSeg").addEventListener("change",function(e){
+    if(e.target.name==="pen") penW=parseFloat(e.target.value);
+  });
+}
+var padW=0,padH=0;
+function fitPad(){
+  var w=pad.parentNode.clientWidth;
+  if(!w){                                  /* not laid out yet — try again next frame */
+    requestAnimationFrame(function(){ if(pad.parentNode.clientWidth) fitPad(); });
+    return;
+  }
+  var h=Math.round(w*0.62);
+  if(w===padW&&h===padH) return;
+  padW=w; padH=h;
+  var r=window.devicePixelRatio||1;
+  pad.style.height=h+"px";
+  pad.width=Math.round(w*r); pad.height=Math.round(h*r);
+  redraw();                                /* paintTo works in device pixels */
+}
+function ptOf(e){
+  var b=pad.getBoundingClientRect();
+  return [ (e.clientX-b.left)/b.width, (e.clientY-b.top)/b.height ];
+}
+/* Strokes are stored 0..1, so the same sketch paints at any resolution. */
+function paintTo(w,h){
+  if(!ctx) return;
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle="#ffffff"; ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle="#16202a"; ctx.lineCap="round"; ctx.lineJoin="round";
+  var unit=padW?(w/padW):1;               /* keep pen weight proportional */
+  strokes.forEach(function(s){
+    if(!s.p||!s.p.length) return;
+    ctx.lineWidth=(s.w||3.5)*unit;
+    ctx.beginPath();
+    ctx.moveTo(s.p[0][0]*w,s.p[0][1]*h);
+    for(var i=1;i<s.p.length;i++) ctx.lineTo(s.p[i][0]*w,s.p[i][1]*h);
+    ctx.stroke();
+  });
+}
+function redraw(){ if(ctx) paintTo(pad.width,pad.height); }
+
+/* A phone-sized canvas looks soft on paper. Repaint big for the print, then undo it. */
+function printRes(on){
+  if(!pad) return;
+  if(on){
+    if(!padW) padW=360;                   /* reference width, so pen weight stays sane */
+    pad.width=1800; pad.height=Math.round(1800*0.62);
+    pad.style.height="auto";
+    paintTo(pad.width,pad.height);
+  }else{
+    padW=0; padH=0;
+    fitPad();
+  }
+}
+window.addEventListener("beforeprint",function(){ printRes(true); });
+window.addEventListener("afterprint",function(){ printRes(false); });
+
+/* Text boxes clip whatever doesn't fit. On the archive copy that would quietly
+   lose field notes, so swap every one for a block that wraps. Print render only. */
+function flattenForPrint(){
+  var sel="input[type=text],input[type=date],select,textarea";
+  Array.prototype.forEach.call(document.querySelectorAll(sel),function(el){
+    var div=document.createElement("div");
+    div.className="printval"+(el.tagName==="TEXTAREA"?" tall":"");
+    div.textContent=el.value||"";
+    el.parentNode.replaceChild(div,el);
+  });
+}
+
+/* ---------- finish & send ---------- */
+function fileName(){
+  var site=(S.site||"Unassigned").replace(/[\\\/:*?"<>|]/g,"-");
+  return (S.date||todayISO())+"_"+site+".html";
+}
+function buildFile(){
+  var clone=document.documentElement.cloneNode(true);
+  function pick(s){ return clone.querySelector(s); }
+  /* hide, never remove — init() in the saved copy still wires these up */
+  var dc=pick("#draftsCard"); if(dc) dc.className="card noprint hidden";
+  var t=pick("title"); if(t) t.textContent="Field Sheet — "+(S.site||"")+" "+(S.date||"");
+  var b=pick("#recBanner");
+  if(b){ b.className="banner"; b.textContent="Completed field sheet — "+(S.site||"")+"  "+(S.date||"")+
+         (S.tech?"  ·  "+S.tech:""); }
+  var sh=pick("#sendHint"); if(sh) sh.className="hint noprint hidden";
+  var fb=pick("#finishBtn"); if(fb) fb.textContent="Re-send sheet";
+
+  var html="<!doctype html>\n"+clone.outerHTML;
+  var payload=JSON.parse(JSON.stringify(S));
+  payload.savedAt=new Date().toISOString();
+  payload.build=BUILD;
+  var json=JSON.stringify(payload).replace(/<\//g,"<\\/");
+  var re=/var BAKED=[^\n]*?;\/\*BAKEDCFG\*\//;
+  if(!re.test(html)) return null;
+  return html.replace(re,function(){ return "var BAKED="+json+";/*"+"BAKEDCFG"+"*/"; });
+}
+function finish(){
+  if(!S.site){ alert("Choose a station first — the file is named after it."); return; }
+  var html=buildFile();
+  if(!html){ alert("Couldn't prepare the file — the page source has been altered."); return; }
+  var name=fileName();
+  var blob=new Blob([html],{type:"text/html"});
+
+  if(navigator.canShare){
+    try{
+      var file=new File([blob],name,{type:"text/html"});
+      if(navigator.canShare({files:[file]})){
+        navigator.share({files:[file],title:name})
+          .then(function(){ pill("Sent","ok"); })
+          .catch(function(){ download(blob,name); });
+        return;
+      }
+    }catch(e){}
+  }
+  download(blob,name);
+}
+function download(blob,name){
+  var a=document.createElement("a");
+  var url=URL.createObjectURL(blob);
+  a.href=url; a.download=name;
+  document.body.appendChild(a); a.click(); a.parentNode.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); },4000);
+  pill("Saved to device","ok");
+}
+
+/* ---------- installable app layer ----------
+   Only on the hosted origin (or localhost while testing). A baked record, the
+   #print render, and a copy opened from file:// all skip this entirely, so the
+   sheet stays a plain self-contained HTML file everywhere it always worked. */
+var HOSTED=location.protocol==="https:"||location.hostname==="localhost"||location.hostname==="127.0.0.1";
+var STANDALONE=(window.matchMedia&&window.matchMedia("(display-mode: standalone)").matches)||window.navigator.standalone===true;
+var IOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+var deferredInstall=null;
+
+function showInstallUI(){
+  if(STANDALONE) return;
+  var b=$("installBanner"); if(!b) return;
+  $("installMsg").innerHTML=IOS
+    ? "Working from a browser tab &mdash; sheets are not safe here and offline won&rsquo;t work. Tap <b>Share</b>, then <b>Add to Home Screen</b>."
+    : "Install this on the phone so it opens from an icon and works with no signal.";
+  $("installBtn").classList.toggle("hidden",IOS||!deferredInstall);
+  b.classList.remove("hidden");
+}
+function setupApp(){
+  if(!HOSTED||RECORD||PRINTMODE) return;
+  if("serviceWorker" in navigator){
+    navigator.serviceWorker.register("sw.js").catch(function(){});
+    var hadController=!!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener("controllerchange",function(){
+      /* first install taking control is not an update — only later takeovers are */
+      if(hadController) $("updatePill").classList.remove("hidden");
+      hadController=true;
+    });
+  }
+  window.addEventListener("beforeinstallprompt",function(e){
+    e.preventDefault();
+    deferredInstall=e;
+    showInstallUI();
+  });
+  window.addEventListener("appinstalled",function(){
+    deferredInstall=null;
+    $("installBanner").classList.add("hidden");
+  });
+  $("installBtn").addEventListener("click",function(){
+    if(deferredInstall){ deferredInstall.prompt(); deferredInstall=null; $("installBtn").classList.add("hidden"); }
+  });
+  $("updatePill").addEventListener("click",function(){
+    commit();
+    location.reload();
+  });
+  if(IOS) showInstallUI();
+}
+
+/* ---------- boot ---------- */
+function startSheet(state,id){
+  S=state;
+  strokes=(S.strokes&&S.strokes.length)?S.strokes:[];
+  S.strokes=strokes;
+  if(!RECORD){ book.cur=id; saveBook(); }
+  render();
+  drawDrafts();
+  window.scrollTo(0,0);
+}
+function init(){
+  buildSites(); buildReqs(); buildQual(); buildChecks(); buildCh(); buildSegs();
+  book=loadBook();
+
+  if(RECORD){
+    $("draftsCard").classList.add("hidden");
+    S=BAKED;
+    strokes=S.strokes||[]; S.strokes=strokes;
+    var b=$("recBanner");
+    b.className="banner";
+    b.textContent="Completed field sheet — "+(S.site||"")+"  "+(S.date||"")+(S.tech?"  ·  "+S.tech:"");
+    pill("Record","ok");
+  }else{
+    var d=currentDraft();
+    if(d){ S=d.state; }
+    else{
+      S=blank();
+      S.tech=book.tech||""; S.tz=book.tz||"-7";
+      book.cur=newId();
+      book.drafts.unshift({id:book.cur,state:S,updated:Date.now()});
+      saveBook();
+    }
+    strokes=S.strokes||[]; S.strokes=strokes;
+    pill("Saved","ok");
+  }
+
+  setupPad();
+  bind();
+  render();
+  drawDrafts();
+
+  $("newSheetBtn").addEventListener("click",function(){
+    commit();
+    var s=blank();
+    s.tech=book.tech||""; s.tz=book.tz||"-7";
+    var id=newId();
+    book.drafts.unshift({id:id,state:s,updated:Date.now()});
+    startSheet(s,id);
+    commit();
+  });
+  $("draftList").addEventListener("click",function(e){
+    var o=e.target.closest?e.target.closest("[data-open]"):null;
+    var x=e.target.closest?e.target.closest("[data-del]"):null;
+    if(o){
+      commit();
+      var id=o.getAttribute("data-open");
+      for(var i=0;i<book.drafts.length;i++) if(book.drafts[i].id===id) return startSheet(book.drafts[i].state,id);
+    }
+    if(x){
+      var did=x.getAttribute("data-del");
+      if(!confirm("Delete this sheet from the phone? It cannot be undone.")) return;
+      book.drafts=book.drafts.filter(function(d){ return d.id!==did; });
+      if(book.cur===did){
+        if(book.drafts.length) startSheet(book.drafts[0].state,book.drafts[0].id);
+        else{
+          var s2=blank(); s2.tech=book.tech||""; s2.tz=book.tz||"-7";
+          var nid=newId();
+          book.drafts.push({id:nid,state:s2,updated:Date.now()});
+          startSheet(s2,nid);
+        }
+      }
+      saveBook(); drawDrafts();
+    }
+  });
+  $("sameAsArrival").addEventListener("click",function(){
+    ["sg","err","ang","calc"].forEach(function(k){ set("sg.d."+k,get("sg.a."+k)); });
+    set("sg.d.calcAuto",get("sg.a.calcAuto"));
+    set("sg.d.angAuto",get("sg.a.angAuto"));
+    set("sg.d.grade",get("sg.a.grade"));
+    render(); touch();
+  });
+  $("meanQBtn").addEventListener("click",function(){
+    var vals=[];
+    for(var i=0;i<3;i++){ var n=num(get("ch."+i+".q")); if(n!==null) vals.push(n); }
+    if(!vals.length){ alert("No channel Q values to average yet."); return; }
+    var m=vals.reduce(function(a,b){ return a+b; },0)/vals.length;
+    var out=m>=1?m.toFixed(3):m.toFixed(5);
+    set("finalQ",out);
+    document.querySelector('[data-k="finalQ"]').value=out;
+    touch();
+  });
+  $("printBtn").addEventListener("click",function(){ window.print(); });
+  $("finishBtn").addEventListener("click",finish);
+
+  window.addEventListener("beforeunload",function(){ if(!RECORD) commit(); });
+
+  $("buildTag").textContent="build "+BUILD;
+  setupApp();
+  if(PRINTMODE){ printRes(true); flattenForPrint(); }
+}
+init();
+</script>
+</body>
+</html>
