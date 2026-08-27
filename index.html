@@ -356,7 +356,7 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
     </div>
     <div class="f">
       <label for="techF">Technician&rsquo;s Initials</label>
-      <input type="text" id="techF" data-k="tech" autocapitalize="characters" autocomplete="off" placeholder="RG">
+      <input type="text" id="techF" data-k="tech" autocapitalize="characters" autocomplete="off">
     </div>
     <p class="hint bad hidden" id="visitIncomplete"></p>
   </div>
@@ -533,7 +533,7 @@ var STORE="kei-fieldsheet-v1";
 var $=function(id){ return document.getElementById(id); };
 /* App build. Bump on every version handed over, so a phone can be checked at a glance
    against the filename it came from. Separate from v1.15, which is the paper form. */
-var BUILD="10";
+var BUILD="11";
 var RECORD=!!BAKED;                 /* opened as a finished record, not the blank app */
 /* file_field_sheets.py opens the sheet as ...html#print to render the archive PDF.
    Headless Chrome never fires beforeprint, so the hi-res sketch has to be explicit. */
