@@ -447,7 +447,14 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
 
   <!-- 5 360 -->
   <div class="card">
-    <h2><span class="n">5</span> 360 Capture</h2>
+    <h2><span class="n">5</span> Photos</h2>
+    <h3 class="sub">Station photo (this phone)</h3>
+    <div class="pgrid" id="sphotoGrid"></div>
+    <button class="btn noprint" type="button" id="takeSPhotoBtn">&#128247; Take station photo</button>
+    <input type="file" id="sphotoInput" accept="image/*" capture="environment" class="hidden">
+    <p class="hint bad hidden" id="sphotoIncomplete"></p>
+    <p class="hint">One picture of the station from the phone, every visit &mdash; the backup if the
+    360 goes missing, and it goes to Aquarius with the data.</p>
     <h3 class="sub">360 Photos</h3>
     <div class="chkgrid" id="photoChk"></div>
     <h3 class="sub">360 Videos</h3>
@@ -542,7 +549,7 @@ var STORE="kei-fieldsheet-v1";
 var $=function(id){ return document.getElementById(id); };
 /* App build. Bump on every version handed over, so a phone can be checked at a glance
    against the filename it came from. Separate from v1.15, which is the paper form. */
-var BUILD="12";
+var BUILD="13";
 var RECORD=!!BAKED;                 /* opened as a finished record, not the blank app */
 /* file_field_sheets.py opens the sheet as ...html#print to render the archive PDF.
    Headless Chrome never fires beforeprint, so the hi-res sketch has to be explicit. */
@@ -556,7 +563,7 @@ function blank(){
     v:"1.15", site:"", date:todayISO(), tz:"-7", arrive:"", depart:"", tech:"", flow:"", ftype:"",
     reqs:[], sg:{a:sgSide(),d:sgSide(),m:{time:"",sg:""}}, purpose:"", notes:"",
     photos:{}, videos:{},
-    pq:["","","","",""], reviewedQ:"", qspread:"", qspreadPct:"", qphotoIds:[]
+    pq:["","","","",""], reviewedQ:"", qspread:"", qspreadPct:"", qphotoIds:[], sphotoIds:[]
   };
   for(var i=0;i<6;i++) s.reqs.push({on:false,txt:""});
   PHOTOS.forEach(function(p){ s.photos[p[0]]=false; });
@@ -732,7 +739,7 @@ function idbDel(k){ return idbOp("readwrite",function(st){ return st.delete(k); 
 
 function photoKey(draftId,photoId){ return draftId+":"+photoId; }
 function deleteDraftPhotos(draft){
-  var ids=(draft.state&&draft.state.qphotoIds)||[];
+  var ids=((draft.state&&draft.state.qphotoIds)||[]).concat((draft.state&&draft.state.sphotoIds)||[]);
   ids.forEach(function(pid){ idbDel(photoKey(draft.id,pid)).catch(function(){}); });
 }
 
@@ -768,6 +775,49 @@ function addPhotoFile(file){
     alert("Couldn't save that photo — "+(e&&e.message?e.message:e)+". The sheet itself is unaffected.");
   });
 }
+function addStationPhoto(file){
+  return downscalePhoto(file).then(function(blob){
+    var pid="s"+Date.now().toString(36)+Math.floor(Math.random()*4096).toString(36);
+    var olds=S.sphotoIds||[];
+    return idbPut(photoKey(book.cur,pid),blob).then(function(){
+      olds.forEach(function(op){ idbDel(photoKey(book.cur,op)).catch(function(){}); });
+      S.sphotoIds=[pid];                 /* one station photo — retaking replaces it */
+      touch(); drawSPhotos(); revalidateIfFlagged();
+    });
+  }).catch(function(e){
+    alert("Couldn't save that photo — "+(e&&e.message?e.message:e)+". The sheet itself is unaffected.");
+  });
+}
+var sphotoUrls=[];
+function drawSPhotos(){
+  var host=$("sphotoGrid");
+  if(!host) return;
+  sphotoUrls.forEach(function(u){ URL.revokeObjectURL(u); });
+  sphotoUrls=[];
+  if(RECORD){
+    host.className="pgrid rec";
+    host.innerHTML=((BAKED&&BAKED.sphotos)||[]).map(function(d){
+      return '<div class="ph"><img src="'+d+'" alt="station photo"></div>';
+    }).join("")||'<p class="hint" style="margin:0">No station photo was taken.</p>';
+    return;
+  }
+  var ids=(S&&S.sphotoIds)||[];
+  if(!ids.length){ host.innerHTML=""; return; }
+  host.innerHTML=ids.map(function(pid){
+    return '<div class="ph" data-pid="'+pid+'"><img alt="station photo">'+
+      '<button type="button" class="phx noprint" data-delsphoto="'+pid+'">&times;</button></div>';
+  }).join("");
+  ids.forEach(function(pid){
+    idbGet(photoKey(book.cur,pid)).then(function(blob){
+      var cell=host.querySelector('[data-pid="'+pid+'"] img');
+      if(!cell) return;
+      if(!blob){ cell.parentNode.innerHTML='<span class="hint">photo missing</span>'; return; }
+      var u=URL.createObjectURL(blob);
+      sphotoUrls.push(u); cell.src=u;
+    }).catch(function(){});
+  });
+}
+
 var photoUrls=[];
 function drawPhotos(){
   var host=$("photoGrid");
@@ -797,8 +847,8 @@ function drawPhotos(){
     }).catch(function(){});
   });
 }
-function loadPhotoDataUrls(){
-  var ids=(S&&S.qphotoIds)||[];
+function loadDataUrlsFor(ids){
+  ids=ids||[];
   return Promise.all(ids.map(function(pid){
     return idbGet(photoKey(book.cur,pid)).then(function(blob){
       if(!blob) return null;
@@ -811,6 +861,8 @@ function loadPhotoDataUrls(){
     }).catch(function(){ return null; });
   })).then(function(list){ return list.filter(Boolean); });
 }
+function loadPhotoDataUrls(){ return loadDataUrlsFor(S&&S.qphotoIds); }
+function loadStationDataUrls(){ return loadDataUrlsFor(S&&S.sphotoIds); }
 
 function buildChecks(){
   function grid(host,list,base){
@@ -849,6 +901,7 @@ function render(){
   }
   if(S&&S.reviewedQ===undefined) S.reviewedQ="";
   if(S&&S.sg&&!S.sg.m) S.sg.m={time:"",sg:""};
+  if(S&&S.sphotoIds===undefined) S.sphotoIds=[];
   if(S&&S.ftype===undefined) S.ftype="";
   Array.prototype.forEach.call(document.querySelectorAll("[data-k]"),function(el){
     var v=get(el.getAttribute("data-k"));
@@ -868,6 +921,7 @@ function render(){
   syncQ();
   showAngleNote();
   drawPhotos();
+  drawSPhotos();
   autoSpread();
   syncReqWhy(false);
   ["a","d"].forEach(function(side){
@@ -1086,6 +1140,17 @@ function validateVisit(){
   }
   if(!hasPurpose) missing.push(["purpose","Main Purpose"]);
 
+  /* one phone picture of the station, every visit — the 360 can be stolen */
+  var nS=RECORD?((BAKED&&BAKED.sphotos)||[]).length:((S.sphotoIds||[]).length);
+  var sEl=$("takeSPhotoBtn"), sNote2=$("sphotoIncomplete");
+  if(sNote2){
+    if(!nS){
+      sNote2.textContent="Not sent — take the station photo with this phone.";
+      sNote2.classList.remove("hidden");
+      missing.push(["#takeSPhotoBtn","Station photo"]);
+    }else sNote2.classList.add("hidden");
+  }
+
   /* the flow question must be answered, and Yes carries obligations */
   var flow=get("flow");
   var seg=$("flowSeg"), fNote=$("flowIncomplete");
@@ -1165,7 +1230,7 @@ function validateVisit(){
 function revalidateIfFlagged(){
   var flagged=["visitIncomplete","reqIncomplete","reqConfirm","purposeIncomplete",
                "flowIncomplete","ftypeIncomplete","photoIncomplete","qmIncomplete",
-               "sgIncomplete"].some(function(id){
+               "sgIncomplete","sphotoIncomplete"].some(function(id){
     var el=$(id); return el&&el.className.indexOf("hidden")===-1;
   });
   if(flagged) validateVisit();
@@ -1176,7 +1241,7 @@ function fileName(){
   var site=(S.site||"Unassigned").replace(/[\\\/:*?"<>|]/g,"-");
   return (S.date||todayISO())+"_"+site+".html";
 }
-function buildFile(photos){
+function buildFile(photos,sphotos){
   var clone=document.documentElement.cloneNode(true);
   function pick(s){ return clone.querySelector(s); }
   /* hide, never remove — init() in the saved copy still wires these up */
@@ -1197,7 +1262,9 @@ function buildFile(photos){
   payload.savedAt=new Date().toISOString();
   payload.build=BUILD;
   delete payload.qphotoIds;               /* IndexedDB keys mean nothing off this phone */
+  delete payload.sphotoIds;
   payload.qphotos=photos||[];
+  payload.sphotos=sphotos||[];
   var json=JSON.stringify(payload).replace(/<\//g,"<\\/");
   var re=/var BAKED=[^\n]*?;\/\*BAKEDCFG\*\//;
   if(!re.test(html)) return null;
@@ -1217,16 +1284,17 @@ function finish(){
     pill("Sheet not sent","dirty");
     return;
   }
-  if(RECORD){ finishWith((BAKED&&BAKED.qphotos)||[]); return; }
-  loadPhotoDataUrls().then(function(photos){
-    if(photos.length<((S.qphotoIds||[]).length)){
+  if(RECORD){ finishWith((BAKED&&BAKED.qphotos)||[],(BAKED&&BAKED.sphotos)||[]); return; }
+  Promise.all([loadPhotoDataUrls(),loadStationDataUrls()]).then(function(both){
+    var expect=((S.qphotoIds||[]).length)+((S.sphotoIds||[]).length);
+    if(both[0].length+both[1].length<expect){
       if(!confirm("Some photos could not be read from storage and will be missing from the sent sheet. Send anyway?")) return;
     }
-    finishWith(photos);
-  }).catch(function(){ finishWith([]); });
+    finishWith(both[0],both[1]);
+  }).catch(function(){ finishWith([],[]); });
 }
-function finishWith(photos){
-  var html=buildFile(photos);
+function finishWith(photos,sphotos){
+  var html=buildFile(photos,sphotos);
   if(!html){ alert("Couldn't prepare the file — the page source has been altered."); return; }
   var name=fileName();
   var blob=new Blob([html],{type:"text/html"});
@@ -1341,6 +1409,7 @@ function init(){
     pill("Record","ok");
     autoSpread();
     var tp=$("takePhotoBtn"); if(tp) tp.classList.add("hidden");
+    var tsp=$("takeSPhotoBtn"); if(tsp) tsp.classList.add("hidden");
   }else{
     var d=currentDraft();
     if(d){ S=d.state; }
@@ -1412,6 +1481,21 @@ function init(){
     paintSegs(); syncQ(); revalidateIfFlagged(); touch();
   });
   $("takePhotoBtn").addEventListener("click",function(){ $("photoInput").click(); });
+  $("takeSPhotoBtn").addEventListener("click",function(){ $("sphotoInput").click(); });
+  $("sphotoInput").addEventListener("change",function(){
+    var f=this.files&&this.files[0];
+    this.value="";
+    if(f) addStationPhoto(f);
+  });
+  $("sphotoGrid").addEventListener("click",function(e){
+    var b=e.target.closest?e.target.closest("[data-delsphoto]"):null;
+    if(!b) return;
+    if(!confirm("Remove the station photo?")) return;
+    var pid=b.getAttribute("data-delsphoto");
+    S.sphotoIds=(S.sphotoIds||[]).filter(function(x){ return x!==pid; });
+    idbDel(photoKey(book.cur,pid)).catch(function(){});
+    touch(); drawSPhotos(); revalidateIfFlagged();
+  });
   $("photoInput").addEventListener("change",function(){
     var files=Array.prototype.slice.call(this.files||[]);
     this.value="";
