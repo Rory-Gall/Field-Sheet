@@ -299,12 +299,43 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
     <div id="draftList"></div>
     <div class="actions">
       <button class="btn pri" type="button" id="newSheetBtn">New sheet</button>
+      <button class="btn" type="button" id="exportAllBtn">Send all completed sheets</button>
     </div>
+    <p class="hint" id="exportSummary" style="display:none"></p>
     <p class="hint">Everything is saved on this device as you type. Nothing is sent anywhere.</p>
   </div>
 
-  <!-- flow question — answers shape everything below -->
-  <div class="card" id="flowCard">
+  <!-- 1 visit -->
+  <div class="card">
+    <h2><span class="n">Step 1</span> Site Visit Details</h2>
+    <div class="f">
+      <label for="siteSel">Station Name</label>
+      <select id="siteSel" data-k="site"><option value="">— choose a station —</option></select>
+    </div>
+    <div class="row">
+      <div>
+        <label for="dateF">Date <span class="ext">(YYYY-MM-DD)</span></label>
+        <input type="text" id="dateF" data-k="date" data-dateiso="1" class="mono" inputmode="numeric" placeholder="2026-09-04">
+      </div>
+      <div style="flex:0 1 150px">
+        <label for="tzF">Notes Time Zone (GMT)</label>
+        <input type="text" id="tzF" data-k="tz" class="mono" inputmode="text" placeholder="-7">
+      </div>
+    </div>
+    <div class="row">
+      <div style="flex:0 1 130px">
+        <label for="techF">Technician&rsquo;s Initials</label>
+        <input type="text" id="techF" data-k="tech" autocapitalize="characters" autocomplete="off">
+      </div>
+      <div>
+        <label for="arriveF">Arrival Time</label>
+        <div class="withbtn">
+          <input type="text" id="arriveF" data-k="arrive" data-time="1" class="mono" inputmode="numeric" placeholder="12:00">
+          <button class="btn now" type="button" data-now="arriveF">Now</button>
+        </div>
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--line2);margin-top:10px;padding-top:10px">
     <div class="flowq">
       <div class="flabel">Flow measurement this visit?</div>
       <div class="seg" id="flowSeg">
@@ -322,35 +353,6 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
     </div>
     <p class="hint bad hidden" id="flowIncomplete"></p>
     <p class="hint bad hidden" id="ftypeIncomplete"></p>
-  </div>
-
-  <!-- 1 visit -->
-  <div class="card">
-    <h2><span class="n">Step 1</span> Site Visit Details</h2>
-    <div class="f">
-      <label for="siteSel">Station Name</label>
-      <select id="siteSel" data-k="site"><option value="">— choose a station —</option></select>
-    </div>
-    <div class="row">
-      <div>
-        <label for="dateF">Date</label>
-        <input type="date" id="dateF" data-k="date">
-      </div>
-      <div style="flex:0 1 150px">
-        <label for="tzF">Notes Time Zone (GMT)</label>
-        <input type="text" id="tzF" data-k="tz" class="mono" inputmode="text" placeholder="-7">
-      </div>
-    </div>
-    <div class="f">
-      <label for="arriveF">Arrival Time</label>
-      <div class="withbtn">
-        <input type="text" id="arriveF" data-k="arrive" data-time="1" class="mono" inputmode="numeric" placeholder="12:00">
-        <button class="btn now" type="button" data-now="arriveF">Now</button>
-      </div>
-    </div>
-    <div class="f">
-      <label for="techF">Technician&rsquo;s Initials</label>
-      <input type="text" id="techF" data-k="tech" autocapitalize="characters" autocomplete="off">
     </div>
     <p class="hint bad hidden" id="visitIncomplete"></p>
   </div>
@@ -358,6 +360,8 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
   <!-- 2 requirements -->
   <div class="card">
     <h2><span class="n">Step 2</span> Site Requirements / Work Completed</h2>
+    <p class="hint" style="margin:0 0 8px">Your first line here also fills in the <b>Main Purpose for
+    Site Visit</b> (Step 4) &mdash; put the visit&rsquo;s main job on line one.</p>
     <div id="reqRows"></div>
     <p class="hint bad hidden" id="reqIncomplete"></p>
     <p class="hint warn hidden" id="reqConfirm"></p>
@@ -400,7 +404,7 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
   <div class="card">
     <h2><span class="n">Step 4</span> Notes</h2>
     <div class="f">
-      <label for="purposeF">Main Purpose for Site Visit</label>
+      <label for="purposeF">Main Purpose for Site Visit <span class="ext">(auto-fills from your first work item &mdash; type to override)</span></label>
       <input type="text" id="purposeF" data-k="purpose">
       <p class="hint bad hidden" id="purposeIncomplete"></p>
     </div>
@@ -455,7 +459,8 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
       </div>
       <p class="hint">Read the staff gauge around the measurement if you can &mdash; otherwise an
       arrival or departure reading covers the requirement.</p>
-      <div class="f" style="margin-top:8px;max-width:200px">
+      <button class="btn sm noprint" type="button" id="revQBtn" data-revq="1" style="margin-top:8px">Add reviewed Q <span class="ext">(office)</span></button>
+      <div class="f hidden" id="revQRow" style="margin-top:8px;max-width:200px">
         <label>Reviewed Q (m&sup3;/s) <span class="ext">(office)</span></label>
         <input type="text" data-k="reviewedQ" class="mono" inputmode="decimal">
       </div>
@@ -560,7 +565,7 @@ var STORE="kei-fieldsheet-v1";
 var $=function(id){ return document.getElementById(id); };
 /* App build. Bump on every version handed over, so a phone can be checked at a glance
    against the filename it came from. Separate from v1.15, which is the paper form. */
-var BUILD="14";
+var BUILD="15";
 var RECORD=!!BAKED;                 /* opened as a finished record, not the blank app */
 /* file_field_sheets.py opens the sheet as ...html#print to render the archive PDF.
    Headless Chrome never fires beforeprint, so the hi-res sketch has to be explicit. */
@@ -881,10 +886,10 @@ function drawPhotos(){
     }).catch(function(){});
   });
 }
-function loadDataUrlsFor(ids){
+function loadDataUrlsFor(draftId,ids){
   ids=ids||[];
   return Promise.all(ids.map(function(pid){
-    return idbGet(photoKey(book.cur,pid)).then(function(blob){
+    return idbGet(photoKey(draftId,pid)).then(function(blob){
       if(!blob) return null;
       return new Promise(function(res){
         var r=new FileReader();
@@ -895,8 +900,8 @@ function loadDataUrlsFor(ids){
     }).catch(function(){ return null; });
   })).then(function(list){ return list.filter(Boolean); });
 }
-function loadPhotoDataUrls(){ return loadDataUrlsFor(S&&S.qphotoIds); }
-function loadStationDataUrls(){ return loadDataUrlsFor(S&&S.sphotoIds); }
+function loadPhotoDataUrls(){ return loadDataUrlsFor(book.cur,S&&S.qphotoIds); }
+function loadStationDataUrls(){ return loadDataUrlsFor(book.cur,S&&S.sphotoIds); }
 
 function buildChecks(){
   function grid(host,list,base){
@@ -960,6 +965,10 @@ function render(){
     if(row) row.classList.toggle("hidden",!has);
     if(btn) btn.classList.toggle("hidden",has);
   });
+  var hasRQ=String(get("reviewedQ")||"")!=="";
+  var rqRow=$("revQRow"), rqBtn=$("revQBtn");
+  if(rqRow) rqRow.classList.toggle("hidden",!hasRQ);
+  if(rqBtn) rqBtn.classList.toggle("hidden",hasRQ);
   drawPhotos();
   drawSPhotos();
   autoSpread();
@@ -999,6 +1008,13 @@ function bind(){
       if(row){ row.classList.remove("hidden"); var f=row.querySelector("input"); if(f) f.focus(); }
       return;
     }
+    var rq=e.target.closest?e.target.closest("[data-revq]"):null;
+    if(rq){
+      rq.classList.add("hidden");
+      var row2=$("revQRow");
+      if(row2){ row2.classList.remove("hidden"); var f2=row2.querySelector("input"); if(f2) f2.focus(); }
+      return;
+    }
     var h=e.target.closest?e.target.closest(".card > h2"):null;
     if(!h) return;
     h.parentNode.classList.toggle("closed");
@@ -1009,6 +1025,7 @@ function bind(){
       set(el.getAttribute("data-k"), el.type==="checkbox"?el.checked:el.value);
       if(el.hasAttribute("data-calc")) autoCalc(el.getAttribute("data-calc"));
       if(el.hasAttribute("data-grade")) autoGrade(el.getAttribute("data-grade"));
+      if(el.getAttribute("data-k")==="reqs.0.txt") autoPurpose();
       if(el.hasAttribute("data-qspread")) autoSpread();
       revalidateIfFlagged();
       touch();
@@ -1033,6 +1050,13 @@ function bind(){
     if(el.hasAttribute&&el.hasAttribute("data-time")){
       var t=normTime(el.value);
       if(t!==el.value){ el.value=t; set(el.getAttribute("data-k"),t); touch(); }
+    }
+    if(el.hasAttribute&&el.hasAttribute("data-dateiso")){
+      var d=String(el.value||"").replace(/[^\d]/g,"");
+      if(d.length===8){
+        var iso=d.slice(0,4)+"-"+d.slice(4,6)+"-"+d.slice(6);
+        if(iso!==el.value){ el.value=iso; set(el.getAttribute("data-k"),iso); touch(); }
+      }
     }
   },true);
   /* Now buttons */
@@ -1073,6 +1097,17 @@ function gradeForError(err){
   if(err<6)   return "Good";
   if(err<=10) return "Fair";
   return "Poor";
+}
+/* the first Step-2 work item doubles as the purpose until someone says otherwise */
+function autoPurpose(){
+  var v=String(get("reqs.0.txt")||"").trim();
+  var prev=String(get("purposeAuto")||"");
+  var cur=String(get("purpose")||"");
+  if(cur!==""&&cur!==prev) return;      /* purpose was typed by hand — leave it */
+  set("purpose",v);
+  set("purposeAuto",v);
+  var f=document.querySelector('[data-k="purpose"]');
+  if(f) f.value=v;
 }
 function autoGrade(side){
   var g=gradeForError(num(get("sg."+side+".err")));
@@ -1160,13 +1195,15 @@ function flattenForPrint(){
 
 /* Section 1 must be complete before a sheet can leave the phone (Rory, build 7).
    Red state only exists after a failed send, then clears live as fields fill. */
-var VISIT_REQ=[["site","Station Name"],["date","Date"],["tz","Notes Time Zone"],
+var VISIT_REQ=[["site","Station Name"],["date","Date (YYYY-MM-DD)"],["tz","Notes Time Zone"],
                ["arrive","Arrival Time"],["depart","Departure Time"],["tech","Technician’s Initials"]];
 function validateVisit(){
   var missing=[];
   VISIT_REQ.forEach(function(f){
     var el=document.querySelector('[data-k="'+f[0]+'"]');
-    var ok=String(get(f[0])||"").trim()!=="";
+    var v=String(get(f[0])||"").trim();
+    var ok=v!=="";
+    if(f[0]==="date") ok=/^\d{4}-\d{2}-\d{2}$/.test(v);
     if(el) el.classList.toggle("missing",!ok);
     if(!ok) missing.push(f);
   });
@@ -1313,19 +1350,20 @@ function revalidateIfFlagged(){
 }
 
 /* ---------- finish & send ---------- */
-function fileName(){
-  var site=(S.site||"Unassigned").replace(/[\\\/:*?"<>|]/g,"-");
-  return (S.date||todayISO())+"_"+site+".html";
+function fileNameFor(st){
+  var site=(st.site||"Unassigned").replace(/[\\\/:*?"<>|]/g,"-");
+  return (st.date||todayISO())+"_"+site+".html";
 }
-function buildFile(photos,sphotos){
+function fileName(){ return fileNameFor(S); }
+function buildFileFor(st,photos,sphotos){
   var clone=document.documentElement.cloneNode(true);
   function pick(s){ return clone.querySelector(s); }
   /* hide, never remove — init() in the saved copy still wires these up */
   var dc=pick("#draftsCard"); if(dc) dc.className="card noprint hidden";
-  var t=pick("title"); if(t) t.textContent="Field Sheet — "+(S.site||"")+" "+(S.date||"");
+  var t=pick("title"); if(t) t.textContent="Field Sheet — "+(st.site||"")+" "+(st.date||"");
   var b=pick("#recBanner");
-  if(b){ b.className="banner"; b.textContent="Completed field sheet — "+(S.site||"")+"  "+(S.date||"")+
-         (S.tech?"  ·  "+S.tech:""); }
+  if(b){ b.className="banner"; b.textContent="Completed field sheet — "+(st.site||"")+"  "+(st.date||"")+
+         (st.tech?"  ·  "+st.tech:""); }
   var sh=pick("#sendHint"); if(sh) sh.className="hint noprint hidden";
   var fb=pick("#finishBtn"); if(fb) fb.textContent="Re-send sheet";
   /* the install banner / update pill may be showing right now — a record must
@@ -1334,7 +1372,7 @@ function buildFile(photos,sphotos){
   var up=pick("#updatePill"); if(up) up.className="hidden noprint";
 
   var html="<!doctype html>\n"+clone.outerHTML;
-  var payload=JSON.parse(JSON.stringify(S));
+  var payload=JSON.parse(JSON.stringify(st));
   payload.savedAt=new Date().toISOString();
   payload.build=BUILD;
   delete payload.qphotoIds;               /* IndexedDB keys mean nothing off this phone */
@@ -1346,6 +1384,102 @@ function buildFile(photos,sphotos){
   if(!re.test(html)) return null;
   return html.replace(re,function(){ return "var BAKED="+json+";/*"+"BAKEDCFG"+"*/"; });
 }
+function buildFile(photos,sphotos){ return buildFileFor(S,photos,sphotos); }
+
+/* ---------- send everything in one go ----------
+   sheetProblems mirrors validateVisit's rules but reads a plain state object, so
+   every sheet on the phone can be checked without loading it. KEEP THE TWO IN STEP. */
+function gv(st,path){
+  var parts=path.split("."), o=st;
+  for(var i=0;i<parts.length;i++){
+    if(o==null) return "";
+    o=o[/^\d+$/.test(parts[i])?Number(parts[i]):parts[i]];
+  }
+  return o==null?"":o;
+}
+function sheetProblems(st){
+  var out=[];
+  function need(v,label){ if(String(v||"").trim()==="") out.push(label); }
+  need(gv(st,"site"),"station");
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(gv(st,"date")||""))) out.push("date");
+  need(gv(st,"tz"),"time zone");
+  need(gv(st,"arrive"),"arrival time");
+  need(gv(st,"depart"),"departure time");
+  need(gv(st,"tech"),"initials");
+  need(gv(st,"purpose"),"purpose");
+  var reqs=st.reqs||[];
+  if(!reqs.some(function(r){ return String(r.txt||"").trim()!==""; })) out.push("work completed");
+  if(reqs.some(function(r){ return String(r.txt||"").trim()!==""&&!r.on&&String(r.why||"").trim()===""; }))
+    out.push("unticked work needs a reason");
+  if(((st.sphotoIds)||[]).length<1) out.push("station photo");
+  var flow=gv(st,"flow");
+  if(flow!=="yes"&&flow!=="no") out.push("flow question");
+  if(flow==="yes"){
+    var ft=gv(st,"ftype");
+    if(ft==="") out.push("method");
+    if(((st.qphotoIds)||[]).length<1) out.push("flow sheet photo");
+    var nQ=(ft==="mid")?1:(ft==="bucket")?5:3, any=false;
+    for(var i=0;i<nQ;i++){ if(num(gv(st,"pq."+i))!==null) any=true; }
+    if(!any) out.push("preliminary Q");
+    var sgOK=["a","d","m"].some(function(sd){
+      return String(gv(st,"sg."+sd+".time")||"").trim()!==""&&String(gv(st,"sg."+sd+".sg")||"").trim()!=="";
+    });
+    if(!sgOK) out.push("staff gauge reading");
+  }
+  return out;
+}
+function exportAll(){
+  commit();
+  var summary=$("exportSummary");
+  function say(t){ if(summary){ summary.style.display="block"; summary.textContent=t; } }
+  var ready=[], notReady=[];
+  (book.drafts||[]).forEach(function(d){
+    if(!d.state) return;
+    var probs=sheetProblems(d.state);
+    if(probs.length) notReady.push({d:d,probs:probs}); else ready.push(d);
+  });
+  if(!ready.length){
+    say(notReady.length
+      ? "Nothing ready to send yet — open each sheet and finish what's red."
+      : "No sheets on this phone.");
+    return;
+  }
+  say("Preparing "+ready.length+" sheet(s)…");
+  Promise.all(ready.map(function(d){
+    return Promise.all([
+      loadDataUrlsFor(d.id,(d.state.qphotoIds)||[]),
+      loadDataUrlsFor(d.id,(d.state.sphotoIds)||[])
+    ]).then(function(both){
+      var html=buildFileFor(d.state,both[0],both[1]);
+      return html?new File([new Blob([html],{type:"text/html"})],fileNameFor(d.state),{type:"text/html"}):null;
+    });
+  })).then(function(files){
+    files=files.filter(Boolean);
+    var held=notReady.length
+      ? "  Held back: "+notReady.map(function(x){ return (x.d.state.site||"unnamed")+" ("+x.probs[0]+"…)"; }).join(", ")+"."
+      : "";
+    function doneMsg(how){ say(files.length+" sheet(s) "+how+"."+held); }
+    if(navigator.canShare){
+      try{
+        if(navigator.canShare({files:files})){
+          navigator.share({files:files,title:"KEI field sheets"})
+            .then(function(){ doneMsg("shared"); })
+            .catch(function(err){
+              if(err&&err.name==="AbortError"){ say("Share cancelled — nothing sent."+held); return; }
+              files.forEach(function(f,i){ setTimeout(function(){ download(f,f.name); },i*400); });
+              doneMsg("downloaded");
+            });
+          return;
+        }
+      }catch(e){}
+    }
+    files.forEach(function(f,i){ setTimeout(function(){ download(f,f.name); },i*400); });
+    doneMsg("downloaded");
+  }).catch(function(e){
+    say("Export failed — "+(e&&e.message?e.message:e)+". Nothing was sent.");
+  });
+}
+
 function finish(){
   var missing=validateVisit();
   if(missing.length){
@@ -1524,6 +1658,7 @@ function init(){
   render();
   drawDrafts();
 
+  $("exportAllBtn").addEventListener("click",exportAll);
   $("newSheetBtn").addEventListener("click",function(){
     commit();
     var s=blank();
