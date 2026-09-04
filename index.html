@@ -77,8 +77,15 @@ header.top .wrap{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
   min-width:22px;height:22px;padding:0 8px;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;
   font-size:13px;letter-spacing:0;flex:0 0 auto
 }
-.card h2::after{content:"−";margin-left:auto;color:var(--ink3);font-weight:600}
-.card.closed h2::after{content:"+"}
+.card h2{min-height:42px}
+.card h2::after{
+  content:"−";margin-left:auto;flex:0 0 auto;
+  width:38px;height:38px;border-radius:999px;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--line);background:var(--bg);color:var(--ink2);
+  font-size:22px;font-weight:600;line-height:1
+}
+.card.closed h2::after{content:"+";color:var(--accent);border-color:var(--accent)}
 .card.closed h2{margin-bottom:0}
 @media screen{
   .card.closed > *:not(h2){display:none}
@@ -229,7 +236,8 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
     box-shadow:none;border-color:#999;border-radius:5px;
     padding:7px 8px;margin:0 0 6px;background:#fff
   }
-  .card h2{font-size:8px;margin:0 0 5px;color:#000;letter-spacing:.06em}
+  .card h2{font-size:8px;margin:0 0 5px;color:#000;letter-spacing:.06em;min-height:0}
+  .card h2::after{content:none}
   .card h2 .n{background:#000;color:#fff;min-width:13px;height:13px;font-size:8px}
   h3.sub{font-size:9px;margin:8px 0 4px}
   .banner{column-span:all;padding:5px 8px;font-size:10px;margin:0 0 7px;background:#fff;color:#000}
@@ -360,8 +368,13 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
   <!-- 2 requirements -->
   <div class="card">
     <h2><span class="n">Step 2</span> Site Requirements / Work Completed</h2>
-    <p class="hint" style="margin:0 0 8px">Your first line here also fills in the <b>Main Purpose for
-    Site Visit</b> (Step 4) &mdash; put the visit&rsquo;s main job on line one.</p>
+    <div class="f">
+      <label for="purposeF">Main Purpose for Site Visit <span class="ext">(auto-fills from your first work item &mdash; type to override)</span></label>
+      <input type="text" id="purposeF" data-k="purpose">
+      <p class="hint bad hidden" id="purposeIncomplete"></p>
+    </div>
+    <p class="hint" style="margin:0 0 8px">Your first work line below fills the purpose in automatically
+    &mdash; put the visit&rsquo;s main job on line one.</p>
     <div id="reqRows"></div>
     <p class="hint bad hidden" id="reqIncomplete"></p>
     <p class="hint warn hidden" id="reqConfirm"></p>
@@ -386,37 +399,23 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
           <div><label>Staff Gauge Angle <span class="ext">(set per station)</span></label><input type="text" data-k="sg.a.ang" class="mono" readonly tabindex="-1"></div>
           <div><label>Calculated Staff Gauge <span class="ext">(auto)</span></label><input type="text" data-k="sg.a.calc" class="mono" readonly tabindex="-1"></div>
         </div>
-        <button class="btn sm noprint" type="button" id="revBtn_a" data-revside="a">Add reviewed reading <span class="ext">(office)</span></button>
-        <div class="row tight hidden" id="revRow_a">
-          <div><label>Reviewed Staff Gauge (m) <span class="ext">(office)</span></label><input type="text" data-k="sg.a.rev" class="mono" inputmode="decimal"></div>
-          <div><label>Error (&plusmn;mm)</label><input type="text" data-k="sg.a.revErr" class="mono" inputmode="decimal"></div>
-        </div>
         <div class="f">
           <label>Staff Gauge Read Grade <span class="ext">(auto from Error &mdash; tap to override)</span></label>
           <div class="seg" data-seg="sg.a.grade" data-opts="Poor|Fair|Good|Very Good|Excellent"></div>
+        </div>
+        <button class="btn sm noprint" type="button" id="revBtn_a" data-revside="a">Add reviewed reading <span class="ext">(office)</span></button>
+        <div class="f hidden" id="revRow_a" style="max-width:240px">
+          <label>Reviewed Staff Gauge (m) <span class="ext">(office)</span></label>
+          <input type="text" data-k="sg.a.rev" class="mono" inputmode="decimal">
         </div>
       </div>
     <p class="hint bad hidden" id="sgIncomplete"></p>
     <p class="hint" id="calcHint">The Calculated Staff Gauge fills in as reading &times; angle once you pick a station.</p>
   </div>
 
-  <!-- 4 notes -->
-  <div class="card">
-    <h2><span class="n">Step 4</span> Notes</h2>
-    <div class="f">
-      <label for="purposeF">Main Purpose for Site Visit <span class="ext">(auto-fills from your first work item &mdash; type to override)</span></label>
-      <input type="text" id="purposeF" data-k="purpose">
-      <p class="hint bad hidden" id="purposeIncomplete"></p>
-    </div>
-    <div class="f">
-      <label for="notesF">Notes</label>
-      <textarea id="notesF" data-k="notes"></textarea>
-    </div>
-  </div>
-
   <!-- 5 360 -->
   <div class="card">
-    <h2><span class="n">Step 5</span> Photos</h2>
+    <h2><span class="n">Step 4</span> Photos</h2>
     <h3 class="sub">Station photo (this phone)</h3>
     <div class="pgrid" id="sphotoGrid"></div>
     <button class="btn noprint" type="button" id="takeSPhotoBtn">&#128247; Take station photo</button>
@@ -433,7 +432,7 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
 
   <!-- 6 discharge -->
   <div class="card hidden" id="cardQ">
-    <h2><span class="n">Step 6</span> Discharge Measurement</h2>
+    <h2><span class="n">Step 5</span> Discharge Measurement</h2>
     <div id="qBody">
       <h3 class="sub">Photo of the flow measurement sheet</h3>
       <div class="pgrid" id="photoGrid"></div>
@@ -444,21 +443,22 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
       from the photo, never retyped. For a bucket run, sketch where the measurement was
       taken and photograph the sketch. The photo travels inside the sent sheet.</p>
 
+      <h3 class="sub">Staff Gauge during measurement</h3>
+      <div class="row">
+        <div><label>Time</label><div class="withbtn">
+          <input type="text" data-k="sg.m.time" data-time="1" class="mono" inputmode="numeric" placeholder="12:35">
+          <button class="btn now" type="button" data-nowk="sg.m.time">Now</button></div></div>
+        <div style="flex:0 1 130px"><label>Staff Gauge (m)</label><input type="text" data-k="sg.m.sg" class="mono" inputmode="decimal"></div>
+        <div style="flex:0 1 120px"><label>Error (&plusmn;mm)</label><input type="text" data-k="sg.m.err" class="mono" inputmode="decimal"></div>
+      </div>
+      <p class="hint">Read the staff gauge around the measurement if you can &mdash; otherwise an
+      arrival or departure reading covers the requirement.</p>
       <h3 class="sub">Preliminary Q&rsquo;s</h3>
       <div class="row" id="qmRows"></div>
       <p class="hint bad hidden" id="qmIncomplete"></p>
       <p class="hint" id="qSpreadOut">Enter at least two Q&rsquo;s and the spread calculates itself.</p>
       <p class="hint">Quick-and-dirty field values &mdash; enough to check the runs agree and to
       have numbers on paper if equipment fails. The office fills Reviewed Q after processing.</p>
-      <h3 class="sub">Staff Gauge during measurement</h3>
-      <div class="row">
-        <div><label>Time</label><div class="withbtn">
-          <input type="text" data-k="sg.m.time" data-time="1" class="mono" inputmode="numeric" placeholder="12:35">
-          <button class="btn now" type="button" data-nowk="sg.m.time">Now</button></div></div>
-        <div style="flex:0 1 140px"><label>Staff Gauge (m)</label><input type="text" data-k="sg.m.sg" class="mono" inputmode="decimal"></div>
-      </div>
-      <p class="hint">Read the staff gauge around the measurement if you can &mdash; otherwise an
-      arrival or departure reading covers the requirement.</p>
       <button class="btn sm noprint" type="button" id="revQBtn" data-revq="1" style="margin-top:8px">Add reviewed Q <span class="ext">(office)</span></button>
       <div class="f hidden" id="revQRow" style="margin-top:8px;max-width:200px">
         <label>Reviewed Q (m&sup3;/s) <span class="ext">(office)</span></label>
@@ -469,7 +469,7 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
 
   <!-- 7 departure SG — read on the way out, after the measurement -->
   <div class="card">
-    <h2><span class="n">Step 7</span> Departure Staff Gauge</h2>
+    <h2><span class="n">Step 6</span> Departure Staff Gauge</h2>
     <div class="panel" id="sgD">
         <div class="f">
           <label>Time</label>
@@ -486,22 +486,28 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
           <div><label>Staff Gauge Angle <span class="ext">(set per station)</span></label><input type="text" data-k="sg.d.ang" class="mono" readonly tabindex="-1"></div>
           <div><label>Calculated Staff Gauge <span class="ext">(auto)</span></label><input type="text" data-k="sg.d.calc" class="mono" readonly tabindex="-1"></div>
         </div>
-        <button class="btn sm noprint" type="button" id="revBtn_d" data-revside="d">Add reviewed reading <span class="ext">(office)</span></button>
-        <div class="row tight hidden" id="revRow_d">
-          <div><label>Reviewed Staff Gauge (m) <span class="ext">(office)</span></label><input type="text" data-k="sg.d.rev" class="mono" inputmode="decimal"></div>
-          <div><label>Error (&plusmn;mm)</label><input type="text" data-k="sg.d.revErr" class="mono" inputmode="decimal"></div>
-        </div>
         <div class="f">
           <label>Staff Gauge Read Grade <span class="ext">(auto from Error &mdash; tap to override)</span></label>
           <div class="seg" data-seg="sg.d.grade" data-opts="Poor|Fair|Good|Very Good|Excellent"></div>
         </div>
         <button class="btn sm noprint" type="button" id="sameAsArrival">Same reading as arrival</button>
+        <button class="btn sm noprint" type="button" id="revBtn_d" data-revside="d">Add reviewed reading <span class="ext">(office)</span></button>
+        <div class="f hidden" id="revRow_d" style="max-width:240px">
+          <label>Reviewed Staff Gauge (m) <span class="ext">(office)</span></label>
+          <input type="text" data-k="sg.d.rev" class="mono" inputmode="decimal">
+        </div>
       </div>
   </div>
 
   <!-- 8 departure — last thing before sending, in the order the visit actually happens -->
   <div class="card">
-    <h2><span class="n">Step 8</span> Departure</h2>
+    <h2><span class="n">Step 7</span> Departure &amp; Notes</h2>
+    <div class="f">
+      <label for="notesF">Notes</label>
+      <textarea id="notesF" data-k="notes"></textarea>
+      <p class="hint">A moment to reflect &mdash; how did the visit go, what should the office
+      or the next crew know?</p>
+    </div>
     <div class="f" style="max-width:240px">
       <label for="departF">Departure Time</label>
       <div class="withbtn">
@@ -565,7 +571,7 @@ var STORE="kei-fieldsheet-v1";
 var $=function(id){ return document.getElementById(id); };
 /* App build. Bump on every version handed over, so a phone can be checked at a glance
    against the filename it came from. Separate from v1.15, which is the paper form. */
-var BUILD="15";
+var BUILD="16";
 var RECORD=!!BAKED;                 /* opened as a finished record, not the blank app */
 /* file_field_sheets.py opens the sheet as ...html#print to render the archive PDF.
    Headless Chrome never fires beforeprint, so the hi-res sketch has to be explicit. */
@@ -574,10 +580,10 @@ var S=null, saveTimer=null, book=null;
 
 /* ---------- state ---------- */
 function blank(){
-  function sgSide(){ return {time:"",sg:"",err:"",ang:"",calc:"",rev:"",revErr:"",grade:""}; }
+  function sgSide(){ return {time:"",sg:"",err:"",ang:"",calc:"",rev:"",grade:""}; }
   var s={
     v:"1.15", site:"", date:todayISO(), tz:"-7", arrive:"", depart:"", tech:"", flow:"", ftype:"",
-    reqs:[], sg:{a:sgSide(),d:sgSide(),m:{time:"",sg:""}}, purpose:"", notes:"",
+    reqs:[], sg:{a:sgSide(),d:sgSide(),m:{time:"",sg:"",err:""}}, purpose:"", notes:"",
     photos:{}, videos:{},
     pq:["","","","",""], reviewedQ:"", qspread:"", qspreadPct:"", qphotoIds:[], sphotoIds:[]
   };
@@ -939,7 +945,8 @@ function render(){
     delete S.qm;
   }
   if(S&&S.reviewedQ===undefined) S.reviewedQ="";
-  if(S&&S.sg&&!S.sg.m) S.sg.m={time:"",sg:""};
+  if(S&&S.sg&&!S.sg.m) S.sg.m={time:"",sg:"",err:""};
+  if(S&&S.sg&&S.sg.m&&S.sg.m.err===undefined) S.sg.m.err="";
   if(S&&S.sphotoIds===undefined) S.sphotoIds=[];
   if(S&&S.ftype===undefined) S.ftype="";
   Array.prototype.forEach.call(document.querySelectorAll("[data-k]"),function(el){
@@ -960,7 +967,7 @@ function render(){
   syncQ();
   showAngleNote();
   ["a","d"].forEach(function(sd){
-    var has=String(get("sg."+sd+".rev")||"")!==""||String(get("sg."+sd+".revErr")||"")!=="";
+    var has=String(get("sg."+sd+".rev")||"")!=="";
     var row=$("revRow_"+sd), btn=$("revBtn_"+sd);
     if(row) row.classList.toggle("hidden",!has);
     if(btn) btn.classList.toggle("hidden",has);
