@@ -68,13 +68,20 @@ header.top .wrap{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
   box-shadow:var(--shadow); padding:11px; margin:0 0 8px;
 }
 .card h2{
-  font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);
-  margin:0 0 8px;font-weight:700;display:flex;align-items:center;gap:8px
+  font-size:16px;color:var(--ink);
+  margin:0 0 8px;font-weight:800;display:flex;align-items:center;gap:9px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none
 }
 .card h2 .n{
-  background:var(--accent);color:var(--accent-ink);border-radius:5px;
-  min-width:18px;height:18px;padding:0 4px;display:inline-flex;align-items:center;justify-content:center;
-  font-size:11px;letter-spacing:0
+  background:var(--accent);color:var(--accent-ink);border-radius:6px;
+  min-width:22px;height:22px;padding:0 8px;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;
+  font-size:13px;letter-spacing:0;flex:0 0 auto
+}
+.card h2::after{content:"−";margin-left:auto;color:var(--ink3);font-weight:600}
+.card.closed h2::after{content:"+"}
+.card.closed h2{margin-bottom:0}
+@media screen{
+  .card.closed > *:not(h2){display:none}
 }
 h3.sub{font-size:13px;font-weight:700;color:var(--ink2);margin:10px 0 6px}
 h3.sub:first-of-type{margin-top:0}
@@ -139,8 +146,7 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
   margin:0;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;
   padding:9px 0;flex:1 1 auto;-webkit-tap-highlight-color:transparent
 }
-.chkgrid{display:flex;flex-wrap:wrap;gap:2px 12px}
-.chkgrid .chk{margin:0;flex:1 1 150px}
+.chkgrid .chk{margin:0}   /* one checkpoint per line, top to bottom */
 
 /* measurement-quality yes/no rows */
 .qrow{border-top:1px solid var(--line2);padding:7px 0 0;margin:7px 0 0}
@@ -164,17 +170,14 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
 .flabel{font-size:14px;font-weight:700;flex:1 1 auto}
 
 /* flow sheet photos */
-.pgrid{display:flex;flex-wrap:wrap;gap:9px;margin:0 0 10px}
+.pgrid{margin:0 0 10px}
 .pgrid:empty{margin:0}
-.pgrid .ph{position:relative}
-.pgrid .ph img{width:104px;height:104px;object-fit:cover;border-radius:9px;border:1px solid var(--line);display:block}
-.pgrid.rec{display:block}
-.pgrid.rec .ph{margin:0 0 10px}
-.pgrid.rec .ph img{width:100%;height:auto;object-fit:contain;max-height:none}
+.pgrid .ph{position:relative;margin:0 0 10px}
+.pgrid .ph img{width:100%;height:auto;border-radius:9px;border:1px solid var(--line);display:block}
 .phx{
-  position:absolute;top:-8px;right:-8px;width:28px;height:28px;border-radius:999px;
+  position:absolute;top:8px;right:8px;width:32px;height:32px;border-radius:999px;
   border:1px solid var(--line);background:var(--panel);color:var(--bad);
-  font-size:16px;font-weight:700;line-height:1;cursor:pointer
+  font-size:18px;font-weight:700;line-height:1;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.25)
 }
 
 /* drafts */
@@ -323,7 +326,7 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
 
   <!-- 1 visit -->
   <div class="card">
-    <h2><span class="n">1</span> Visit</h2>
+    <h2><span class="n">Step 1</span> Site Visit Details</h2>
     <div class="f">
       <label for="siteSel">Station Name</label>
       <select id="siteSel" data-k="site"><option value="">— choose a station —</option></select>
@@ -338,20 +341,11 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
         <input type="text" id="tzF" data-k="tz" class="mono" inputmode="text" placeholder="-7">
       </div>
     </div>
-    <div class="row">
-      <div>
-        <label for="arriveF">Arrival Time</label>
-        <div class="withbtn">
-          <input type="text" id="arriveF" data-k="arrive" data-time="1" class="mono" inputmode="numeric" placeholder="12:00">
-          <button class="btn now" type="button" data-now="arriveF">Now</button>
-        </div>
-      </div>
-      <div>
-        <label for="departF">Departure Time</label>
-        <div class="withbtn">
-          <input type="text" id="departF" data-k="depart" data-time="1" class="mono" inputmode="numeric" placeholder="13:00">
-          <button class="btn now" type="button" data-now="departF">Now</button>
-        </div>
+    <div class="f">
+      <label for="arriveF">Arrival Time</label>
+      <div class="withbtn">
+        <input type="text" id="arriveF" data-k="arrive" data-time="1" class="mono" inputmode="numeric" placeholder="12:00">
+        <button class="btn now" type="button" data-now="arriveF">Now</button>
       </div>
     </div>
     <div class="f">
@@ -363,18 +357,16 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
 
   <!-- 2 requirements -->
   <div class="card">
-    <h2><span class="n">2</span> Site Requirements / Work Completed</h2>
+    <h2><span class="n">Step 2</span> Site Requirements / Work Completed</h2>
     <div id="reqRows"></div>
     <p class="hint bad hidden" id="reqIncomplete"></p>
     <p class="hint warn hidden" id="reqConfirm"></p>
   </div>
 
-  <!-- 3 staff gauge -->
+  <!-- 3 arrival SG -->
   <div class="card">
-    <h2><span class="n">3</span> Staff Gauge</h2>
-    <div class="cols2">
-      <div class="panel" id="sgA">
-        <h4>SG Arrival</h4>
+    <h2><span class="n">Step 3</span> Arrival Staff Gauge</h2>
+    <div class="panel" id="sgA">
         <div class="f">
           <label>Time</label>
           <div class="withbtn">
@@ -383,57 +375,30 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
           </div>
         </div>
         <div class="row tight">
-          <div><label>SG (m)</label><input type="text" data-k="sg.a.sg" data-calc="a" class="mono" inputmode="decimal"></div>
-          <div><label>Error (&plusmn;mm)</label><input type="text" data-k="sg.a.err" class="mono" inputmode="decimal"></div>
+          <div><label>Staff Gauge (m)</label><input type="text" data-k="sg.a.sg" data-calc="a" class="mono" inputmode="decimal"></div>
+          <div><label>Error (&plusmn;mm)</label><input type="text" data-k="sg.a.err" data-grade="a" class="mono" inputmode="decimal"></div>
         </div>
         <div class="row tight hidden" id="angRow_a">
-          <div><label>SG Angle <span class="ext">(set per station)</span></label><input type="text" data-k="sg.a.ang" class="mono" readonly tabindex="-1"></div>
-          <div><label>Calc&rsquo;d SG <span class="ext">(auto)</span></label><input type="text" data-k="sg.a.calc" class="mono" readonly tabindex="-1"></div>
+          <div><label>Staff Gauge Angle <span class="ext">(set per station)</span></label><input type="text" data-k="sg.a.ang" class="mono" readonly tabindex="-1"></div>
+          <div><label>Calculated Staff Gauge <span class="ext">(auto)</span></label><input type="text" data-k="sg.a.calc" class="mono" readonly tabindex="-1"></div>
         </div>
-        <div class="row tight">
-          <div><label>Reviewed SG (m) <span class="ext">(office)</span></label><input type="text" data-k="sg.a.rev" class="mono" inputmode="decimal"></div>
-          <div><label>&plusmn;mm</label><input type="text" data-k="sg.a.revErr" class="mono" inputmode="decimal"></div>
+        <button class="btn sm noprint" type="button" id="revBtn_a" data-revside="a">Add reviewed reading <span class="ext">(office)</span></button>
+        <div class="row tight hidden" id="revRow_a">
+          <div><label>Reviewed Staff Gauge (m) <span class="ext">(office)</span></label><input type="text" data-k="sg.a.rev" class="mono" inputmode="decimal"></div>
+          <div><label>Error (&plusmn;mm)</label><input type="text" data-k="sg.a.revErr" class="mono" inputmode="decimal"></div>
         </div>
         <div class="f">
-          <label>SG Read Grade</label>
+          <label>Staff Gauge Read Grade <span class="ext">(auto from Error &mdash; tap to override)</span></label>
           <div class="seg" data-seg="sg.a.grade" data-opts="Poor|Fair|Good|Very Good|Excellent"></div>
         </div>
       </div>
-      <div class="panel" id="sgD">
-        <h4>SG Departure</h4>
-        <div class="f">
-          <label>Time</label>
-          <div class="withbtn">
-            <input type="text" data-k="sg.d.time" data-time="1" class="mono" inputmode="numeric" placeholder="12:57">
-            <button class="btn now" type="button" data-nowk="sg.d.time">Now</button>
-          </div>
-        </div>
-        <div class="row tight">
-          <div><label>SG (m)</label><input type="text" data-k="sg.d.sg" data-calc="d" class="mono" inputmode="decimal"></div>
-          <div><label>Error (&plusmn;mm)</label><input type="text" data-k="sg.d.err" class="mono" inputmode="decimal"></div>
-        </div>
-        <div class="row tight hidden" id="angRow_d">
-          <div><label>SG Angle <span class="ext">(set per station)</span></label><input type="text" data-k="sg.d.ang" class="mono" readonly tabindex="-1"></div>
-          <div><label>Calc&rsquo;d SG <span class="ext">(auto)</span></label><input type="text" data-k="sg.d.calc" class="mono" readonly tabindex="-1"></div>
-        </div>
-        <div class="row tight">
-          <div><label>Reviewed SG (m) <span class="ext">(office)</span></label><input type="text" data-k="sg.d.rev" class="mono" inputmode="decimal"></div>
-          <div><label>&plusmn;mm</label><input type="text" data-k="sg.d.revErr" class="mono" inputmode="decimal"></div>
-        </div>
-        <div class="f">
-          <label>SG Read Grade</label>
-          <div class="seg" data-seg="sg.d.grade" data-opts="Poor|Fair|Good|Very Good|Excellent"></div>
-        </div>
-        <button class="btn sm noprint" type="button" id="sameAsArrival">Same reading as arrival</button>
-      </div>
-    </div>
     <p class="hint bad hidden" id="sgIncomplete"></p>
-    <p class="hint" id="calcHint">Calc&rsquo;d SG fills in as SG &times; SG Angle. Type over it if the site does it differently.</p>
+    <p class="hint" id="calcHint">The Calculated Staff Gauge fills in as reading &times; angle once you pick a station.</p>
   </div>
 
   <!-- 4 notes -->
   <div class="card">
-    <h2><span class="n">4</span> Notes</h2>
+    <h2><span class="n">Step 4</span> Notes</h2>
     <div class="f">
       <label for="purposeF">Main Purpose for Site Visit</label>
       <input type="text" id="purposeF" data-k="purpose">
@@ -447,7 +412,7 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
 
   <!-- 5 360 -->
   <div class="card">
-    <h2><span class="n">5</span> Photos</h2>
+    <h2><span class="n">Step 5</span> Photos</h2>
     <h3 class="sub">Station photo (this phone)</h3>
     <div class="pgrid" id="sphotoGrid"></div>
     <button class="btn noprint" type="button" id="takeSPhotoBtn">&#128247; Take station photo</button>
@@ -464,7 +429,7 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
 
   <!-- 6 discharge -->
   <div class="card hidden" id="cardQ">
-    <h2><span class="n">6</span> Discharge Measurement</h2>
+    <h2><span class="n">Step 6</span> Discharge Measurement</h2>
     <div id="qBody">
       <h3 class="sub">Photo of the flow measurement sheet</h3>
       <div class="pgrid" id="photoGrid"></div>
@@ -481,12 +446,12 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
       <p class="hint" id="qSpreadOut">Enter at least two Q&rsquo;s and the spread calculates itself.</p>
       <p class="hint">Quick-and-dirty field values &mdash; enough to check the runs agree and to
       have numbers on paper if equipment fails. The office fills Reviewed Q after processing.</p>
-      <h3 class="sub">SG during measurement</h3>
+      <h3 class="sub">Staff Gauge during measurement</h3>
       <div class="row">
         <div><label>Time</label><div class="withbtn">
           <input type="text" data-k="sg.m.time" data-time="1" class="mono" inputmode="numeric" placeholder="12:35">
           <button class="btn now" type="button" data-nowk="sg.m.time">Now</button></div></div>
-        <div style="flex:0 1 140px"><label>SG (m)</label><input type="text" data-k="sg.m.sg" class="mono" inputmode="decimal"></div>
+        <div style="flex:0 1 140px"><label>Staff Gauge (m)</label><input type="text" data-k="sg.m.sg" class="mono" inputmode="decimal"></div>
       </div>
       <p class="hint">Read the staff gauge around the measurement if you can &mdash; otherwise an
       arrival or departure reading covers the requirement.</p>
@@ -495,6 +460,51 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
         <input type="text" data-k="reviewedQ" class="mono" inputmode="decimal">
       </div>
     </div>
+  </div>
+
+  <!-- 7 departure SG — read on the way out, after the measurement -->
+  <div class="card">
+    <h2><span class="n">Step 7</span> Departure Staff Gauge</h2>
+    <div class="panel" id="sgD">
+        <div class="f">
+          <label>Time</label>
+          <div class="withbtn">
+            <input type="text" data-k="sg.d.time" data-time="1" class="mono" inputmode="numeric" placeholder="12:57">
+            <button class="btn now" type="button" data-nowk="sg.d.time">Now</button>
+          </div>
+        </div>
+        <div class="row tight">
+          <div><label>Staff Gauge (m)</label><input type="text" data-k="sg.d.sg" data-calc="d" class="mono" inputmode="decimal"></div>
+          <div><label>Error (&plusmn;mm)</label><input type="text" data-k="sg.d.err" data-grade="d" class="mono" inputmode="decimal"></div>
+        </div>
+        <div class="row tight hidden" id="angRow_d">
+          <div><label>Staff Gauge Angle <span class="ext">(set per station)</span></label><input type="text" data-k="sg.d.ang" class="mono" readonly tabindex="-1"></div>
+          <div><label>Calculated Staff Gauge <span class="ext">(auto)</span></label><input type="text" data-k="sg.d.calc" class="mono" readonly tabindex="-1"></div>
+        </div>
+        <button class="btn sm noprint" type="button" id="revBtn_d" data-revside="d">Add reviewed reading <span class="ext">(office)</span></button>
+        <div class="row tight hidden" id="revRow_d">
+          <div><label>Reviewed Staff Gauge (m) <span class="ext">(office)</span></label><input type="text" data-k="sg.d.rev" class="mono" inputmode="decimal"></div>
+          <div><label>Error (&plusmn;mm)</label><input type="text" data-k="sg.d.revErr" class="mono" inputmode="decimal"></div>
+        </div>
+        <div class="f">
+          <label>Staff Gauge Read Grade <span class="ext">(auto from Error &mdash; tap to override)</span></label>
+          <div class="seg" data-seg="sg.d.grade" data-opts="Poor|Fair|Good|Very Good|Excellent"></div>
+        </div>
+        <button class="btn sm noprint" type="button" id="sameAsArrival">Same reading as arrival</button>
+      </div>
+  </div>
+
+  <!-- 8 departure — last thing before sending, in the order the visit actually happens -->
+  <div class="card">
+    <h2><span class="n">Step 8</span> Departure</h2>
+    <div class="f" style="max-width:240px">
+      <label for="departF">Departure Time</label>
+      <div class="withbtn">
+        <input type="text" id="departF" data-k="depart" data-time="1" class="mono" inputmode="numeric" placeholder="13:00">
+        <button class="btn now" type="button" data-now="departF">Now</button>
+      </div>
+    </div>
+    <p class="hint">Fill this as you leave &mdash; then Finish &amp; send.</p>
   </div>
 
   <div class="actions noprint">
@@ -538,18 +548,19 @@ var SG_ANGLE={
 
 /* Measurement quality. Worded so No is always the answer that needs explaining,
    which is why the eddies question is phrased as "not affecting". */
-var PHOTOS=[["station","Station, Control, US &amp; DS"],
-            ["sdmeter","SD Meter Loc.","salt"],["dosing","Dosing Loc.","salt"],
-            ["mixing","Mixing Reach","salt"],["wdxs","WD X-Section","mid"],
-            ["bucketloc","Measurement Loc.","bucket"]];
-var VIDEOS=[["station","Station, Control, US &amp; DS"],["arrsg","10 Sec Arrival SG"],
-            ["depsg","10 Sec Departure SG"]];
+var PHOTOS=[["station","Station, Control, Upstream &amp; Downstream"],
+            ["sdmeter","Salt Dilution Meter Location","salt"],["dosing","Dosing Location","salt"],
+            ["mixing","Mixing Reach","salt"],["wdxs","Cross Section","mid"],
+            ["bucketloc","Measurement Location","bucket"]];
+var VIDEOS=[["station","Station, Control, Upstream &amp; Downstream"],
+            ["arrsg","10-Second Arrival Staff Gauge"],
+            ["depsg","10-Second Departure Staff Gauge"]];
 
 var STORE="kei-fieldsheet-v1";
 var $=function(id){ return document.getElementById(id); };
 /* App build. Bump on every version handed over, so a phone can be checked at a glance
    against the filename it came from. Separate from v1.15, which is the paper form. */
-var BUILD="13";
+var BUILD="14";
 var RECORD=!!BAKED;                 /* opened as a finished record, not the blank app */
 /* file_field_sheets.py opens the sheet as ...html#print to render the archive PDF.
    Headless Chrome never fires beforeprint, so the hi-res sketch has to be explicit. */
@@ -688,10 +699,33 @@ function buildQm(){
       '<input type="text" data-k="pq.'+i+'" data-qspread="1" class="mono" inputmode="decimal"></div>';
   }).join("");
 }
+/* three sensors for salt dilution, one pass for midsection, five buckets for bucket */
+function qCount(){
+  var t=get("ftype");
+  return t==="mid"?1:t==="bucket"?5:3;
+}
+function syncQCount(){
+  var n=qCount();
+  for(var i=0;i<5;i++){
+    var el=document.querySelector('[data-k="pq.'+i+'"]');
+    if(!el) continue;
+    var hide=i>=n;
+    el.parentNode.classList.toggle("hidden",hide);
+    if(hide&&String(get("pq."+i)||"")!==""){ set("pq."+i,""); el.value=""; }
+  }
+  autoSpread();
+}
 /* the one number the office wants at a glance: how far apart the measurements are */
 function autoSpread(){
   var vals=[];
-  for(var i=0;i<5;i++){ var n=num(get("pq."+i)); if(n!==null&&n>0) vals.push(n); }
+  var N=qCount();
+  if(N<2){                                      /* one run has nothing to agree with */
+    set("qspread",""); set("qspreadPct","");
+    var out1=$("qSpreadOut"); if(out1) out1.classList.add("hidden");
+    return;
+  }
+  var out=$("qSpreadOut"); if(out) out.classList.remove("hidden");
+  for(var i=0;i<N;i++){ var n=num(get("pq."+i)); if(n!==null&&n>0) vals.push(n); }
   var el=$("qSpreadOut");
   if(vals.length<2){
     set("qspread",""); set("qspreadPct","");
@@ -920,6 +954,12 @@ function render(){
   paintSegs();
   syncQ();
   showAngleNote();
+  ["a","d"].forEach(function(sd){
+    var has=String(get("sg."+sd+".rev")||"")!==""||String(get("sg."+sd+".revErr")||"")!=="";
+    var row=$("revRow_"+sd), btn=$("revBtn_"+sd);
+    if(row) row.classList.toggle("hidden",!has);
+    if(btn) btn.classList.toggle("hidden",has);
+  });
   drawPhotos();
   drawSPhotos();
   autoSpread();
@@ -936,6 +976,7 @@ function syncQ(){
   var t=get("ftype");
   var el=$("cardQ"); if(el) el.classList.toggle("hidden",!on);
   var tr=$("ftypeRow"); if(tr) tr.classList.toggle("hidden",!on);
+  syncQCount();
   Array.prototype.forEach.call(document.querySelectorAll(".qonly"),function(q){
     var kinds=q.getAttribute("data-show");
     q.classList.toggle("hidden",!(on&&(!kinds||kinds===t)));
@@ -949,11 +990,25 @@ function paintSegs(){
   });
 }
 function bind(){
+  document.addEventListener("click",function(e){
+    var rb=e.target.closest?e.target.closest("[data-revside]"):null;
+    if(rb){
+      var sd=rb.getAttribute("data-revside");
+      rb.classList.add("hidden");
+      var row=$("revRow_"+sd);
+      if(row){ row.classList.remove("hidden"); var f=row.querySelector("input"); if(f) f.focus(); }
+      return;
+    }
+    var h=e.target.closest?e.target.closest(".card > h2"):null;
+    if(!h) return;
+    h.parentNode.classList.toggle("closed");
+  });
   document.addEventListener("input",function(e){
     var el=e.target;
     if(el.hasAttribute&&el.hasAttribute("data-k")){
       set(el.getAttribute("data-k"), el.type==="checkbox"?el.checked:el.value);
       if(el.hasAttribute("data-calc")) autoCalc(el.getAttribute("data-calc"));
+      if(el.hasAttribute("data-grade")) autoGrade(el.getAttribute("data-grade"));
       if(el.hasAttribute("data-qspread")) autoSpread();
       revalidateIfFlagged();
       touch();
@@ -1009,6 +1064,27 @@ function num(v){
   var n=parseFloat(String(v).replace(/[^\d.\-+eE]/g,""));
   return isFinite(n)?n:null;
 }
+/* RISC read-grade bands, from the office guideline sheet:
+   <2.0 Excellent | 2.0-2.9 Very Good | 3.0-5.9 Good | 6.0-10.0 Fair | >10 Poor */
+function gradeForError(err){
+  if(err===null) return "";
+  if(err<2)   return "Excellent";
+  if(err<3)   return "Very Good";
+  if(err<6)   return "Good";
+  if(err<=10) return "Fair";
+  return "Poor";
+}
+function autoGrade(side){
+  var g=gradeForError(num(get("sg."+side+".err")));
+  if(g==="") return;
+  var prev=String(get("sg."+side+".gradeAuto")||"");
+  var cur=String(get("sg."+side+".grade")||"");
+  if(cur!==""&&cur!==prev) return;      /* tapped by hand — leave it */
+  set("sg."+side+".grade",g);
+  set("sg."+side+".gradeAuto",g);
+  var el=document.querySelector('[data-radio="sg.'+side+'.grade"][value="'+g+'"]');
+  if(el){ el.checked=true; paintSegs(); }
+}
 function autoCalc(side){
   var sg=num(get("sg."+side+".sg")), ang=num(get("sg."+side+".ang"));
   var f=document.querySelector('[data-k="sg.'+side+'.calc"]');
@@ -1043,9 +1119,9 @@ function showAngleNote(){
   var h=$("calcHint");
   if(!h) return;
   var m=SG_ANGLE[S.site];
-  if(!S.site) h.textContent="Calc’d SG fills in as SG × SG Angle once you pick a station.";
-  else if(m)  h.textContent=S.site+" leans — angle "+m+" filled in, so Calc’d SG = SG × "+m+". Type over it if it has been re-surveyed.";
-  else        h.textContent=S.site+" has a vertical gauge, so there is no angle correction and no Calc’d SG.";
+  if(!S.site) h.textContent="The Calculated Staff Gauge fills in as reading × angle once you pick a station.";
+  else if(m)  h.textContent=S.site+" leans — angle "+m+" is set for this station, so Calculated Staff Gauge = reading × "+m+".";
+  else        h.textContent=S.site+" has a vertical gauge — no angle correction needed.";
 }
 /* ---------- drafts UI ---------- */
 function drawDrafts(){
@@ -1185,7 +1261,7 @@ function validateVisit(){
       }else pnote.classList.add("hidden");
     }
     var anyQ=false;
-    for(var qi=0;qi<5;qi++){ if(num(get("pq."+qi))!==null) anyQ=true; }
+    for(var qi=0;qi<qCount();qi++){ if(num(get("pq."+qi))!==null) anyQ=true; }
     Array.prototype.forEach.call(document.querySelectorAll('#qmRows input'),function(el2){
       el2.classList.toggle("missing",!anyQ);
     });
@@ -1278,6 +1354,7 @@ function finish(){
       ? document.querySelector(sel0)
       : document.querySelector('[data-k="'+sel0+'"]');
     if(first){
+      var fc=first.closest(".card"); if(fc) fc.classList.remove("closed");
       first.scrollIntoView({block:"center"});   /* instant — smooth stalls in throttled tabs */
       setTimeout(function(){ try{ first.focus({preventScroll:true}); }catch(e){} },400);
     }
@@ -1346,6 +1423,26 @@ function showInstallUI(){
   b.classList.remove("hidden");
 }
 function setupApp(){
+  /* ?nosw = live-preview mode for desktop review sessions: no service worker,
+     so every refresh shows the file as it is on disk right now. If one is already
+     installed (a visit without ?nosw), evict it and reload once so the frozen
+     copy can never masquerade as the live file. */
+  if(/(^|[?#&])nosw/.test(location.search+location.hash)){
+    if("serviceWorker" in navigator){
+      navigator.serviceWorker.getRegistrations().then(function(regs){
+        if(!regs.length) return;
+        Promise.all(regs.map(function(rg){ return rg.unregister(); })).then(function(){
+          return caches.keys().then(function(ks){ return Promise.all(ks.map(function(k){ return caches.delete(k); })); });
+        }).then(function(){
+          if(navigator.serviceWorker.controller && !sessionStorage.getItem("noswReloaded")){
+            sessionStorage.setItem("noswReloaded","1");
+            location.reload();
+          }
+        });
+      });
+    }
+    return;
+  }
   if(!HOSTED||RECORD||PRINTMODE) return;
   if("serviceWorker" in navigator){
     navigator.serviceWorker.register("sw.js").then(function(reg){
@@ -1465,7 +1562,9 @@ function init(){
     ["sg","err","ang","calc"].forEach(function(k){ set("sg.d."+k,get("sg.a."+k)); });
     set("sg.d.calcAuto",get("sg.a.calcAuto"));
     set("sg.d.angAuto",get("sg.a.angAuto"));
+    set("sg.d.err",get("sg.a.err"));
     set("sg.d.grade",get("sg.a.grade"));
+    set("sg.d.gradeAuto",get("sg.a.gradeAuto"));
     render(); touch();
   });
   $("printBtn").addEventListener("click",function(){ window.print(); });
