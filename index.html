@@ -571,7 +571,7 @@ var STORE="kei-fieldsheet-v1";
 var $=function(id){ return document.getElementById(id); };
 /* App build. Bump on every version handed over, so a phone can be checked at a glance
    against the filename it came from. Separate from v1.15, which is the paper form. */
-var BUILD="17";
+var BUILD="18";
 var RECORD=!!BAKED;                 /* opened as a finished record, not the blank app */
 /* file_field_sheets.py opens the sheet as ...html#print to render the archive PDF.
    Headless Chrome never fires beforeprint, so the hi-res sketch has to be explicit. */
@@ -673,10 +673,12 @@ function buildSites(){
     sel.appendChild(o);
   });
 }
-function buildReqs(){
-  var host=$("reqRows"), html="";
-  for(var i=0;i<6;i++){
-    html+='<div class="chk" id="reqrow_'+i+'">'+
+/* Work lines: as many as needed. There are always at least REQ_MIN, and on a
+   sheet being filled in the last line is always blank, so writing on it opens
+   the next one. */
+var REQ_MIN=6;
+function reqRowHtml(i){
+  return '<div class="chk" id="reqrow_'+i+'">'+
       '<input type="checkbox" data-k="reqs.'+i+'.on" aria-label="Requirement '+(i+1)+' done">'+
       '<input type="text" data-k="reqs.'+i+'.txt" autocomplete="off" aria-label="Requirement '+(i+1)+'">'+
       '</div>'+
@@ -684,14 +686,35 @@ function buildReqs(){
         '<label>Not done &mdash; why?</label>'+
         '<input type="text" data-k="reqs.'+i+'.why" autocomplete="off">'+
       '</div>';
-  }
+}
+function reqCount(){ return Math.max(REQ_MIN,(S&&S.reqs)?S.reqs.length:0); }
+function padReqs(){
+  if(!S) return;
+  if(!Array.isArray(S.reqs)) S.reqs=[];
+  while(S.reqs.length<REQ_MIN) S.reqs.push({on:false,txt:""});
+  if(RECORD) return;
+  var last=S.reqs[S.reqs.length-1];
+  if(last&&String(last.txt||"").trim()!=="") S.reqs.push({on:false,txt:""});
+}
+function buildReqs(){
+  var host=$("reqRows"), html="", n=reqCount();
+  for(var i=0;i<n;i++) html+=reqRowHtml(i);
   host.innerHTML=html;
+}
+/* typing on the last line adds a blank one under it, without rebuilding the
+   list (a rebuild would take the keyboard away mid-word) */
+function growReqs(){
+  if(RECORD||!S) return;
+  var before=S.reqs.length;
+  padReqs();
+  var host=$("reqRows");
+  for(var i=before;i<S.reqs.length;i++) host.insertAdjacentHTML("beforeend",reqRowHtml(i));
 }
 /* written-in but unticked rows: fine to leave unticked, but only with a reason.
    The "why" line appears on a send attempt, or whenever a saved reason exists. */
 function syncReqWhy(showAll){
   var unresolved=[];
-  for(var i=0;i<6;i++){
+  for(var i=0;i<reqCount();i++){
     var txt=String(get("reqs."+i+".txt")||"").trim();
     var on=!!get("reqs."+i+".on");
     var why=String(get("reqs."+i+".why")||"").trim();
@@ -933,6 +956,8 @@ function buildSegs(){
 
 /* ---------- render / bind ---------- */
 function render(){
+  padReqs();
+  if(document.querySelectorAll("#reqRows .chk").length!==reqCount()) buildReqs();
   /* drafts from build 6 carried a hasQ checkbox; checked maps to Yes, unchecked
      maps to unanswered so the new forced question still gets a deliberate answer */
   if(S&&("hasQ" in S)){
@@ -1033,6 +1058,7 @@ function bind(){
       if(el.hasAttribute("data-calc")) autoCalc(el.getAttribute("data-calc"));
       if(el.hasAttribute("data-grade")) autoGrade(el.getAttribute("data-grade"));
       if(el.getAttribute("data-k")==="reqs.0.txt") autoPurpose();
+      if(/^reqs\.\d+\.txt$/.test(el.getAttribute("data-k"))) growReqs();
       if(el.hasAttribute("data-qspread")) autoSpread();
       revalidateIfFlagged();
       touch();
