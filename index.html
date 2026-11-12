@@ -552,6 +552,7 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
 
 <button id="updatePill" class="hidden noprint" type="button">Updated &mdash; tap to reload</button>
 
+<script src="sender.js"></script>
 <script>
 "use strict";
 var BAKED=null;/*BAKEDCFG*/
@@ -591,7 +592,7 @@ var STORE="kei-fieldsheet-v1";
 var $=function(id){ return document.getElementById(id); };
 /* App build. Bump on every version handed over, so a phone can be checked at a glance
    against the filename it came from. Separate from v1.15, which is the paper form. */
-var BUILD="21";
+var BUILD="22";
 var RECORD=!!BAKED;                 /* opened as a finished record, not the blank app */
 /* file_field_sheets.py opens the sheet as ...html#print to render the archive PDF.
    Headless Chrome never fires beforeprint, so the hi-res sketch has to be explicit. */
@@ -1513,6 +1514,7 @@ function fileNameFor(st){
 function fileName(){ return fileNameFor(S); }
 function buildFileFor(st,photos,sphotos,xph){
   var clone=document.documentElement.cloneNode(true);
+  var sjs=clone.querySelector('script[src="sender.js"]'); if(sjs) sjs.parentNode.removeChild(sjs);
   function pick(s){ return clone.querySelector(s); }
   /* hide, never remove — init() in the saved copy still wires these up */
   var dc=pick("#draftsCard"); if(dc) dc.className="card noprint hidden";
@@ -1771,85 +1773,68 @@ function setupApp(){
   if(IOS) showInstallUI();
 }
 
-/* ---------- automatic sending (build 20) ----------
-   Signs in with the KEI Microsoft app (the KEI Board's "KEI Task Board" registration,
-   delegated Sites.ReadWrite.All, so a person can only write where they already can) and
-   uploads each finished sheet, when there is signal, to:
-     1. _KEI Monitoring Sites\<site>\Field Sheets\  (the folder must already exist)
-     2. Hydro Processor\Sites\_Staged\<site>\ + <file>.stage.json (kei-stage/1), only when
-        Sites\<site>.keisite.json exists - the Processor's "Approve the latest uploads".
-   Folders are reached by their OneDrive ids: a renamed folder makes the send fail loudly,
-   never misfile. Microsoft caps a phone web app's sign-in at 24 hours, so staff sign in
-   each morning; a sheet that can't send says why and waits - nothing is dropped. */
-var FS_CFG={
-  tenantId:"ff85c429-ed5b-458f-aca2-478fd1f538e1",
-  clientId:"d6fb3bfc-b421-4d95-b7b3-f3cce4dad884",
-  driveId:"b!J072BbRI40OmbEK7ALh-5w9sPauU7UtDrafivbxV73LAogmnPVCrQoijSVCwNloy",
-  monSites:"01REBDVIUZKO6DNSV6QFGJHANVCNZU3ODA",
-  staged:"01REBDVIRGPEVDFQVXCJBIWYQXVUJ26ITW"
-};
-var GRAPH="https://graph.microsoft.com/v1.0";
-var AUTHORITY="https://login.microsoftonline.com/"+FS_CFG.tenantId+"/oauth2/v2.0";
-var SCOPES="https://graph.microsoft.com/Sites.ReadWrite.All https://graph.microsoft.com/User.Read offline_access openid profile";
+/* ---------- automatic sending: the page side (build 22) ----------
+   The sending itself is in sender.js and runs in the service worker, so a finished sheet
+   still goes out when the phone gets signal with the app closed (a "background sync").
+   This part signs in, queues finished sheets, asks the worker to send, and shows progress
+   from copies of the outbox and sign-in that it refreshes whenever the worker reports. */
 var AUTH_KEY="kei_fs_auth", PKCE_KEY="kei_fs_pkce", OUTBOX_KEY=STORE+"-outbox", SIGNED_OUT="signed-out";
-var auth=null;
-
+var OB=[], AUTHC=null;
+function haveSender(){ return typeof KEISEND!=="undefined"; }
 function redirectUri(){ return location.origin+location.pathname.replace(/[^/]*$/,""); }
-function authLoad(){ try{ return JSON.parse(localStorage.getItem(AUTH_KEY)||"null"); }catch(e){ return null; } }
+function authLoad(){ return AUTHC; }
 function authSave(a){
-  auth=a;
-  setTimeout(function(){ if(typeof drawAccount==="function") drawAccount(); },0);
-  try{ if(a) localStorage.setItem(AUTH_KEY,JSON.stringify(a)); else localStorage.removeItem(AUTH_KEY); }catch(e){}
+  AUTHC=a; drawAccount();
+  return haveSender()?KEISEND.authPut(a):Promise.resolve();
+}
+function refreshAuth(){
+  if(!haveSender()) return Promise.resolve();
+  return KEISEND.authGet().then(function(a){ AUTHC=a; drawAccount(); });
+}
+function refreshOutbox(){
+  if(!haveSender()) return Promise.resolve();
+  return KEISEND.list().then(function(l){ OB=l; drawOutbox(); drawDrafts(); });
+}
+function obLoad(){ return OB; }
+function obFind(id){ return OB.filter(function(x){ return x.draftId===id; })[0]||null; }
+/* builds 20-21 kept the outbox and sign-in in localStorage, which the worker can't read:
+   move them into the shared store once, and only then forget the old copies */
+function migrateLocal(){
+  var a=null, l=[];
+  try{ a=JSON.parse(localStorage.getItem(AUTH_KEY)||"null"); l=JSON.parse(localStorage.getItem(OUTBOX_KEY)||"[]"); }catch(e){}
+  if(!a&&!l.length) return Promise.resolve();
+  var p=a?KEISEND.authGet().then(function(cur){ return cur?null:KEISEND.authPut(a); }):Promise.resolve();
+  l.forEach(function(e){
+    p=p.then(function(){
+      return KEISEND.entry(e.draftId).then(function(cur){
+        if(cur) return null;
+        return idbOp("readwrite",function(st){ return st.put(e,"ob:"+e.draftId); });
+      });
+    });
+  });
+  return p.then(function(){
+    try{ localStorage.removeItem(AUTH_KEY); localStorage.removeItem(OUTBOX_KEY); }catch(e){}
+  }).catch(function(e){ console.error("moving the old outbox failed (kept in place):",e); });
 }
 function b64url(bytes){
   var s2=""; new Uint8Array(bytes).forEach(function(b){ s2+=String.fromCharCode(b); });
   return btoa(s2).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
 }
-function hexOf(buf){
-  return Array.prototype.map.call(new Uint8Array(buf),function(b){ return ("0"+b.toString(16)).slice(-2); }).join("");
-}
-function postForm(url,data){
-  var body=Object.keys(data).map(function(k){ return encodeURIComponent(k)+"="+encodeURIComponent(data[k]); }).join("&");
-  return fetch(url,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:body})
-    .then(function(r){ return r.json(); });
-}
-function claimsOf(tok){
-  var out={name:"",email:""};
-  try{
-    var p2=tok.id_token.split(".")[1].replace(/-/g,"+").replace(/_/g,"/");
-    var c=JSON.parse(decodeURIComponent(escape(atob(p2+"===".slice((p2.length+3)%4)))));
-    out.name=c.name||""; out.email=(c.preferred_username||c.upn||"").toLowerCase();
-  }catch(e){}
-  return out;
-}
-function keepTok(tok,fresh){
-  if(!tok||!tok.access_token) return null;
-  var who=claimsOf(tok), old=auth||{};
-  var a={
-    access_token:tok.access_token,
-    refresh_token:tok.refresh_token||old.refresh_token||"",
-    expires_at:Date.now()+Number(tok.expires_in||3600)*1000,
-    name:who.name||old.name||"", email:who.email||old.email||"",
-    signedInAt:fresh?Date.now():(old.signedInAt||Date.now())
-  };
-  authSave(a);
-  return a;
-}
 function signIn(){
   if(!navigator.onLine){ alert("Signing in needs signal. Try again once you have service."); return; }
+  if(!haveSender()){ alert("This copy of the app didn't load completely. Close it and open it again with signal."); return; }
   var a=new Uint8Array(32); crypto.getRandomValues(a);
   var verifier=b64url(a);
   try{ localStorage.setItem(PKCE_KEY,verifier); }catch(e){}
   commit();
   crypto.subtle.digest("SHA-256",new TextEncoder().encode(verifier)).then(function(h){
-    var q={client_id:FS_CFG.clientId,response_type:"code",redirect_uri:redirectUri(),response_mode:"query",
-           scope:SCOPES,code_challenge:b64url(h),code_challenge_method:"S256",prompt:"select_account"};
-    location.href=AUTHORITY+"/authorize?"+Object.keys(q).map(function(k){ return k+"="+encodeURIComponent(q[k]); }).join("&");
+    var q={client_id:KEISEND.CFG.clientId,response_type:"code",redirect_uri:redirectUri(),response_mode:"query",
+           scope:KEISEND.SCOPES,code_challenge:b64url(h),code_challenge_method:"S256",prompt:"select_account"};
+    location.href=KEISEND.AUTHORITY+"/authorize?"+Object.keys(q).map(function(k){ return k+"="+encodeURIComponent(q[k]); }).join("&");
   });
 }
 /* back from Microsoft: swap the one-time code for tokens, then clear it from the address */
 function authStart(){
-  auth=authLoad();
   var q=new URLSearchParams(location.search), code=q.get("code"), err=q.get("error");
   if(err){
     history.replaceState({},"",redirectUri());
@@ -1858,168 +1843,44 @@ function authStart(){
   if(!code) return Promise.resolve({});
   var verifier=""; try{ verifier=localStorage.getItem(PKCE_KEY)||""; localStorage.removeItem(PKCE_KEY); }catch(e){}
   history.replaceState({},"",redirectUri());
-  return postForm(AUTHORITY+"/token",{client_id:FS_CFG.clientId,grant_type:"authorization_code",code:code,
-      redirect_uri:redirectUri(),code_verifier:verifier,scope:SCOPES})
-    .then(function(tok){
-      if(!keepTok(tok,true)) return {error:tok.error_description||tok.error||"sign-in failed"};
-      return {signedIn:true};
-    },function(e){ return {error:"sign-in could not finish: "+(e&&e.message?e.message:e)}; });
+  return KEISEND.redeemCode(code,verifier,redirectUri()).then(function(a){ AUTHC=a; return {signedIn:true}; },
+    function(e){ return {error:"sign-in could not finish: "+(e&&e.message?e.message:e)}; });
 }
-var refreshing=null;
-function token(){
-  if(!auth) auth=authLoad();
-  if(!auth) return Promise.reject(new Error(SIGNED_OUT));
-  if(auth.expires_at-120000>Date.now()) return Promise.resolve(auth.access_token);
-  if(refreshing) return refreshing;
-  if(!auth.refresh_token){ authSave(null); return Promise.reject(new Error(SIGNED_OUT)); }
-  refreshing=postForm(AUTHORITY+"/token",{client_id:FS_CFG.clientId,grant_type:"refresh_token",
-      refresh_token:auth.refresh_token,scope:SCOPES})
-    .then(function(tok){
-      refreshing=null;
-      if(!tok.access_token){ authSave(null); drawAccount(); throw new Error(SIGNED_OUT); }
-      return keepTok(tok,false).access_token;
-    },function(e){ refreshing=null; throw e; });    /* no signal is NOT a sign-out */
-  return refreshing;
+/* ask for a send. With the service worker: a background sync (Android runs it as soon as
+   there is signal, app open or closed) plus a nudge to try right now. Without one (a ?nosw
+   preview), the page sends by itself - there is never more than one sender. */
+function pump(){
+  if(RECORD||!haveSender()) return;
+  var sw=navigator.serviceWorker;
+  if(sw&&sw.controller){
+    sw.ready.then(function(reg){
+      if(reg.sync&&reg.sync.register) return reg.sync.register("kei-send").catch(function(){});
+    }).then(function(){ if(sw.controller) sw.controller.postMessage({type:"kei-send"}); });
+  }else{
+    KEISEND.pumpAll().then(refreshOutbox,refreshOutbox);
+  }
 }
-function gErr(status,msg){ var e=new Error(msg); e.status=status; return e; }
-function graph(method,path,body,ctype){
-  return token().then(function(t){
-    var h={Authorization:"Bearer "+t};
-    if(body!=null) h["Content-Type"]=ctype||"application/json";
-    return fetch(GRAPH+path,{method:method,headers:h,
-      body:body==null?undefined:(typeof body==="string"||body instanceof Blob?body:JSON.stringify(body))});
-  }).then(function(r){
-    if(r.status===204) return {};
-    return r.text().then(function(txt){
-      var j={}; try{ j=txt?JSON.parse(txt):{}; }catch(e){}
-      if(!r.ok){
-        var m=(j.error&&j.error.message)||("HTTP "+r.status);
-        if(r.status===401){ authSave(null); drawAccount(); throw new Error(SIGNED_OUT); }
-        if(r.status===403) m="no permission to write there ("+m+")";
-        throw gErr(r.status,m);
-      }
-      return j;
-    });
-  });
-}
-function seg(x){ return encodeURIComponent(x); }
-function driveItem(id){ return "/drives/"+seg(FS_CFG.driveId)+"/items/"+id; }
-function childPath(parentId,name){ return driveItem(parentId)+":/"+seg(name)+":"; }
-function itemOrNull(path){
-  return graph("GET",path+"?$select=id,name,size,folder,parentReference").catch(function(e){
-    if(e.status===404) return null; throw e;
-  });
-}
-/* upload in 3.1 MB pieces: works for any size and survives a dropped connection mid-file */
-function uploadBlob(sessionPath,behavior,blob){
-  return graph("POST",sessionPath+"/createUploadSession",
-      {item:{"@microsoft.graph.conflictBehavior":behavior}}).then(function(sess){
-    var url=sess.uploadUrl, size=blob.size, CH=327680*10;
-    function piece(at){
-      var end=Math.min(at+CH,size);
-      return fetch(url,{method:"PUT",headers:{"Content-Range":"bytes "+at+"-"+(end-1)+"/"+size},
-          body:blob.slice(at,end)}).then(function(r){
-        if(r.status===202) return piece(end);
-        return r.text().then(function(txt){
-          var j={}; try{ j=JSON.parse(txt); }catch(e){}
-          if(r.status===200||r.status===201) return j;
-          throw gErr(r.status,(j.error&&j.error.message)||("upload failed, HTTP "+r.status));
-        });
-      });
-    }
-    return size?piece(0):Promise.reject(new Error("empty file"));
-  });
-}
-/* a new file in a folder; a name already used by a DIFFERENT sheet gets _2, _3... and a
-   name already holding these exact bytes counts as sent (an earlier try that finished) */
-function uploadNew(parentId,name,blob,n){
-  n=n||0;
-  var nm=n?name.replace(/\.html$/i,"_"+(n+1)+".html"):name;
-  return itemOrNull(childPath(parentId,nm)).then(function(it){
-    if(it&&it.size===blob.size) return it;
-    if(it){
-      if(n>=8) throw new Error("too many files already named "+name);
-      return uploadNew(parentId,name,blob,n+1);
-    }
-    return uploadBlob(childPath(parentId,nm),"fail",blob);
-  });
-}
-var sitesFolder=null;
-function sitesFolderId(){
-  if(sitesFolder) return Promise.resolve(sitesFolder);
-  return graph("GET",driveItem(FS_CFG.staged)+"?$select=id,name,parentReference").then(function(it){
-    sitesFolder=it.parentReference&&it.parentReference.id;
-    if(!sitesFolder) throw new Error("could not find the Hydro Processor's Sites folder");
-    return sitesFolder;
-  });
-}
-function ensureFolder(parentId,name){
-  return itemOrNull(childPath(parentId,name)).then(function(it){
-    if(it) return it.id;
-    return graph("POST",driveItem(parentId)+"/children",
-        {name:name,folder:{},"@microsoft.graph.conflictBehavior":"fail"})
-      .then(function(c){ return c.id; },function(e){
-        if(e.status===409) return itemOrNull(childPath(parentId,name)).then(function(x){ return x.id; });
-        throw e;
-      });
-  });
-}
-function sendToSite(e,blob){
-  var replace=e.siteItemId
-    ? itemOrNull(driveItem(e.siteItemId)).then(function(it){
-        /* re-finished after a correction: replace this sheet's own earlier upload */
-        return it?uploadBlob(driveItem(e.siteItemId),"replace",blob):null;
-      })
-    : Promise.resolve(null);
-  return replace.then(function(done){
-    if(done) return done;
-    return itemOrNull(driveItem(FS_CFG.monSites)+":/"+seg(e.site)+"/"+seg("Field Sheets")+":").then(function(f){
-      if(!f||!f.folder) throw new Error('there is no "Field Sheets" folder for '+e.site+" in _KEI Monitoring Sites");
-      return uploadNew(f.id,e.name,blob);
-    });
-  });
-}
-var PROC_ID={"CoN_MtnStn Resevoir":"CoN_Mtn Station Reservoir"};
-function procId(site){ return PROC_ID[site]||site; }
-function sendToProcessor(e,blob){
-  var pid=procId(e.site);
-  return sitesFolderId().then(function(sid){
-    return itemOrNull(childPath(sid,pid+".keisite.json"));
-  }).then(function(st){
-    if(!st) return "none";
-    var nm=e.siteName||e.name;
-    return ensureFolder(FS_CFG.staged,pid).then(function(fid){
-      return itemOrNull(childPath(fid,nm)).then(function(it){
-        if(it&&it.size===blob.size) return it;
-        if(it&&!e.procStaged)
-          throw new Error("another "+nm+" is still waiting in the Hydro Processor's approval queue - approve or set it aside there, then this one sends");
-        return uploadBlob(childPath(fid,nm),it?"replace":"fail",blob);
-      }).then(function(){
-        var who=(auth&&(auth.name||auth.email))||"the phone app";
-        var stage={format:"kei-stage/1",station:pid,file:nm,kind:"fieldSheet",label:"Field sheet",
-          why:"Sent from the phone app by "+who,sha256:e.sha,bytes:e.bytes,
-          source:"phone:"+((auth&&auth.email)||""),
-          stagedUtc:new Date().toISOString().replace(/\.\d+Z$/,"Z")};
-        /* written last: a stage is complete once its .stage.json exists */
-        return graph("PUT",childPath(fid,nm+".stage.json")+"/content",JSON.stringify(stage,null,1),"application/json");
-      }).then(function(){ return "staged"; });
-    });
-  });
+/* a finished sheet goes into the outbox (its file kept in IndexedDB) and sends from there */
+function queueFinished(draftId,st,html){
+  if(!haveSender()) return Promise.reject(new Error("the sending part of the app didn't load — close the app and open it again"));
+  return KEISEND.queueHtml(draftId,{name:fileNameFor(st),site:st.site,tech:st.tech||"",date:st.date||""},html)
+    .then(refreshOutbox).then(pump);
 }
 
 /* to-dos the office left for this station; a missing list means "no list yet", not "nothing to do" */
 function syncTodos(){
   var note=$("todoNote");
   function say(t,bad){ if(note){ note.textContent=t; note.className="hint"+(bad?" bad":""); } }
-  var site=S&&S.site, pid=procId(site);
+  if(!haveSender()){ say("This copy of the app didn't load completely — close it and open it again.",true); return; }
+  var K=KEISEND, site=S&&S.site, pid=K.procId(site);
   if(!site){ say("Pick the station in Step 1 first.",true); return; }
   if(!navigator.onLine){ say("No signal — sync the to-dos before you leave service.",true); return; }
   if(!authLoad()){ say("Sign in first (top of the page, under Sheets on this phone).",true); return; }
   say("Getting the to-do list…");
-  sitesFolderId().then(function(sid){
-    return itemOrNull(childPath(sid,pid+".keisite.json")).then(function(st){
+  K.sitesFolderId().then(function(sid){
+    return K.itemOrNull(K.childPath(sid,pid+".keisite.json")).then(function(st){
       if(!st) return {none:"station"};
-      return graph("GET",driveItem(sid)+":/_ToDos/"+seg(pid+".json")+":")
+      return K.graph("GET",K.driveItem(sid)+":/_ToDos/"+K.seg(pid+".json")+":")
         .then(function(it){
           return fetch(it["@microsoft.graph.downloadUrl"]).then(function(r){
             if(!r.ok) throw new Error("download failed, HTTP "+r.status);
@@ -2047,79 +1908,23 @@ function syncTodos(){
       ". Tick what you do; for anything you don't, say why.");
   }).catch(function(err){
     var m=err&&err.message?err.message:String(err);
-    if(m===SIGNED_OUT) say("Sign in first (top of the page, under Sheets on this phone).",true);
+    if(m===SIGNED_OUT){ refreshAuth(); say("Sign in first (top of the page, under Sheets on this phone).",true); }
     else if(!navigator.onLine||err instanceof TypeError) say("Lost signal — try again in service.",true);
     else say("Couldn't get the to-do list — "+m,true);
   });
 }
-function obLoad(){ try{ return JSON.parse(localStorage.getItem(OUTBOX_KEY)||"[]"); }catch(e){ return []; } }
-function obSave(l){ try{ localStorage.setItem(OUTBOX_KEY,JSON.stringify(l)); }catch(e){} }
-function obFind(id){ return obLoad().filter(function(x){ return x.draftId===id; })[0]||null; }
-function obUpd(id,patch){
-  var l=obLoad();
-  l.forEach(function(x){ if(x.draftId===id) Object.keys(patch).forEach(function(k){ x[k]=patch[k]; }); });
-  obSave(l); drawOutbox();
-}
-/* a finished sheet goes into the outbox (its file kept in IndexedDB) and sends from there */
-function queueFinished(draftId,st,html){
-  var bytes=new TextEncoder().encode(html);
-  return crypto.subtle.digest("SHA-256",bytes).then(function(h){
-    var blob=new Blob([bytes],{type:"text/html"});
-    return idbPut("outbox:"+draftId,blob).then(function(){
-      var l=obLoad(), old=null;
-      l=l.filter(function(x){ if(x.draftId===draftId){ old=x; return false; } return true; });
-      l.push({draftId:draftId,name:fileNameFor(st),site:st.site,tech:st.tech||"",date:st.date||"",
-        sha:hexOf(h),bytes:bytes.length,queued:new Date().toISOString(),state:"waiting",msg:"",
-        siteDone:false,procDone:false,
-        siteItemId:old&&old.siteItemId||"",siteName:old&&old.siteName||"",procStaged:!!(old&&old.procStaged)});
-      obSave(l); drawOutbox(); drawDrafts();
-      pump();
-    });
-  });
-}
-var pumping=false;
-function pump(){
-  if(RECORD||pumping) return;
-  var todo=obLoad().filter(function(x){ return x.state!=="sent"; });
-  if(!todo.length) return;
-  if(!navigator.onLine){ todo.forEach(function(x){ if(x.state!=="waiting") obUpd(x.draftId,{state:"waiting",msg:""}); }); return; }
-  if(!authLoad()){ todo.forEach(function(x){ if(x.state!=="signin") obUpd(x.draftId,{state:"signin",msg:""}); }); return; }
-  pumping=true;
-  todo.reduce(function(chain,x){ return chain.then(function(){ return sendOne(x.draftId); }); },Promise.resolve())
-    .then(function(){ pumping=false; drawDrafts(); },function(){ pumping=false; drawDrafts(); });
-}
-function sendOne(id){
-  var e=obFind(id);
-  if(!e||e.state==="sent") return Promise.resolve();
-  obUpd(id,{state:"sending",msg:""});
-  return idbGet("outbox:"+id).then(function(blob){
-    if(!blob) throw new Error("the finished file is missing from this phone - open the sheet and press Finish again");
-    var cur=obFind(id);
-    var a=cur.siteDone?Promise.resolve():sendToSite(cur,blob).then(function(it){
-      obUpd(id,{siteDone:true,siteItemId:it.id,siteName:it.name||cur.name});
-    });
-    return a.then(function(){
-      var c2=obFind(id);
-      return c2.procDone?null:sendToProcessor(c2,blob).then(function(r){
-        obUpd(id,{procDone:true,proc:r,procStaged:r==="staged"||c2.procStaged});
-      });
-    });
-  }).then(function(){
-    obUpd(id,{state:"sent",msg:"",sentAt:new Date().toISOString()});
-  }).catch(function(err){
-    var m=err&&err.message?err.message:String(err);
-    if(m===SIGNED_OUT) obUpd(id,{state:"signin",msg:""});
-    else if(!navigator.onLine||err instanceof TypeError) obUpd(id,{state:"waiting",msg:""});
-    else obUpd(id,{state:"error",msg:m});
-  });
-}
+
 function hhmm(iso){ var d=new Date(iso); return isNaN(d)?"":d.toTimeString().slice(0,5); }
 function drawAccount(){
   var host=$("acctRow"); if(!host||RECORD) return;
   var a=authLoad();
+  if(!haveSender()){
+    host.innerHTML='<div class="who" style="color:var(--bad)">Sending isn&rsquo;t available in this copy &mdash; close the app and open it again with signal. Use &ldquo;Share a copy&rdquo; meanwhile.</div>';
+    return;
+  }
   if(a){
     var until=new Date((a.signedInAt||Date.now())+24*3600*1000);
-    host.innerHTML='<div class="who">Signed in as <b>'+esc(a.name||a.email)+'</b> &mdash; sheets send themselves (until '+
+    host.innerHTML='<div class="who">Signed in as <b>'+esc(a.name||a.email)+'</b> &mdash; sheets send themselves, even with the app closed (until '+
       esc(until.toTimeString().slice(0,5))+' '+(until.toDateString()===new Date().toDateString()?'today':'tomorrow')+')</div>'+
       '<button class="btn sm" type="button" id="signOutBtn">Sign out</button>';
   }else{
@@ -2140,7 +1945,7 @@ function drawOutbox(){
   drawSendChip();
   var host=$("outboxList"); if(!host||RECORD) return;
   var weekAgo=Date.now()-7*24*3600*1000;
-  var l=obLoad().filter(function(x){ return x.state!=="sent"||Date.parse(x.sentAt||0)>weekAgo; }).reverse();
+  var l=obLoad().filter(function(x){ return x.state!=="sent"||Date.parse(x.sentAt||0)>weekAgo; }).slice().reverse();
   $("outboxHead").style.display=l.length?"":"none";
   host.innerHTML=l.map(function(x){
     var st={waiting:["Waiting for signal",""],signin:["Sign in to send",""],sending:["Sending…",""],
@@ -2154,7 +1959,7 @@ function drawOutbox(){
 }
 function shareCopy(id){
   var e=obFind(id);
-  idbGet("outbox:"+id).then(function(blob){
+  (haveSender()?KEISEND.getFile(id):Promise.resolve(null)).then(function(blob){
     if(!blob||!e){ alert("That file is no longer on this phone."); return; }
     var file=new File([blob],e.name,{type:"text/html"});
     if(navigator.canShare&&navigator.canShare({files:[file]})){
@@ -2162,6 +1967,8 @@ function shareCopy(id){
     }else download(blob,e.name);
   });
 }
+/* the page's own sends (no worker) and the worker's both say when something changed */
+window.onKeiSend=function(kind){ if(kind==="kei-auth") refreshAuth(); else refreshOutbox(); };
 
 /* ---------- boot ---------- */
 function startSheet(state,id){
@@ -2213,25 +2020,33 @@ function init(){
     if(e.target.closest&&e.target.closest(".card > h2")) setTimeout(fitAllReqs,0);
   });
   if(!RECORD){
-    authStart().then(function(r){
-      drawAccount(); drawOutbox(); drawDrafts();
-      if(r&&r.error) alert("Microsoft sign-in didn't finish: "+r.error);
-      pump();
-    });
+    if(haveSender()){
+      migrateLocal().then(authStart).then(function(r){
+        return Promise.all([refreshAuth(),refreshOutbox()]).then(function(){ return r; });
+      }).then(function(r){
+        if(r&&r.error) alert("Microsoft sign-in didn't finish: "+r.error);
+        pump();
+      });
+      if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("message",function(e){
+        if(e.data&&(e.data.type==="kei-outbox"||e.data.type==="kei-auth")) window.onKeiSend(e.data.type);
+      });
+    }else drawAccount();
     $("acctRow").addEventListener("click",function(e){
       if(e.target.closest("#signInBtn")) signIn();
       if(e.target.closest("#signOutBtn")&&confirm("Sign out? Finished sheets wait on this phone until someone signs in.")){
-        authSave(null); drawAccount(); pump();
+        authSave(null).then(pump);
       }
     });
     $("outboxList").addEventListener("click",function(e){
       var r=e.target.closest("[data-obretry]"), sh=e.target.closest("[data-obshare]");
-      if(r){ obUpd(r.getAttribute("data-obretry"),{state:"waiting",msg:""}); pump(); }
+      if(r&&haveSender()) KEISEND.upd(r.getAttribute("data-obretry"),{state:"waiting",msg:""}).then(refreshOutbox).then(pump);
       if(sh) shareCopy(sh.getAttribute("data-obshare"));
     });
     $("todoSyncBtn").addEventListener("click",syncTodos);
     window.addEventListener("online",pump);
-    document.addEventListener("visibilitychange",function(){ if(document.visibilityState==="visible"){ drawAccount(); pump(); } });
+    document.addEventListener("visibilitychange",function(){
+      if(document.visibilityState==="visible"){ refreshAuth(); refreshOutbox(); pump(); }
+    });
     setInterval(pump,60000);
   }
   $("newSheetBtn").addEventListener("click",function(){

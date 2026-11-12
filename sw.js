@@ -2,10 +2,13 @@
    CACHE carries the build number — bump it together with var BUILD in index.html.
    A byte-different sw.js is what makes phones pick up a new build. */
 "use strict";
-var CACHE = "kei-fieldsheet-b21";
+/* the sender: one copy of the code that sends finished sheets, shared with the page */
+importScripts("sender.js");
+var CACHE = "kei-fieldsheet-b22";
 var ASSETS = [
   "./",
   "./index.html",
+  "./sender.js",
   "./manifest.webmanifest",
   "./icon-192.png",
   "./icon-512.png",
@@ -69,4 +72,19 @@ self.addEventListener("fetch", function (e) {
       return hit || refresh;
     })
   );
+});
+
+/* Sending finished sheets. "kei-send" is a background sync: Android runs it as soon as the
+   phone has signal, even with the app closed. If a sheet is still waiting for signal at the
+   end (a dropped connection), the sync fails on purpose so Android tries again later. Sheets
+   that need a sign-in or have a real problem don't retry here - the app shows them. */
+self.addEventListener("sync", function (e) {
+  if (e.tag !== "kei-send") return;
+  e.waitUntil(KEISEND.pumpAll().then(function (r) {
+    if (r && r.waiting) throw new Error(r.waiting + " sheet(s) still waiting for signal");
+  }));
+});
+/* the open app asking for a send right now */
+self.addEventListener("message", function (e) {
+  if (e.data && e.data.type === "kei-send") e.waitUntil(KEISEND.pumpAll().catch(function () {}));
 });
