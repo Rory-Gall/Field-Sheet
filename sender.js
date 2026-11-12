@@ -118,7 +118,8 @@
             draftId: draftId, name: info.name, site: info.site, tech: info.tech || "", date: info.date || "",
             sha: hexOf(h), bytes: bytes.length, queued: new Date().toISOString(), state: "waiting", msg: "",
             siteDone: false, procDone: false,
-            siteItemId: old.siteItemId || "", siteName: old.siteName || "", procStaged: !!old.procStaged
+            siteItemId: old.siteItemId || "", siteName: old.siteName || "", procStaged: !!old.procStaged,
+            procStarted: !!(old.procStarted || old.procStaged), siteUp: null, procUp: null
           }, "ob:" + draftId);
         };
       });
@@ -219,41 +220,75 @@
       if (e.status === 404) return null; throw e;
     });
   }
-  /* upload in 3.1 MB pieces: works for any size and survives a dropped connection mid-file */
-  function uploadBlob(sessionPath, behavior, blob) {
-    return graph("POST", sessionPath + "/createUploadSession",
-      { item: { "@microsoft.graph.conflictBehavior": behavior } }).then(function (sess) {
-      var url = sess.uploadUrl, size = blob.size, CH = 327680 * 10;
-      function piece(at) {
-        var end = Math.min(at + CH, size);
-        return fetch(url, {
-          method: "PUT", headers: { "Content-Range": "bytes " + at + "-" + (end - 1) + "/" + size },
-          body: blob.slice(at, end)
-        }).then(function (r) {
-          if (r.status === 202) return piece(end);
-          return r.text().then(function (txt) {
-            var j = {}; try { j = JSON.parse(txt); } catch (e) {}
-            if (r.status === 200 || r.status === 201) return j;
-            throw gErr(r.status, (j.error && j.error.message) || ("upload failed, HTTP " + r.status));
-          });
+  /* Upload in 1.6 MB pieces. With rk ({id, field}) the upload session is kept in the outbox
+     entry, so a send cut off by lost signal or a killed worker carries on from the last piece
+     that arrived instead of starting over - the difference between a 16 MB sheet getting
+     through on patchy signal or never. */
+  function uploadBlob(sessionPath, behavior, blob, rk) {
+    var size = blob.size, CH = 327680 * 5;
+    if (!size) return Promise.reject(new Error("empty file"));
+    function keep(v) { if (!rk) return Promise.resolve(); var p = {}; p[rk.field] = v; return upd(rk.id, p); }
+    function piece(url, at) {
+      var end = Math.min(at + CH, size);
+      return fetch(url, {
+        method: "PUT", headers: { "Content-Range": "bytes " + at + "-" + (end - 1) + "/" + size },
+        body: blob.slice(at, end)
+      }).then(function (r) {
+        if (r.status === 202) {
+          return (rk ? keep({ url: url, path: sessionPath, size: size, at: end }) : Promise.resolve())
+            .then(function () { return piece(url, end); });
+        }
+        return r.text().then(function (txt) {
+          var j = {}; try { j = JSON.parse(txt); } catch (e) {}
+          if (r.status === 200 || r.status === 201) return j;
+          /* the session is gone (expired, or a piece it won't take): start over cleanly */
+          if (r.status === 404 || r.status === 416) return fresh();
+          throw gErr(r.status, (j.error && j.error.message) || ("upload failed, HTTP " + r.status));
         });
-      }
-      return size ? piece(0) : Promise.reject(new Error("empty file"));
+      });
+    }
+    function fresh() {
+      return graph("POST", sessionPath + "/createUploadSession",
+        { item: { "@microsoft.graph.conflictBehavior": behavior } }).then(function (sess) {
+        var url = sess.uploadUrl;
+        return (rk ? keep({ url: url, path: sessionPath, size: size, at: 0 }) : Promise.resolve())
+          .then(function () { return piece(url, 0); });
+      });
+    }
+    function resume(s) {
+      return fetch(s.url).then(function (r) {
+        if (!r.ok) return fresh();
+        return r.json().then(function (j) {
+          var nr = (j.nextExpectedRanges || [])[0], at = nr ? parseInt(nr.split("-")[0], 10) : NaN;
+          return (at >= 0 && at < size) ? piece(s.url, at) : fresh();
+        });
+      });
+    }
+    var go = rk
+      ? entry(rk.id).then(function (e) {
+          var s = e && e[rk.field];
+          return (s && s.url && s.path === sessionPath && s.size === size) ? resume(s) : fresh();
+        })
+      : fresh();
+    return go.then(function (item) {
+      return (rk ? keep(null) : Promise.resolve()).then(function () { return item; });
     });
   }
-  /* a new file in a folder; a name already used by a DIFFERENT sheet gets _2, _3... and a
-     name already holding these exact bytes counts as sent (an earlier try that finished) */
-  function uploadNew(parentId, name, blob, n) {
-    n = n || 0;
-    var nm = n ? name.replace(/\.html$/i, "_" + (n + 1) + ".html") : name;
-    return itemOrNull(childPath(parentId, nm)).then(function (it) {
-      if (it && it.size === blob.size) return it;
-      if (it) {
-        if (n >= 8) throw new Error("too many files already named " + name);
-        return uploadNew(parentId, name, blob, n + 1);
-      }
-      return uploadBlob(childPath(parentId, nm), "fail", blob);
-    });
+  /* The sheet's file name is decided ONCE, on its first try, and kept in its outbox entry:
+     a name already used by another sheet gets _2, _3... Every later try reuses that name and
+     may overwrite only this sheet's own unfinished copy. (Picking a fresh name on each retry
+     is how Selous LB 2026-11-12 ended up as _5.) */
+  function chooseName(parentId, e) {
+    if (e.siteName) return Promise.resolve(e.siteName);
+    function tryN(n) {
+      var nm = n ? e.name.replace(/\.html$/i, "_" + (n + 1) + ".html") : e.name;
+      return itemOrNull(childPath(parentId, nm)).then(function (it) {
+        if (!it) return nm;
+        if (n >= 8) throw new Error("too many files already named " + e.name);
+        return tryN(n + 1);
+      });
+    }
+    return tryN(0).then(function (nm) { return upd(e.draftId, { siteName: nm }).then(function () { return nm; }); });
   }
   var sitesFolder = null;
   function sitesFolderId() {
@@ -281,14 +316,16 @@
     var replace = e.siteItemId
       ? itemOrNull(driveItem(e.siteItemId)).then(function (it) {
           /* finished again after a correction: replace this sheet's own earlier upload */
-          return it ? uploadBlob(driveItem(e.siteItemId), "replace", blob) : null;
+          return it ? uploadBlob(driveItem(e.siteItemId), "replace", blob, { id: e.draftId, field: "siteUp" }) : null;
         })
       : Promise.resolve(null);
     return replace.then(function (done) {
       if (done) return done;
       return itemOrNull(driveItem(CFG.monSites) + ":/" + seg(e.site) + "/" + seg("Field Sheets") + ":").then(function (f) {
         if (!f || !f.folder) throw new Error('there is no "Field Sheets" folder for ' + e.site + " in _KEI Monitoring Sites");
-        return uploadNew(f.id, e.name, blob);
+        return chooseName(f.id, e).then(function (nm) {
+          return uploadBlob(childPath(f.id, nm), "replace", blob, { id: e.draftId, field: "siteUp" });
+        });
       });
     });
   }
@@ -303,9 +340,11 @@
       return ensureFolder(CFG.staged, pid).then(function (fid) {
         return itemOrNull(childPath(fid, nm)).then(function (it) {
           if (it && it.size === blob.size) return it;
-          if (it && !e.procStaged)
+          if (it && !e.procStaged && !e.procStarted)
             throw new Error("another " + nm + " is still waiting in the Hydro Processor's approval queue - approve or set it aside there, then this one sends");
-          return uploadBlob(childPath(fid, nm), it ? "replace" : "fail", blob);
+          return upd(e.draftId, { procStarted: true }).then(function () {
+            return uploadBlob(childPath(fid, nm), "replace", blob, { id: e.draftId, field: "procUp" });
+          });
         }).then(function () {
           var stage = {
             format: "kei-stage/1", station: pid, file: nm, kind: "fieldSheet", label: "Field sheet",

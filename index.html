@@ -592,7 +592,7 @@ var STORE="kei-fieldsheet-v1";
 var $=function(id){ return document.getElementById(id); };
 /* App build. Bump on every version handed over, so a phone can be checked at a glance
    against the filename it came from. Separate from v1.15, which is the paper form. */
-var BUILD="22";
+var BUILD="23";
 var RECORD=!!BAKED;                 /* opened as a finished record, not the blank app */
 /* file_field_sheets.py opens the sheet as ...html#print to render the archive PDF.
    Headless Chrome never fires beforeprint, so the hi-res sketch has to be explicit. */
@@ -1948,7 +1948,11 @@ function drawOutbox(){
   var l=obLoad().filter(function(x){ return x.state!=="sent"||Date.parse(x.sentAt||0)>weekAgo; }).slice().reverse();
   $("outboxHead").style.display=l.length?"":"none";
   host.innerHTML=l.map(function(x){
-    var st={waiting:["Waiting for signal",""],signin:["Sign in to send",""],sending:["Sending…",""],
+    var up=x.procUp||x.siteUp, pct=up&&up.size?Math.round(100*(up.at||0)/up.size):null;
+    var where=x.procUp?" to the Hydro Processor":x.siteUp?" to Field Sheets":"";
+    var sendTxt="Sending"+where+(pct!=null?" \u2014 "+pct+"%":"\u2026");
+    var st={waiting:[(pct!=null?"Waiting for signal ("+pct+"% sent"+where+")":"Waiting for signal"),""],
+      signin:["Sign in to send",""],sending:[sendTxt,""],
       error:["Not sent — "+x.msg,"bad"],
       sent:["Sent "+hhmm(x.sentAt)+" ✓  Field Sheets"+(x.proc==="staged"?" + Hydro Processor":""),"ok"]}[x.state]||[x.state,""];
     return '<div class="draft obx"><div class="d1"><div class="dn">'+esc(x.name)+'</div>'+
