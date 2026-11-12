@@ -179,6 +179,8 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
 /* flow sheet photos */
 .pgrid{margin:0 0 10px}
 .pgrid:empty{margin:0}
+.phcap{font-size:13px;color:var(--ink2);margin:4px 2px 0}
+#xphotoArea .pgrid:not(.rec) .ph img{max-height:180px;object-fit:cover}
 .pgrid .ph{position:relative;margin:0 0 10px}
 .pgrid .ph img{width:100%;height:auto;border-radius:9px;border:1px solid var(--line);display:block}
 .phx{
@@ -416,13 +418,15 @@ input[readonly]{color:var(--ink2);background:var(--line2)}
   <!-- 5 360 -->
   <div class="card">
     <h2><span class="n">Step 4</span> Photos</h2>
-    <h3 class="sub">Station photo (this phone)</h3>
+    <h3 class="sub">Station photo (this phone) <span class="ext">(required)</span></h3>
     <div class="pgrid" id="sphotoGrid"></div>
     <button class="btn noprint" type="button" id="takeSPhotoBtn">&#128247; Take station photo</button>
     <input type="file" id="sphotoInput" accept="image/*" capture="environment" class="hidden">
     <p class="hint bad hidden" id="sphotoIncomplete"></p>
     <p class="hint">One picture of the station from the phone, every visit &mdash; the backup if the
     360 goes missing, and it goes to Aquarius with the data.</p>
+    <div id="xphotoArea"></div>
+    <input type="file" id="xphotoInput" accept="image/*" capture="environment" class="hidden">
     <h3 class="sub">360 Photos</h3>
     <div class="chkgrid" id="photoChk"></div>
     <h3 class="sub">360 Videos</h3>
@@ -559,7 +563,8 @@ var SG_ANGLE={
 
 /* Measurement quality. Worded so No is always the answer that needs explaining,
    which is why the eddies question is phrased as "not affecting". */
-var PHOTOS=[["station","Station, Control, Upstream &amp; Downstream"],
+var PHOTOS=[["qr","Clear photo of the QR code (take it first)"],
+            ["station","Station, Control, Upstream &amp; Downstream"],
             ["sdmeter","Salt Dilution Meter Location","salt"],["dosing","Dosing Location","salt"],
             ["mixing","Mixing Reach","salt"],["wdxs","Cross Section","mid"],
             ["bucketloc","Measurement Location","bucket"]];
@@ -571,7 +576,7 @@ var STORE="kei-fieldsheet-v1";
 var $=function(id){ return document.getElementById(id); };
 /* App build. Bump on every version handed over, so a phone can be checked at a glance
    against the filename it came from. Separate from v1.15, which is the paper form. */
-var BUILD="18";
+var BUILD="19";
 var RECORD=!!BAKED;                 /* opened as a finished record, not the blank app */
 /* file_field_sheets.py opens the sheet as ...html#print to render the archive PDF.
    Headless Chrome never fires beforeprint, so the hi-res sketch has to be explicit. */
@@ -587,7 +592,7 @@ function blank(){
     photos:{}, videos:{},
     pq:["","","","",""], reviewedQ:"", qspread:"", qspreadPct:"", qphotoIds:[], sphotoIds:[]
   };
-  for(var i=0;i<6;i++) s.reqs.push({on:false,txt:""});
+  for(var i=0;i<REQ_MIN;i++) s.reqs.push({on:false,txt:""});
   PHOTOS.forEach(function(p){ s.photos[p[0]]=false; });
   VIDEOS.forEach(function(p){ s.videos[p[0]]=false; });
   return s;
@@ -676,7 +681,7 @@ function buildSites(){
 /* Work lines: as many as needed. There are always at least REQ_MIN, and on a
    sheet being filled in the last line is always blank, so writing on it opens
    the next one. */
-var REQ_MIN=6;
+var REQ_MIN=1;
 function reqRowHtml(i){
   return '<div class="chk" id="reqrow_'+i+'">'+
       '<input type="checkbox" data-k="reqs.'+i+'.on" aria-label="Requirement '+(i+1)+' done">'+
@@ -693,6 +698,9 @@ function padReqs(){
   if(!Array.isArray(S.reqs)) S.reqs=[];
   while(S.reqs.length<REQ_MIN) S.reqs.push({on:false,txt:""});
   if(RECORD) return;
+  /* drop untouched blank lines at the end (older drafts started with six), keeping one */
+  function empty(r){ return r&&String(r.txt||"").trim()===""&&!r.on&&String(r.why||"").trim()===""; }
+  while(S.reqs.length>REQ_MIN&&empty(S.reqs[S.reqs.length-1])&&empty(S.reqs[S.reqs.length-2])) S.reqs.pop();
   var last=S.reqs[S.reqs.length-1];
   if(last&&String(last.txt||"").trim()!=="") S.reqs.push({on:false,txt:""});
 }
@@ -807,7 +815,8 @@ function idbDel(k){ return idbOp("readwrite",function(st){ return st.delete(k); 
 
 function photoKey(draftId,photoId){ return draftId+":"+photoId; }
 function deleteDraftPhotos(draft){
-  var ids=((draft.state&&draft.state.qphotoIds)||[]).concat((draft.state&&draft.state.sphotoIds)||[]);
+  var ids=((draft.state&&draft.state.qphotoIds)||[]).concat((draft.state&&draft.state.sphotoIds)||[])
+    .concat(((draft.state&&draft.state.xphotos)||[]).map(function(x){ return x.id; }));
   ids.forEach(function(pid){ idbDel(photoKey(draft.id,pid)).catch(function(){}); });
 }
 
@@ -855,6 +864,81 @@ function addStationPhoto(file){
   }).catch(function(e){
     alert("Couldn't save that photo — "+(e&&e.message?e.message:e)+". The sheet itself is unaffected.");
   });
+}
+/* Phone photos beyond the station photo: one each for the fixed slots (retaking
+   replaces it) and any number of "extra" photos, each with the label typed first. */
+var XSLOTS=[["up","Upstream"],["down","Downstream"],["control","Control"]];
+var xphotoUrls=[], xPending=null;
+function addXPhoto(file,kind,label){
+  return downscalePhoto(file).then(function(blob){
+    var pid="x"+Date.now().toString(36)+Math.floor(Math.random()*4096).toString(36);
+    return idbPut(photoKey(book.cur,pid),blob).then(function(){
+      if(!Array.isArray(S.xphotos)) S.xphotos=[];
+      if(kind!=="extra"){
+        S.xphotos.filter(function(x){ return x.kind===kind; }).forEach(function(x){
+          idbDel(photoKey(book.cur,x.id)).catch(function(){});
+        });
+        S.xphotos=S.xphotos.filter(function(x){ return x.kind!==kind; });
+      }
+      S.xphotos.push({id:pid,kind:kind,label:label});
+      touch(); drawXPhotos(kind==="extra");
+    });
+  }).catch(function(e){
+    alert("Couldn't save that photo — "+(e&&e.message?e.message:e)+". The sheet itself is unaffected.");
+  });
+}
+function xCell(x){
+  var src=RECORD?' src="'+x.data+'"':'';
+  return '<div class="ph" data-xpid="'+(RECORD?'':x.id)+'"><img alt="'+esc(x.label)+'"'+src+'>'+
+    (RECORD?'':'<button type="button" class="phx noprint" data-delxphoto="'+x.id+'">&times;</button>')+
+    (x.kind==="extra"?'<div class="phcap">'+esc(x.label)+'</div>':'')+'</div>';
+}
+function drawXPhotos(clearLabel){
+  var host=$("xphotoArea");
+  if(!host) return;
+  var oldLabel=$("xLabel")?$("xLabel").value:"";
+  xphotoUrls.forEach(function(u){ URL.revokeObjectURL(u); });
+  xphotoUrls=[];
+  var list=(RECORD?((BAKED&&BAKED.xphotos)||[]):((S&&S.xphotos)||[]));
+  var html="";
+  XSLOTS.forEach(function(sl){
+    var have=list.filter(function(x){ return x.kind===sl[0]; });
+    html+='<h3 class="sub">'+sl[1]+' <span class="ext">(optional)</span></h3>'+
+      '<div class="pgrid'+(RECORD?' rec':'')+'">'+have.map(xCell).join("")+'</div>';
+    if(!RECORD) html+='<button class="btn noprint" type="button" data-xtake="'+sl[0]+'">&#128247; '+
+      (have.length?'Retake ':'Take ')+sl[1].toLowerCase()+' photo</button>';
+    else if(!have.length) html+='<p class="hint" style="margin:0 0 8px">Not taken.</p>';
+  });
+  var extra=list.filter(function(x){ return x.kind==="extra"; });
+  html+='<h3 class="sub">More photos</h3><div class="pgrid'+(RECORD?' rec':'')+'">'+extra.map(xCell).join("")+'</div>';
+  if(!RECORD){
+    html+='<div class="withbtn noprint"><input type="text" id="xLabel" autocomplete="off" '+
+      'placeholder="What is this a photo of? e.g. Repaired bellows">'+
+      '<button class="btn" type="button" data-xtake="extra">&#128247; Take photo</button></div>'+
+      '<p class="hint bad hidden noprint" id="xLabelNote"></p>'+
+      '<p class="hint noprint">Type what it is, then take the photo — the photo is saved with that label. Add as many as you like.</p>';
+  }else if(!extra.length) html+='<p class="hint" style="margin:0 0 8px">No other photos.</p>';
+  host.innerHTML=html;
+  if(!RECORD&&$("xLabel")&&!clearLabel) $("xLabel").value=oldLabel;
+  if(RECORD) return;
+  list.forEach(function(x){
+    idbGet(photoKey(book.cur,x.id)).then(function(blob){
+      var cell=host.querySelector('[data-xpid="'+x.id+'"] img');
+      if(!cell) return;
+      if(!blob){ cell.parentNode.insertAdjacentHTML("afterbegin",'<span class="hint">photo missing</span>'); return; }
+      var u=URL.createObjectURL(blob);
+      xphotoUrls.push(u); cell.src=u;
+    }).catch(function(){});
+  });
+}
+/* the labelled photos of one draft, as {kind,label,data} for the sent file */
+function loadXDataUrlsFor(draftId,list){
+  list=list||[];
+  return Promise.all(list.map(function(x){
+    return loadDataUrlsFor(draftId,[x.id]).then(function(d){
+      return d.length?{kind:x.kind,label:x.label,data:d[0]}:null;
+    });
+  })).then(function(out){ return out.filter(Boolean); });
 }
 var sphotoUrls=[];
 function drawSPhotos(){
@@ -956,6 +1040,7 @@ function buildSegs(){
 
 /* ---------- render / bind ---------- */
 function render(){
+  if(S&&!Array.isArray(S.xphotos)) S.xphotos=[];
   padReqs();
   if(document.querySelectorAll("#reqRows .chk").length!==reqCount()) buildReqs();
   /* drafts from build 6 carried a hasQ checkbox; checked maps to Yes, unchecked
@@ -1003,6 +1088,7 @@ function render(){
   if(rqBtn) rqBtn.classList.toggle("hidden",hasRQ);
   drawPhotos();
   drawSPhotos();
+  drawXPhotos();
   autoSpread();
   syncReqWhy(false);
   ["a","d"].forEach(function(side){
@@ -1388,7 +1474,7 @@ function fileNameFor(st){
   return (st.date||todayISO())+"_"+site+".html";
 }
 function fileName(){ return fileNameFor(S); }
-function buildFileFor(st,photos,sphotos){
+function buildFileFor(st,photos,sphotos,xph){
   var clone=document.documentElement.cloneNode(true);
   function pick(s){ return clone.querySelector(s); }
   /* hide, never remove — init() in the saved copy still wires these up */
@@ -1412,12 +1498,13 @@ function buildFileFor(st,photos,sphotos){
   delete payload.sphotoIds;
   payload.qphotos=photos||[];
   payload.sphotos=sphotos||[];
+  payload.xphotos=xph||[];
   var json=JSON.stringify(payload).replace(/<\//g,"<\\/");
   var re=/var BAKED=[^\n]*?;\/\*BAKEDCFG\*\//;
   if(!re.test(html)) return null;
   return html.replace(re,function(){ return "var BAKED="+json+";/*"+"BAKEDCFG"+"*/"; });
 }
-function buildFile(photos,sphotos){ return buildFileFor(S,photos,sphotos); }
+function buildFile(photos,sphotos,xph){ return buildFileFor(S,photos,sphotos,xph); }
 
 /* ---------- send everything in one go ----------
    sheetProblems mirrors validateVisit's rules but reads a plain state object, so
@@ -1481,9 +1568,10 @@ function exportAll(){
   Promise.all(ready.map(function(d){
     return Promise.all([
       loadDataUrlsFor(d.id,(d.state.qphotoIds)||[]),
-      loadDataUrlsFor(d.id,(d.state.sphotoIds)||[])
+      loadDataUrlsFor(d.id,(d.state.sphotoIds)||[]),
+      loadXDataUrlsFor(d.id,d.state.xphotos)
     ]).then(function(both){
-      var html=buildFileFor(d.state,both[0],both[1]);
+      var html=buildFileFor(d.state,both[0],both[1],both[2]);
       return html?new File([new Blob([html],{type:"text/html"})],fileNameFor(d.state),{type:"text/html"}):null;
     });
   })).then(function(files){
@@ -1528,17 +1616,17 @@ function finish(){
     pill("Sheet not sent","dirty");
     return;
   }
-  if(RECORD){ finishWith((BAKED&&BAKED.qphotos)||[],(BAKED&&BAKED.sphotos)||[]); return; }
-  Promise.all([loadPhotoDataUrls(),loadStationDataUrls()]).then(function(both){
-    var expect=((S.qphotoIds||[]).length)+((S.sphotoIds||[]).length);
-    if(both[0].length+both[1].length<expect){
+  if(RECORD){ finishWith((BAKED&&BAKED.qphotos)||[],(BAKED&&BAKED.sphotos)||[],(BAKED&&BAKED.xphotos)||[]); return; }
+  Promise.all([loadPhotoDataUrls(),loadStationDataUrls(),loadXDataUrlsFor(book.cur,S.xphotos)]).then(function(both){
+    var expect=((S.qphotoIds||[]).length)+((S.sphotoIds||[]).length)+((S.xphotos||[]).length);
+    if(both[0].length+both[1].length+both[2].length<expect){
       if(!confirm("Some photos could not be read from storage and will be missing from the sent sheet. Send anyway?")) return;
     }
-    finishWith(both[0],both[1]);
-  }).catch(function(){ finishWith([],[]); });
+    finishWith(both[0],both[1],both[2]);
+  }).catch(function(){ finishWith([],[],[]); });
 }
-function finishWith(photos,sphotos){
-  var html=buildFile(photos,sphotos);
+function finishWith(photos,sphotos,xph){
+  var html=buildFile(photos,sphotos,xph);
   if(!html){ alert("Couldn't prepare the file — the page source has been altered."); return; }
   var name=fileName();
   var blob=new Blob([html],{type:"text/html"});
@@ -1753,6 +1841,40 @@ function init(){
     var f=this.files&&this.files[0];
     this.value="";
     if(f) addStationPhoto(f);
+  });
+  $("xphotoArea").addEventListener("click",function(e){
+    var t=e.target.closest?e.target.closest("[data-xtake]"):null;
+    if(t){
+      var kind=t.getAttribute("data-xtake"), label="";
+      if(kind==="extra"){
+        var li=$("xLabel"), note=$("xLabelNote");
+        label=(li?li.value:"").trim();
+        if(!label){
+          if(li){ li.classList.add("missing"); li.focus(); }
+          if(note){ note.textContent="Type what the photo is of first."; note.classList.remove("hidden"); }
+          return;
+        }
+        li.classList.remove("missing"); if(note) note.classList.add("hidden");
+      }else{
+        XSLOTS.forEach(function(sl){ if(sl[0]===kind) label=sl[1]; });
+      }
+      xPending={kind:kind,label:label};
+      $("xphotoInput").click();
+      return;
+    }
+    var b=e.target.closest?e.target.closest("[data-delxphoto]"):null;
+    if(!b) return;
+    if(!confirm("Remove this photo from the sheet?")) return;
+    var pid=b.getAttribute("data-delxphoto");
+    S.xphotos=(S.xphotos||[]).filter(function(x){ return x.id!==pid; });
+    idbDel(photoKey(book.cur,pid)).catch(function(){});
+    touch(); drawXPhotos();
+  });
+  $("xphotoInput").addEventListener("change",function(){
+    var f=this.files&&this.files[0];
+    this.value="";
+    if(f&&xPending) addXPhoto(f,xPending.kind,xPending.label);
+    xPending=null;
   });
   $("sphotoGrid").addEventListener("click",function(e){
     var b=e.target.closest?e.target.closest("[data-delsphoto]"):null;
