@@ -554,6 +554,8 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
   <!-- 7 departure SG — read on the way out, after the measurement -->
   <div class="card">
     <h2><span class="n">Step 5</span> Departure Staff Gauge</h2>
+    <div class="chk" style="margin-bottom:8px"><input type="checkbox" id="depsgF" data-k="videos.depsg">
+      <label class="inline" for="depsgF">10-Second Departure Staff Gauge 360 video taken</label></div>
     <div class="panel" id="sgD">
         <div class="f">
           <label>Time</label>
@@ -653,14 +655,13 @@ var PHOTOS=[["station","Station, Control, Upstream &amp; Downstream"],
             ["mixing","Mixing Reach","salt"],["wdxs","Cross Section","mid"],
             ["bucketloc","Measurement Location","bucket"]];
 var VIDEOS=[["station","Station, Control, Upstream &amp; Downstream"],
-            ["arrsg","10-Second Arrival Staff Gauge"],
-            ["depsg","10-Second Departure Staff Gauge"]];
+            ["arrsg","10-Second Arrival Staff Gauge"]];
 
 var STORE="kei-fieldsheet-v1";
 var $=function(id){ return document.getElementById(id); };
 /* App build. Bump on every version handed over, so a phone can be checked at a glance
    against the filename it came from. Separate from v1.15, which is the paper form. */
-var BUILD="24";
+var BUILD="25";
 var RECORD=!!BAKED;                 /* opened as a finished record, not the blank app */
 /* file_field_sheets.py opens the sheet as ...html#print to render the archive PDF.
    Headless Chrome never fires beforeprint, so the hi-res sketch has to be explicit. */
@@ -679,6 +680,7 @@ function blank(){
   for(var i=0;i<REQ_MIN;i++) s.reqs.push({on:false,txt:""});
   PHOTOS.forEach(function(p){ s.photos[p[0]]=false; });
   VIDEOS.forEach(function(p){ s.videos[p[0]]=false; });
+  s.videos.depsg=false;              /* ticked on the Departure page, with the departure reading */
   return s;
 }
 function todayISO(){
