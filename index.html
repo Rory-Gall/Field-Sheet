@@ -921,7 +921,7 @@ var STORE="kei-fieldsheet-v1";
 var $=function(id){ return document.getElementById(id); };
 /* App build. Bump on every version handed over, so a phone can be checked at a glance
    against the filename it came from. Separate from v1.15, which is the paper form. */
-var BUILD="28";
+var BUILD="29";
 var RECORD=!!BAKED;                 /* opened as a finished record, not the blank app */
 /* file_field_sheets.py opens the sheet as ...html#print to render the archive PDF.
    Headless Chrome never fires beforeprint, so the hi-res sketch has to be explicit. */
@@ -1858,9 +1858,23 @@ function sheetsHtml(){
     h+=g.sent.map(rowSent).join("");
   }
   h+='<p class="sh-foot">Sent sheets are on OneDrive, so they are safe to clear. Any left here clear themselves after 7 days.</p>';
+  h+='<p class="sh-foot">Field Sheet build '+esc(BUILD)+' &middot; <button class="sh-link" type="button" data-checkupdate="1">Check for an update</button>'+
+     (updMsg?'<br>'+esc(updMsg):'')+'</p>';
   return h;
 }
 /* redraws are skipped while a finger is down on the page, so a tap is never lost to a redraw */
+var updMsg="";
+function checkUpdateNow(){
+  function say(t){ updMsg=t; drawSheets(); }
+  if(!navigator.onLine){ say("No signal — try again when you have service."); return; }
+  if(!window.keiCheckUpdate){ say("Reloading…"); commit(); location.reload(); return; }
+  say("Checking…");
+  window.keiCheckUpdate().then(function(found){
+    say(found===null?"Couldn’t check just now — try again in a moment."
+      :found?"A newer build is on its way — tap “Updated” when it appears at the bottom."
+      :"You have the latest build ("+BUILD+").");
+  });
+}
 var shHtml=null, shDown=0, shPending=false;
 function drawSheets(){
   if(RECORD) return;
@@ -1988,6 +2002,7 @@ function sheetsClick(e){
     if((id=b.getAttribute("data-drop"))) return removeUnsent(id);
     if((id=b.getAttribute("data-clear"))) return clearSent(id);
     if(b.hasAttribute("data-clearall")) return clearAllSent();
+    if(b.hasAttribute("data-checkupdate")) return checkUpdateNow();
     return;
   }
   var row=t.closest?t.closest("[data-open],[data-reopen]"):null;
@@ -2392,6 +2407,17 @@ function setupApp(){
       reg.addEventListener("updatefound",function(){
         if(reg.active) offerWhenActivated(reg.installing);
       });
+      /* An app left open in the background never "launches", so it would never look for a new
+         build. Look every time it comes back to the front, and every half hour while it is open.
+         Resolves to true when a newer build was found (the pill follows once it is ready). */
+      window.keiCheckUpdate=function(){
+        if(!navigator.onLine) return Promise.resolve(null);
+        return reg.update().then(function(){ return !!(reg.installing||reg.waiting); },function(){ return null; });
+      };
+      document.addEventListener("visibilitychange",function(){
+        if(document.visibilityState==="visible") window.keiCheckUpdate();
+      });
+      setInterval(window.keiCheckUpdate,30*60*1000);
     }).catch(function(){});
   }
   /* drafts must survive the OS cleaning house — installed apps are usually
