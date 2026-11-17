@@ -226,6 +226,49 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
 .obx .dd.ok{color:var(--ok,#1a7f45)}
 .tag{font-size:11px;font-weight:700;border-radius:6px;padding:1px 6px;margin-left:6px;background:var(--line2);color:var(--ink2)}
 .draft.cur{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+/* the Sheets page */
+.sh-status{background:var(--panel);border:1px solid var(--line);border-left:6px solid var(--ink3);border-radius:var(--r);
+  box-shadow:var(--shadow);padding:13px 14px 12px;margin:0 0 12px}
+.sh-status.ok{border-left-color:var(--good)} .sh-status.warn{border-left-color:var(--warn)}
+.sh-status.bad{border-left-color:var(--bad)} .sh-status.go{border-left-color:var(--accent)}
+.sh-bigrow{display:flex;gap:10px;align-items:flex-start}
+.sh-bigrow .sh-big{flex:1 1 auto;min-width:0}
+.sh-bigrow .sh-link{flex:0 0 auto;padding:4px 0 4px 6px}
+.sh-big{font-size:20px;font-weight:750;line-height:1.2;letter-spacing:-.01em}
+.sh-status.ok .sh-big{color:var(--good)} .sh-status.warn .sh-big{color:var(--warn)} .sh-status.bad .sh-big{color:var(--bad)}
+.sh-sub{font-size:13px;line-height:1.4;color:var(--ink2);margin-top:5px}
+.sh-status .btn{margin-top:10px;width:100%}
+.sh-link{background:none;border:0;padding:0;margin:0;color:var(--accent);font:inherit;font-size:13px;font-weight:650;cursor:pointer}
+.sh-new{width:100%;font-size:16px;padding:14px 12px}
+.sh-h{display:flex;align-items:center;gap:8px;margin:20px 2px 8px;font-size:12px;font-weight:750;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink3)}
+.sh-h .cnt{font-size:11px;letter-spacing:0;min-width:20px;text-align:center;padding:1px 6px;border-radius:999px;background:var(--line2);color:var(--ink2)}
+.sh-h .sh-link{margin-left:auto;padding:0;text-transform:none;letter-spacing:0}
+.sh-row{display:flex;gap:10px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  box-shadow:var(--shadow);padding:11px 8px 11px 12px;margin:0 0 8px}
+.sh-row[data-open],.sh-row[data-reopen]{cursor:pointer}
+.sh-row.cur{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.sh-row.un{border-left-width:6px;padding-right:12px}
+.sh-row.un.bad{border-left-color:var(--bad)} .sh-row.un.warn{border-left-color:var(--warn)} .sh-row.un.go{border-left-color:var(--accent)}
+.sh-main{flex:1 1 auto;min-width:0}
+.sh-top{display:flex;align-items:center;gap:8px}
+.sh-name{flex:0 1 auto;min-width:0;font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sh-meta{font-size:12.5px;color:var(--ink3);margin-top:2px}
+.sh-note{font-size:13px;line-height:1.35;color:var(--ink2);margin-top:5px}
+.sh-note.good{color:var(--good);font-weight:650} .sh-note.warn{color:var(--warn);font-weight:650} .sh-note.bad{color:var(--bad);font-weight:650}
+.sh-chip{flex:0 0 auto;font-size:11px;font-weight:750;border-radius:999px;padding:2px 8px;background:var(--line2);color:var(--ink2);white-space:nowrap}
+.sh-chip.acc{background:transparent;color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent)}
+.sh-chip.good{background:var(--good-bg);color:var(--good)} .sh-chip.warn{background:var(--warn-bg);color:var(--warn)}
+.sh-bar{height:6px;border-radius:3px;background:var(--line2);margin-top:8px;overflow:hidden}
+.sh-bar i{display:block;height:100%;border-radius:3px;background:var(--accent)}
+.sh-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.sh-x{flex:0 0 auto;border:0;background:none;color:var(--ink3);font-size:22px;line-height:1;padding:8px 10px;margin:-4px 0 0;border-radius:10px;cursor:pointer}
+.sh-row.sent{align-items:center;box-shadow:none;padding:9px 10px 9px 12px}
+.sh-tick{flex:0 0 26px;width:26px;height:26px;border-radius:13px;background:var(--line2);color:var(--ink2);font-weight:800;font-size:14px;
+  display:flex;align-items:center;justify-content:center}
+.sh-tick.good{background:var(--good-bg);color:var(--good)}
+.sh-empty{font-size:13.5px;color:var(--ink3);margin:0 2px 4px}
+.sh-foot{font-size:12.5px;line-height:1.45;color:var(--ink3);margin:16px 2px 0}
 
 .actions{display:flex;gap:9px;flex-wrap:wrap;margin:14px 0 0}
 .actions .btn{flex:1 1 auto}
@@ -351,21 +394,8 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
 
   <section class="page" id="pg_sheets" data-label="Sheets"><div class="wrap">
 
-  <!-- drafts -->
-  <div class="card noprint" id="draftsCard">
-    <h2><span class="n">&#9776;</span> Sheets on this phone</h2>
-    <div class="acct" id="acctRow"></div>
-    <div id="draftList"></div>
-    <div class="actions">
-      <button class="btn pri" type="button" id="newSheetBtn">New sheet</button>
-      <button class="btn" type="button" id="exportAllBtn">Finish all completed sheets</button>
-    </div>
-    <p class="hint" id="exportSummary" style="display:none"></p>
-    <h3 class="sub" id="outboxHead" style="display:none">Sending</h3>
-    <div id="outboxList"></div>
-    <p class="hint">Saved on this device as you type. Finished sheets send themselves to their site&rsquo;s
-    Field Sheets folder and the Hydro Processor whenever there&rsquo;s signal &mdash; sign in once a day.</p>
-  </div>
+  <!-- the Sheets page: not sent yet / planned and in progress / sent. Drawn by drawSheets() -->
+  <div class="noprint" id="draftsCard"><div id="sheetsHome"></div></div>
 
   </div></section>
 
@@ -661,7 +691,7 @@ var STORE="kei-fieldsheet-v1";
 var $=function(id){ return document.getElementById(id); };
 /* App build. Bump on every version handed over, so a phone can be checked at a glance
    against the filename it came from. Separate from v1.15, which is the paper form. */
-var BUILD="25";
+var BUILD="26";
 var RECORD=!!BAKED;                 /* opened as a finished record, not the blank app */
 /* file_field_sheets.py opens the sheet as ...html#print to render the archive PDF.
    Headless Chrome never fires beforeprint, so the hi-res sketch has to be explicit. */
@@ -739,6 +769,7 @@ function pill(txt,cls){
 }
 function touch(){
   if(RECORD){ pill("Record — unsaved edits","dirty"); return; }
+  var td=currentDraft(); if(td&&!td.edited&&obFind(td.id)) td.edited=true;
   pill("Saving…","dirty");
   clearTimeout(saveTimer);
   saveTimer=setTimeout(commit,400);
@@ -1372,27 +1403,304 @@ function showAngleNote(){
   else        h.textContent=S.site+" has a vertical gauge — no angle correction needed.";
 }
 /* ---------- drafts UI ---------- */
-function drawDrafts(){
-  if(RECORD) return;
-  var host=$("draftList");
-  if(!book.drafts.length){ host.innerHTML='<p class="hint" style="margin:0">No sheets yet. Start one below.</p>'; return; }
-  host.innerHTML=book.drafts.map(function(d){
-    var st=d.state||{};
-    var nm=st.site||"(no station yet)";
-    var when=st.date||"";
-    var t=[st.arrive,st.depart].filter(Boolean).join("–");
-    return '<div class="draft'+(d.id===book.cur?" cur":"")+'" data-id="'+d.id+'">'+
-      '<div class="d1"><div class="dn">'+esc(nm)+'</div>'+
-      '<div class="dd">'+esc(when+(t?"  "+t:""))+draftTag(d.id)+'</div></div>'+
-      (d.id===book.cur?'':'<button class="btn sm" type="button" data-open="'+d.id+'">Open</button>')+
-      '<button class="btn sm danger" type="button" data-del="'+d.id+'">&times;</button>'+
-      '</div>';
-  }).join("");
+/* ---------- the Sheets page (build 26) ----------
+   Three lists, in the order they need attention:
+     NOT SENT YET             finished, still on their way (or stuck, with the reason)
+     PLANNED AND IN PROGRESS  being set up or filled in; an untouched empty sheet is not listed
+     SENT                     confirmed on OneDrive, with what the Hydro Processor says about it
+   A sheet changed after it was sent goes back to "in progress", marked Changed. */
+function draftById(id){
+  for(var i=0;i<book.drafts.length;i++) if(book.drafts[i].id===id) return book.drafts[i];
+  return null;
 }
-function draftTag(id){
-  var e=obFind(id);
-  if(!e) return "";
-  return '<span class="tag">'+(e.state==="sent"?"Sent ✓":e.state==="error"?"Not sent":"Finished")+'</span>';
+function isBlankSheet(st){
+  st=st||{};
+  function has(v){ return String(v==null?"":v).trim()!==""; }
+  if(has(st.site)||has(st.arrive)||has(st.depart)||has(st.tech)||has(st.purpose)||has(st.notes)) return false;
+  if((st.reqs||[]).some(function(r){ return r&&(has(r.txt)||r.on); })) return false;
+  if((st.sphotoIds||[]).length||(st.qphotoIds||[]).length||(st.xphotos||[]).length) return false;
+  if(st.flow==="yes"||st.flow==="no") return false;
+  var sg=st.sg||{};
+  if(["a","d","m"].some(function(k){ return sg[k]&&(has(sg[k].sg)||has(sg[k].time)); })) return false;
+  var ticks=false;
+  [st.photos,st.videos].forEach(function(o){ Object.keys(o||{}).forEach(function(k){ if(o[k]) ticks=true; }); });
+  return !ticks;
+}
+/* untouched empty sheets don't pile up: only the one that's open is kept */
+function pruneBlank(){
+  var n=book.drafts.length;
+  book.drafts=book.drafts.filter(function(d){ return d.id===book.cur||obFind(d.id)||!isBlankSheet(d.state); });
+  if(book.drafts.length!==n) saveBook();
+}
+function sheetStarted(st){ return String((st&&st.arrive)||"").trim()!==""; }
+function sheetGroups(){
+  var by={}, seen={}, g={unsent:[],work:[],sent:[]};
+  OB.forEach(function(e){ by[e.draftId]=e; });
+  book.drafts.forEach(function(d){
+    var e=by[d.id]||null; seen[d.id]=1;
+    if(e&&e.state!=="sent") g.unsent.push({d:d,e:e});
+    else if(e&&!d.edited) g.sent.push({d:d,e:e});
+    else if(e||!isBlankSheet(d.state)) g.work.push({d:d,e:e});
+  });
+  OB.forEach(function(e){ if(!seen[e.draftId]) (e.state==="sent"?g.sent:g.unsent).push({d:null,e:e}); });
+  var rank={error:0,signin:1,waiting:2,sending:3};
+  g.unsent.sort(function(a,b){ return ((rank[a.e.state]||0)-(rank[b.e.state]||0))||(a.e.queued<b.e.queued?-1:1); });
+  g.sent.sort(function(a,b){ return (a.e.sentAt||"")<(b.e.sentAt||"")?1:-1; });
+  g.work.sort(function(a,b){
+    var sa=sheetStarted(a.d.state), sb=sheetStarted(b.d.state);
+    if(sa!==sb) return sa?-1:1;
+    if(sa) return (b.d.updated||0)-(a.d.updated||0);
+    return String(a.d.state.date||"")<String(b.d.state.date||"")?-1:1;
+  });
+  return g;
+}
+function p2(v){ return String(v).padStart(2,"0"); }
+function isoShift(n){ var d=new Date(); d.setDate(d.getDate()+n); return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate()); }
+function dayWord(iso){ return iso===isoShift(0)?"today":iso===isoShift(1)?"tomorrow":iso===isoShift(-1)?"yesterday":""; }
+function whenTxt(iso){
+  var d=new Date(iso); if(isNaN(d)) return "";
+  var day=d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate());
+  return (dayWord(day)||day)+" "+p2(d.getHours())+":"+p2(d.getMinutes());
+}
+function plural(n,w){ return n+" "+w+(n===1?"":"s"); }
+function shChip(t,c){ return '<span class="sh-chip'+(c?" "+c:"")+'">'+esc(t)+'</span>'; }
+
+function statusCard(g,a){
+  var n=g.unsent.length, bad=g.unsent.filter(function(x){ return x.e.state==="error"; }).length;
+  var cls="", big, sub, act="", out="";
+  if(!haveSender()){
+    return '<div class="sh-status bad"><div class="sh-big">Sending isn&rsquo;t available</div>'+
+      '<div class="sh-sub">This copy of the app didn&rsquo;t load completely. Close it and open it again with signal.</div></div>';
+  }
+  if(bad){ cls="bad"; big=plural(bad,"sheet")+" couldn’t send"; }
+  else if(n&&!a){ cls="warn"; big=plural(n,"sheet")+" waiting — sign in to send"; }
+  else if(n&&!navigator.onLine){ cls="warn"; big=plural(n,"sheet")+" waiting for signal"; }
+  else if(n){ cls="go"; big="Sending "+plural(n,"sheet")+"…"; }
+  else if(!a){ cls="warn"; big="Not signed in"; }
+  else if(g.sent.length){ cls="ok"; big="Everything is sent ✓"; }
+  else big="Nothing waiting to send";
+  if(a){
+    var until=new Date((a.signedInAt||Date.now())+24*3600*1000);
+    sub="Signed in as <b>"+esc(a.name||a.email)+"</b> until "+esc(p2(until.getHours())+":"+p2(until.getMinutes()))+" "+
+      (until.toDateString()===new Date().toDateString()?"today":"tomorrow");
+    out='<button class="sh-link" type="button" id="signOutBtn">Sign out</button>';
+  }else{
+    sub=n?"Finished sheets wait on this phone until you sign in.":"Sign in while you have service, so today’s sheets can send themselves.";
+    act='<button class="btn pri" type="button" id="signInBtn">Sign in with Microsoft</button>';
+  }
+  return '<div class="sh-status '+cls+'"><div class="sh-bigrow"><div class="sh-big">'+esc(big)+'</div>'+out+'</div>'+
+    '<div class="sh-sub">'+sub+'</div>'+act+'</div>';
+}
+function rowWork(x){
+  var d=x.d, st=d.state||{}, on=sheetStarted(st), probs=sheetProblems(st);
+  var lines=(st.reqs||[]).filter(function(r){ return r&&String(r.txt||"").trim()!==""; });
+  var done=lines.filter(function(r){ return r.on; }).length;
+  var times=[st.arrive,st.depart].filter(Boolean).join("–");
+  var meta=[st.date?st.date+(dayWord(st.date)?" ("+dayWord(st.date)+")":""):"no date",times].filter(Boolean).join(" · ");
+  if(on&&lines.length) meta+=" · "+done+" of "+lines.length+" done";
+  var c, note="", ncls="", ready=on&&!probs.length;
+  if(d.edited&&x.e){ c=shChip("Changed","warn"); note="Changed after it was sent. Finish it again to send the changes."; ncls="warn"; }
+  else if(!on){ c=shChip("Planned"); note=lines.length?plural(lines.length,"thing")+" to do":""; }
+  else if(ready) c=shChip("Ready","good");
+  else{ c=shChip("In progress","acc"); note="Still needs: "+probs.slice(0,2).join(", ")+(probs.length>2?" +"+(probs.length-2)+" more":""); }
+  return '<div class="sh-row'+(d.id===book.cur?" cur":"")+'" data-open="'+d.id+'" role="button">'+
+    '<div class="sh-main"><div class="sh-top"><span class="sh-name">'+esc(st.site||"No station yet")+'</span>'+c+'</div>'+
+    '<div class="sh-meta">'+esc(meta)+'</div>'+
+    (note?'<div class="sh-note '+ncls+'">'+esc(note)+'</div>':'')+
+    (ready?'<div class="sh-acts"><button class="btn sm pri" type="button" data-finish="'+d.id+'">Finish &amp; send</button></div>':'')+
+    '</div><button class="sh-x" type="button" data-del="'+d.id+'" aria-label="Delete this sheet">&times;</button></div>';
+}
+function rowUnsent(x){
+  var e=x.e, d=x.d, up=e.procUp||e.siteUp, pct=up&&up.size?Math.round(100*(up.at||0)/up.size):null;
+  var where=e.procUp?" to the Hydro Processor":e.siteUp?" to Field Sheets":"";
+  var t, cls="", tone="warn";
+  if(e.state==="error"){ t="Couldn’t send: "+e.msg; cls="bad"; tone="bad"; }
+  else if(e.state==="signin"){ t="Sign in to send"; cls="warn"; }
+  else if(e.state==="sending"){ t="Sending"+where+(pct!=null?" — "+pct+"%":"…"); tone="go"; }
+  else{ t="Waiting for signal"+(pct!=null?" ("+pct+"% sent)":""); cls="warn"; }
+  return '<div class="sh-row un '+tone+'"'+(d?' data-open="'+d.id+'" role="button"':'')+'>'+
+    '<div class="sh-main"><div class="sh-top"><span class="sh-name">'+esc(e.site||e.name)+'</span></div>'+
+    '<div class="sh-meta">'+esc((e.date?e.date+" · ":"")+"finished "+whenTxt(e.queued))+'</div>'+
+    '<div class="sh-note '+cls+'">'+esc(t)+'</div>'+
+    (pct!=null&&e.state!=="error"?'<div class="sh-bar"><i style="width:'+pct+'%"></i></div>':'')+
+    (d&&d.edited?'<div class="sh-note warn">Changed after Finish. Finish it again to send the changes.</div>':'')+
+    (e.state==="error"?'<div class="sh-acts">'+
+      '<button class="btn sm pri" type="button" data-obretry="'+e.draftId+'">Try again</button>'+
+      '<button class="btn sm" type="button" data-obshare="'+e.draftId+'">Share a copy</button>'+
+      '<button class="btn sm danger" type="button" data-drop="'+e.draftId+'">Remove</button></div>':'')+
+    '</div></div>';
+}
+function sentWhere(e){
+  if(e.proc!=="staged") return {t:"In its Field Sheets folder",c:"good"};
+  var ps=e.procState||"";
+  if(ps==="accepted"||ps==="already in the record") return {t:"In the Hydro Processor",c:"good"};
+  if(ps==="missing") return {t:"In Field Sheets · not found in the Hydro Processor",c:"warn"};
+  if(ps&&ps!=="queued") return {t:"In Field Sheets · Hydro Processor: "+ps,c:""};
+  return {t:"In Field Sheets · waiting for approval in the Hydro Processor",c:""};
+}
+function rowSent(x){
+  var e=x.e, d=x.d, w=sentWhere(e);
+  var as=(e.siteName&&e.siteName!==e.name)?" · saved as "+e.siteName.replace(/\.html$/i,""):"";
+  return '<div class="sh-row sent"'+(d?' data-reopen="'+d.id+'" role="button"':'')+'>'+
+    '<div class="sh-tick'+(w.c==="good"?" good":"")+'">✓</div>'+
+    '<div class="sh-main"><div class="sh-top"><span class="sh-name">'+esc(e.site||e.name)+'</span></div>'+
+    '<div class="sh-meta">'+esc((e.date?e.date+" · ":"")+"sent "+whenTxt(e.sentAt)+as)+'</div>'+
+    '<div class="sh-note '+w.c+'">'+esc(w.t)+'</div></div>'+
+    '<button class="btn sm" type="button" data-clear="'+e.draftId+'">Clear</button></div>';
+}
+function sheetsHtml(){
+  var g=sheetGroups(), h=statusCard(g,authLoad());
+  function head(t,n,extra){ return '<div class="sh-h"><span>'+t+'</span><span class="cnt">'+n+'</span>'+(extra||"")+'</div>'; }
+  h+='<button class="btn pri sh-new" type="button" id="newSheetBtn">+ New sheet</button>';
+  if(g.unsent.length) h+=head("Not sent yet",g.unsent.length)+g.unsent.map(rowUnsent).join("");
+  h+=head("Planned and in progress",g.work.length);
+  h+=g.work.length?g.work.map(rowWork).join(""):'<p class="sh-empty">Nothing on the go. Start one with New sheet.</p>';
+  if(g.sent.length){
+    var q=g.sent.filter(function(x){ return x.e.proc==="staged"&&(!x.e.procState||x.e.procState==="queued"); }).length;
+    h+=head("Sent",g.sent.length,g.sent.length>1?'<button class="sh-link" type="button" data-clearall="1">Clear all</button>':'');
+    if(q) h+='<p class="sh-empty">'+plural(q,"sheet")+" waiting for your approval in the Hydro Processor, on the PC.</p>";
+    h+=g.sent.map(rowSent).join("");
+  }
+  h+='<p class="sh-foot">Sent sheets are on OneDrive, so they are safe to clear. Any left here clear themselves after 7 days.</p>';
+  return h;
+}
+/* redraws are skipped while a finger is down on the page, so a tap is never lost to a redraw */
+var shHtml=null, shDown=0, shPending=false;
+function drawSheets(){
+  if(RECORD) return;
+  var host=$("sheetsHome"); if(!host) return;
+  if(shDown&&Date.now()-shDown<3000){          /* a finger is down: draw when it lifts (3 s at most) */
+    if(!shPending){ shPending=true; setTimeout(function(){ if(shPending){ shPending=false; shDown=0; drawSheets(); } },3100); }
+    return;
+  }
+  var h=sheetsHtml();
+  if(h!==shHtml){ host.innerHTML=h; shHtml=h; }
+  drawSendChip();
+}
+function drawDrafts(){ drawSheets(); }
+
+function openDraft(id){
+  commit();
+  var d=draftById(id);
+  if(d) startSheet(d.state,d.id);
+}
+function newSheet(){
+  commit();
+  var cur=currentDraft();
+  if(cur&&isBlankSheet(cur.state)&&!obFind(cur.id)){ if(pagerOn()) goPage("arrive"); return; }
+  var s=blank(); s.tz=book.tz||"-7";
+  var id=newId();
+  book.drafts.unshift({id:id,state:s,updated:Date.now()});
+  startSheet(s,id);
+  commit();
+}
+/* the form always has a sheet open: after the open one goes, pick another being worked on, or a new empty one */
+function ensureCurrent(){
+  if(draftById(book.cur)) return;
+  var w=sheetGroups().work, pick=w.length?w[0].d:null;
+  if(!pick){
+    var s=blank(); s.tz=book.tz||"-7";
+    pick={id:newId(),state:s,updated:Date.now()};
+    book.drafts.unshift(pick);
+  }
+  startSheet(pick.state,pick.id,true);
+}
+function dropDraft(id){
+  book.drafts.filter(function(d){ return d.id===id; }).forEach(deleteDraftPhotos);
+  book.drafts=book.drafts.filter(function(d){ return d.id!==id; });
+  saveBook();
+  ensureCurrent();
+}
+function deleteDraft(id){
+  if(!confirm("Delete this sheet from the phone? It has not been sent, and this cannot be undone.")) return;
+  dropDraft(id); drawSheets();
+}
+/* a sent sheet is on OneDrive (the upload was confirmed), so clearing it loses nothing */
+function clearSent(id){
+  dropDraft(id);
+  return (haveSender()?KEISEND.remove(id):Promise.resolve()).then(refreshOutbox);
+}
+function clearAllSent(){
+  var ids=sheetGroups().sent.map(function(x){ return x.e.draftId; });
+  if(!ids.length||!confirm("Clear "+plural(ids.length,"sent sheet")+" from this phone? They stay on OneDrive.")) return;
+  ids.reduce(function(c,id){ return c.then(function(){ return clearSent(id); }); },Promise.resolve());
+}
+function removeUnsent(id){
+  if(!confirm("This sheet has NOT been sent. Remove it from this phone anyway?\n\nUse Share a copy first if you need to keep it.")) return;
+  dropDraft(id);
+  (haveSender()?KEISEND.remove(id):Promise.resolve()).then(refreshOutbox);
+}
+function tidySent(){
+  var cutoff=Date.now()-7*24*3600*1000;
+  var old=OB.filter(function(e){
+    var d=draftById(e.draftId);
+    return e.state==="sent"&&Date.parse(e.sentAt||0)<cutoff&&!(d&&d.edited);
+  });
+  return old.reduce(function(c,e){ return c.then(function(){ return clearSent(e.draftId); }); },Promise.resolve());
+}
+/* ask the Hydro Processor what became of each sent sheet (read only; at most every 2 minutes) */
+var lastProcCheck=0;
+function checkSent(force){
+  if(RECORD||!haveSender()||!navigator.onLine||!authLoad()) return Promise.resolve();
+  if(!force&&Date.now()-lastProcCheck<120000) return Promise.resolve();
+  var todo=OB.filter(function(e){
+    return e.state==="sent"&&e.proc==="staged"&&(!e.procState||e.procState==="queued"||e.procState==="missing");
+  });
+  if(!todo.length) return Promise.resolve();
+  lastProcCheck=Date.now();
+  return todo.reduce(function(c,e){
+    return c.then(function(){ return KEISEND.checkProcessor(e.draftId).catch(function(){}); });
+  },Promise.resolve()).then(refreshOutbox);
+}
+function finishDraft(id){
+  commit();
+  var d=draftById(id);
+  if(!d) return;
+  if(sheetProblems(d.state).length){ openDraft(id); return; }
+  Promise.all([
+    loadDataUrlsFor(d.id,(d.state.qphotoIds)||[]),
+    loadDataUrlsFor(d.id,(d.state.sphotoIds)||[]),
+    loadXDataUrlsFor(d.id,d.state.xphotos)
+  ]).then(function(both){
+    var expect=((d.state.qphotoIds||[]).length)+((d.state.sphotoIds||[]).length)+((d.state.xphotos||[]).length);
+    if(both[0].length+both[1].length+both[2].length<expect){
+      if(!confirm("Some photos could not be read from storage and will be missing from the sent sheet. Send anyway?")) return;
+    }
+    var html=buildFileFor(d.state,both[0],both[1],both[2]);
+    if(!html) throw new Error("the page source has been altered");
+    return queueFinished(d.id,d.state,html);
+  }).catch(function(e){
+    alert("Couldn't finish the sheet — "+(e&&e.message?e.message:e)+". Nothing was lost; try again.");
+  });
+}
+function sheetsClick(e){
+  var t=e.target, b=t.closest?t.closest("button"):null, id;
+  if(b){
+    if(b.id==="signInBtn") return signIn();
+    if(b.id==="signOutBtn"){
+      if(confirm("Sign out? Finished sheets wait on this phone until someone signs in.")) authSave(null).then(pump);
+      return;
+    }
+    if(b.id==="newSheetBtn") return newSheet();
+    if((id=b.getAttribute("data-finish"))) return finishDraft(id);
+    if((id=b.getAttribute("data-del"))) return deleteDraft(id);
+    if((id=b.getAttribute("data-obretry"))){
+      if(haveSender()) KEISEND.upd(id,{state:"waiting",msg:""}).then(refreshOutbox).then(pump);
+      return;
+    }
+    if((id=b.getAttribute("data-obshare"))) return shareCopy(id);
+    if((id=b.getAttribute("data-drop"))) return removeUnsent(id);
+    if((id=b.getAttribute("data-clear"))) return clearSent(id);
+    if(b.hasAttribute("data-clearall")) return clearAllSent();
+    return;
+  }
+  var row=t.closest?t.closest("[data-open],[data-reopen]"):null;
+  if(!row) return;
+  if((id=row.getAttribute("data-reopen"))){
+    if(!confirm("Open this sent sheet to fix something?\n\nPress Finish again afterwards to send the fix.")) return;
+    return openDraft(id);
+  }
+  openDraft(row.getAttribute("data-open"));
 }
 function esc(s){
   return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
@@ -1592,6 +1900,7 @@ function buildFileFor(st,photos,sphotos,xph){
   function pick(s){ return clone.querySelector(s); }
   /* hide, never remove — init() in the saved copy still wires these up */
   var dc=pick("#draftsCard"); if(dc) dc.className="card noprint hidden";
+  var shh=pick("#sheetsHome"); if(shh) shh.innerHTML="";
   var t=pick("title"); if(t) t.textContent="Field Sheet — "+(st.site||"")+" "+(st.date||"");
   var b=pick("#recBanner");
   if(b){ b.className="banner"; b.textContent="Completed field sheet — "+(st.site||"")+"  "+(st.date||"")+
@@ -1661,44 +1970,6 @@ function sheetProblems(st){
     if(!sgOK) out.push("staff gauge reading");
   }
   return out;
-}
-function exportAll(){
-  commit();
-  var summary=$("exportSummary");
-  function say(t){ if(summary){ summary.style.display="block"; summary.textContent=t; } }
-  var ready=[], notReady=[];
-  (book.drafts||[]).forEach(function(d){
-    if(!d.state) return;
-    var probs=sheetProblems(d.state);
-    if(probs.length) notReady.push({d:d,probs:probs}); else ready.push(d);
-  });
-  if(!ready.length){
-    say(notReady.length
-      ? "Nothing ready to send yet — open each sheet and finish what's red."
-      : "No sheets on this phone.");
-    return;
-  }
-  say("Finishing "+ready.length+" sheet(s)…");
-  ready.reduce(function(chain,d){
-    return chain.then(function(){
-      return Promise.all([
-        loadDataUrlsFor(d.id,(d.state.qphotoIds)||[]),
-        loadDataUrlsFor(d.id,(d.state.sphotoIds)||[]),
-        loadXDataUrlsFor(d.id,d.state.xphotos)
-      ]).then(function(both){
-        var html=buildFileFor(d.state,both[0],both[1],both[2]);
-        if(!html) throw new Error("the page source has been altered");
-        return queueFinished(d.id,d.state,html);
-      });
-    });
-  },Promise.resolve()).then(function(){
-    var held=notReady.length
-      ? "  Not finished yet: "+notReady.map(function(x){ return (x.d.state.site||"unnamed")+" ("+x.probs[0]+"…)"; }).join(", ")+"."
-      : "";
-    say(ready.length+" sheet(s) finished — they send themselves when there's signal."+held);
-  }).catch(function(e){
-    say("Couldn't finish them — "+(e&&e.message?e.message:e)+". Nothing was lost.");
-  });
 }
 
 function finish(){
@@ -1937,6 +2208,7 @@ function pump(){
 /* a finished sheet goes into the outbox (its file kept in IndexedDB) and sends from there */
 function queueFinished(draftId,st,html){
   if(!haveSender()) return Promise.reject(new Error("the sending part of the app didn't load — close the app and open it again"));
+  var qd=draftById(draftId); if(qd&&qd.edited){ delete qd.edited; saveBook(); }
   return KEISEND.queueHtml(draftId,{name:fileNameFor(st),site:st.site,tech:st.tech||"",date:st.date||""},html)
     .then(refreshOutbox).then(pump);
 }
@@ -1988,24 +2260,7 @@ function syncTodos(){
   });
 }
 
-function hhmm(iso){ var d=new Date(iso); return isNaN(d)?"":d.toTimeString().slice(0,5); }
-function drawAccount(){
-  var host=$("acctRow"); if(!host||RECORD) return;
-  var a=authLoad();
-  if(!haveSender()){
-    host.innerHTML='<div class="who" style="color:var(--bad)">Sending isn&rsquo;t available in this copy &mdash; close the app and open it again with signal. Use &ldquo;Share a copy&rdquo; meanwhile.</div>';
-    return;
-  }
-  if(a){
-    var until=new Date((a.signedInAt||Date.now())+24*3600*1000);
-    host.innerHTML='<div class="who">Signed in as <b>'+esc(a.name||a.email)+'</b> &mdash; sheets send themselves, even with the app closed (until '+
-      esc(until.toTimeString().slice(0,5))+' '+(until.toDateString()===new Date().toDateString()?'today':'tomorrow')+')</div>'+
-      '<button class="btn sm" type="button" id="signOutBtn">Sign out</button>';
-  }else{
-    host.innerHTML='<div class="who">Not signed in &mdash; finished sheets wait on this phone until you sign in.</div>'+
-      '<button class="btn sm pri" type="button" id="signInBtn">Sign in with Microsoft</button>';
-  }
-}
+function drawAccount(){ drawSheets(); }
 function drawSendChip(){
   var chip=$("sendChip"); if(!chip||RECORD) return;
   var l=obLoad().filter(function(x){ return x.state!=="sent"; });
@@ -2015,26 +2270,7 @@ function drawSendChip(){
   chip.textContent=t; chip.style.display=t?"":"none";
   chip.style.background=(bad||sign)?"var(--bad-bg)":""; chip.style.color=(bad||sign)?"var(--bad)":"";
 }
-function drawOutbox(){
-  drawSendChip();
-  var host=$("outboxList"); if(!host||RECORD) return;
-  var weekAgo=Date.now()-7*24*3600*1000;
-  var l=obLoad().filter(function(x){ return x.state!=="sent"||Date.parse(x.sentAt||0)>weekAgo; }).slice().reverse();
-  $("outboxHead").style.display=l.length?"":"none";
-  host.innerHTML=l.map(function(x){
-    var up=x.procUp||x.siteUp, pct=up&&up.size?Math.round(100*(up.at||0)/up.size):null;
-    var where=x.procUp?" to the Hydro Processor":x.siteUp?" to Field Sheets":"";
-    var sendTxt="Sending"+where+(pct!=null?" \u2014 "+pct+"%":"\u2026");
-    var st={waiting:[(pct!=null?"Waiting for signal ("+pct+"% sent"+where+")":"Waiting for signal"),""],
-      signin:["Sign in to send",""],sending:[sendTxt,""],
-      error:["Not sent — "+x.msg,"bad"],
-      sent:["Sent "+hhmm(x.sentAt)+" ✓  Field Sheets"+(x.proc==="staged"?" + Hydro Processor":""),"ok"]}[x.state]||[x.state,""];
-    return '<div class="draft obx"><div class="d1"><div class="dn">'+esc(x.name)+'</div>'+
-      '<div class="dd '+st[1]+'">'+esc(st[0])+'</div></div>'+
-      (x.state==="error"?'<button class="btn sm" type="button" data-obretry="'+x.draftId+'">Retry</button>':'')+
-      '<button class="btn sm" type="button" data-obshare="'+x.draftId+'">Share a copy</button></div>';
-  }).join("");
-}
+function drawOutbox(){ drawSheets(); }
 function shareCopy(id){
   var e=obFind(id);
   (haveSender()?KEISEND.getFile(id):Promise.resolve(null)).then(function(blob){
@@ -2091,6 +2327,7 @@ function markTab(){
     if(on&&!t.classList.contains("on")){
       var tr=$("tracker");
       tr.scrollTo({left:t.offsetLeft-tr.clientWidth/2+t.offsetWidth/2});
+      if(key==="sheets") checkSent();
     }
     t.classList.toggle("on",on);
   });
@@ -2142,15 +2379,15 @@ function setupPager(){
 }
 
 /* ---------- boot ---------- */
-function startSheet(state,id){
+function startSheet(state,id,stay){
   S=state;
-  if(!RECORD){ book.cur=id; saveBook(); }
+  if(!RECORD){ book.cur=id; saveBook(); pruneBlank(); }
   render();
   drawDrafts();
   window.scrollTo(0,0);
   if(pagerOn()){
-    Array.prototype.forEach.call(document.querySelectorAll(".page"),function(pp){ pp.scrollTop=0; });
-    goPage("arrive",true);
+    Array.prototype.forEach.call(document.querySelectorAll(".page"),function(pp){ if(!stay||pp.id!=="pg_sheets") pp.scrollTop=0; });
+    if(!stay) goPage("arrive",true);
   }
 }
 function init(){
@@ -2183,9 +2420,9 @@ function init(){
 
   bind();
   render();
+  if(!RECORD) pruneBlank();
   drawDrafts();
 
-  $("exportAllBtn").addEventListener("click",exportAll);
   $("reqRows").addEventListener("keydown",function(e){
     if(e.key==="Enter"&&e.target.classList.contains("reqtxt")){ e.preventDefault(); e.target.blur(); }
   });
@@ -2201,63 +2438,28 @@ function init(){
       }).then(function(r){
         if(r&&r.error) alert("Microsoft sign-in didn't finish: "+r.error);
         pump();
+        return tidySent().then(function(){ return checkSent(); });
       });
       if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("message",function(e){
         if(e.data&&(e.data.type==="kei-outbox"||e.data.type==="kei-auth")) window.onKeiSend(e.data.type);
       });
     }else drawAccount();
-    $("acctRow").addEventListener("click",function(e){
-      if(e.target.closest("#signInBtn")) signIn();
-      if(e.target.closest("#signOutBtn")&&confirm("Sign out? Finished sheets wait on this phone until someone signs in.")){
-        authSave(null).then(pump);
-      }
-    });
-    $("outboxList").addEventListener("click",function(e){
-      var r=e.target.closest("[data-obretry]"), sh=e.target.closest("[data-obshare]");
-      if(r&&haveSender()) KEISEND.upd(r.getAttribute("data-obretry"),{state:"waiting",msg:""}).then(refreshOutbox).then(pump);
-      if(sh) shareCopy(sh.getAttribute("data-obshare"));
+    var shHost=$("sheetsHome");
+    shHost.addEventListener("click",sheetsClick);
+    shHost.addEventListener("pointerdown",function(){ shDown=Date.now(); });
+    ["pointerup","pointercancel"].forEach(function(ev){
+      window.addEventListener(ev,function(){
+        shDown=0;
+        if(shPending){ shPending=false; setTimeout(drawSheets,60); }   /* after the tap's own click */
+      });
     });
     $("todoSyncBtn").addEventListener("click",syncTodos);
     window.addEventListener("online",pump);
     document.addEventListener("visibilitychange",function(){
-      if(document.visibilityState==="visible"){ refreshAuth(); refreshOutbox(); pump(); }
+      if(document.visibilityState==="visible"){ refreshAuth(); refreshOutbox().then(function(){ return checkSent(); }); pump(); }
     });
     setInterval(pump,60000);
   }
-  $("newSheetBtn").addEventListener("click",function(){
-    commit();
-    var s=blank();
-    s.tz=book.tz||"-7";
-    var id=newId();
-    book.drafts.unshift({id:id,state:s,updated:Date.now()});
-    startSheet(s,id);
-    commit();
-  });
-  $("draftList").addEventListener("click",function(e){
-    var o=e.target.closest?e.target.closest("[data-open]"):null;
-    var x=e.target.closest?e.target.closest("[data-del]"):null;
-    if(o){
-      commit();
-      var id=o.getAttribute("data-open");
-      for(var i=0;i<book.drafts.length;i++) if(book.drafts[i].id===id) return startSheet(book.drafts[i].state,id);
-    }
-    if(x){
-      var did=x.getAttribute("data-del");
-      if(!confirm("Delete this sheet from the phone? It cannot be undone.")) return;
-      book.drafts.filter(function(d){ return d.id===did; }).forEach(deleteDraftPhotos);
-      book.drafts=book.drafts.filter(function(d){ return d.id!==did; });
-      if(book.cur===did){
-        if(book.drafts.length) startSheet(book.drafts[0].state,book.drafts[0].id);
-        else{
-          var s2=blank(); s2.tz=book.tz||"-7";
-          var nid=newId();
-          book.drafts.push({id:nid,state:s2,updated:Date.now()});
-          startSheet(s2,nid);
-        }
-      }
-      saveBook(); drawDrafts();
-    }
-  });
   $("sameAsArrival").addEventListener("click",function(){
     ["sg","err","ang","calc"].forEach(function(k){ set("sg.d."+k,get("sg.a."+k)); });
     set("sg.d.calcAuto",get("sg.a.calcAuto"));

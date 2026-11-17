@@ -100,6 +100,24 @@
       };
     }).then(function () { return notify("kei-outbox"); });
   }
+  /* change an entry only while it is still the version a send started with; if the sheet was
+     finished again or removed meanwhile, the send stops here ("superseded") and writes nothing */
+  var SUPERSEDED = "superseded";
+  function updRev(id, rev, patch) {
+    var gone = false;
+    return op("readwrite", function (st) {
+      var rq = st.get("ob:" + id);
+      rq.onsuccess = function () {
+        var e = rq.result;
+        if (!e || (e.rev || "") !== rev) { gone = true; return; }
+        Object.keys(patch).forEach(function (k) { e[k] = patch[k]; });
+        st.put(e, "ob:" + id);
+      };
+    }).then(function () {
+      if (gone) throw new Error(SUPERSEDED);
+      return notify("kei-outbox");
+    });
+  }
   function hexOf(buf) {
     return Array.prototype.map.call(new Uint8Array(buf), function (b) { return ("0" + b.toString(16)).slice(-2); }).join("");
   }
@@ -119,7 +137,8 @@
             sha: hexOf(h), bytes: bytes.length, queued: new Date().toISOString(), state: "waiting", msg: "",
             siteDone: false, procDone: false,
             siteItemId: old.siteItemId || "", siteName: old.siteName || "", procStaged: !!old.procStaged,
-            procStarted: !!(old.procStarted || old.procStaged), siteUp: null, procUp: null
+            procStarted: !!(old.procStarted || old.procStaged), siteUp: null, procUp: null,
+            rev: hexOf(h).slice(0, 12) + "-" + Date.now().toString(36)      /* this version of the sheet */
           }, "ob:" + draftId);
         };
       });
@@ -194,7 +213,7 @@
     return token().then(function (t) {
       var h = { Authorization: "Bearer " + t };
       if (body != null) h["Content-Type"] = ctype || "application/json";
-      return fetch(CFG.graph + path, {
+      return fetch((/^https?:/.test(path) ? path : CFG.graph + path), {
         method: method, headers: h,
         body: body == null ? undefined : (typeof body === "string" || body instanceof Blob ? body : JSON.stringify(body))
       });
@@ -227,7 +246,7 @@
   function uploadBlob(sessionPath, behavior, blob, rk) {
     var size = blob.size, CH = 327680 * 5;
     if (!size) return Promise.reject(new Error("empty file"));
-    function keep(v) { if (!rk) return Promise.resolve(); var p = {}; p[rk.field] = v; return upd(rk.id, p); }
+    function keep(v) { if (!rk) return Promise.resolve(); var p = {}; p[rk.field] = v; return rk.save(p); }
     function piece(url, at) {
       var end = Math.min(at + CH, size);
       return fetch(url, {
@@ -278,7 +297,7 @@
      a name already used by another sheet gets _2, _3... Every later try reuses that name and
      may overwrite only this sheet's own unfinished copy. (Picking a fresh name on each retry
      is how Selous LB 2026-11-12 ended up as _5.) */
-  function chooseName(parentId, e) {
+  function chooseName(parentId, e, save) {
     if (e.siteName) return Promise.resolve(e.siteName);
     function tryN(n) {
       var nm = n ? e.name.replace(/\.html$/i, "_" + (n + 1) + ".html") : e.name;
@@ -288,7 +307,7 @@
         return tryN(n + 1);
       });
     }
-    return tryN(0).then(function (nm) { return upd(e.draftId, { siteName: nm }).then(function () { return nm; }); });
+    return tryN(0).then(function (nm) { return save({ siteName: nm }).then(function () { return nm; }); });
   }
   var sitesFolder = null;
   function sitesFolderId() {
@@ -312,24 +331,24 @@
   }
   function procId(site) { return PROC_ID[site] || site; }
 
-  function sendToSite(e, blob) {
+  function sendToSite(e, blob, save) {
     var replace = e.siteItemId
       ? itemOrNull(driveItem(e.siteItemId)).then(function (it) {
           /* finished again after a correction: replace this sheet's own earlier upload */
-          return it ? uploadBlob(driveItem(e.siteItemId), "replace", blob, { id: e.draftId, field: "siteUp" }) : null;
+          return it ? uploadBlob(driveItem(e.siteItemId), "replace", blob, { id: e.draftId, field: "siteUp", save: save }) : null;
         })
       : Promise.resolve(null);
     return replace.then(function (done) {
       if (done) return done;
       return itemOrNull(driveItem(CFG.monSites) + ":/" + seg(e.site) + "/" + seg("Field Sheets") + ":").then(function (f) {
         if (!f || !f.folder) throw new Error('there is no "Field Sheets" folder for ' + e.site + " in _KEI Monitoring Sites");
-        return chooseName(f.id, e).then(function (nm) {
-          return uploadBlob(childPath(f.id, nm), "replace", blob, { id: e.draftId, field: "siteUp" });
+        return chooseName(f.id, e, save).then(function (nm) {
+          return uploadBlob(childPath(f.id, nm), "replace", blob, { id: e.draftId, field: "siteUp", save: save });
         });
       });
     });
   }
-  function sendToProcessor(e, blob, who) {
+  function sendToProcessor(e, blob, who, save) {
     var pid = procId(e.site);
     return sitesFolderId().then(function (sid) {
       return itemOrNull(childPath(sid, pid + ".keisite.json"));
@@ -342,8 +361,8 @@
           if (it && it.size === blob.size) return it;
           if (it && !e.procStaged && !e.procStarted)
             throw new Error("another " + nm + " is still waiting in the Hydro Processor's approval queue - approve or set it aside there, then this one sends");
-          return upd(e.draftId, { procStarted: true }).then(function () {
-            return uploadBlob(childPath(fid, nm), "replace", blob, { id: e.draftId, field: "procUp" });
+          return save({ procStarted: true }).then(function () {
+            return uploadBlob(childPath(fid, nm), "replace", blob, { id: e.draftId, field: "procUp", save: save });
           });
         }).then(function () {
           var stage = {
@@ -363,56 +382,69 @@
   function sendOne(id) {
     return entry(id).then(function (e) {
       if (!e || e.state === "sent") return null;
-      return upd(id, { state: "sending", msg: "" }).then(function () {
+      var rev = e.rev || "";
+      function save(patch) { return updRev(id, rev, patch); }
+      return save({ state: "sending", msg: "" }).then(function () {
         return Promise.all([get("outbox:" + id), authGet()]);
       }).then(function (got) {
         var blob = got[0], who = got[1];
         if (!blob) throw new Error("the finished file is missing from this phone - open the sheet and press Finish again");
         return entry(id).then(function (cur) {
-          return cur.siteDone ? null : sendToSite(cur, blob).then(function (it) {
-            return upd(id, { siteDone: true, siteItemId: it.id, siteName: it.name || cur.name });
+          if (!cur || (cur.rev || "") !== rev) throw new Error(SUPERSEDED);
+          return cur.siteDone ? null : sendToSite(cur, blob, save).then(function (it) {
+            return save({ siteDone: true, siteItemId: it.id, siteName: it.name || cur.name });
           });
         }).then(function () {
           return entry(id).then(function (c2) {
-            return c2.procDone ? null : sendToProcessor(c2, blob, who).then(function (r) {
-              return upd(id, { procDone: true, proc: r, procStaged: r === "staged" || c2.procStaged });
+            if (!c2 || (c2.rev || "") !== rev) throw new Error(SUPERSEDED);
+            return c2.procDone ? null : sendToProcessor(c2, blob, who, save).then(function (r) {
+              return save({ procDone: true, proc: r, procStaged: r === "staged" || c2.procStaged });
             });
           });
         });
       }).then(function () {
-        return upd(id, { state: "sent", msg: "", sentAt: new Date().toISOString() });
+        return save({ state: "sent", msg: "", sentAt: new Date().toISOString() });
       }).catch(function (err) {
         var m = err && err.message ? err.message : String(err);
-        if (m === SIGNED_OUT) return upd(id, { state: "signin", msg: "" });
-        if (!online() || err instanceof TypeError) return upd(id, { state: "waiting", msg: "" });
-        return upd(id, { state: "error", msg: m });
+        if (m === SUPERSEDED) return null;          /* finished again or removed: the next pass sends the new one */
+        var p = m === SIGNED_OUT ? { state: "signin", msg: "" }
+          : (!online() || err instanceof TypeError) ? { state: "waiting", msg: "" }
+          : { state: "error", msg: m };
+        return save(p).catch(function () { return null; });
       });
     });
   }
-  /* send everything still to go, one at a time. Calls while a run is going share that run.
+  /* Send everything still to go, one at a time. Calls while a run is going share that run, and
+     the run keeps taking passes until nothing NEW is waiting - so a sheet finished while another
+     is uploading goes out as soon as that one is done, not at the next trigger.
      Resolves to what is left: {left, waiting, signin, errors}. */
   var running = null;
   function pumpAll() {
     if (running) return running;
-    running = list().then(function (l) {
-      var todo = l.filter(function (x) { return x.state !== "sent"; });
-      if (!todo.length) return null;
-      if (!online()) {
-        return Promise.all(todo.map(function (x) {
-          return x.state === "waiting" ? null : upd(x.draftId, { state: "waiting", msg: "" });
-        }));
-      }
-      return authGet().then(function (a) {
-        if (!a) {
+    var tried = {};
+    function key(x) { return x.draftId + "|" + (x.rev || ""); }
+    function pass(n) {
+      return list().then(function (l) {
+        var todo = l.filter(function (x) { return x.state !== "sent" && !tried[key(x)]; });
+        if (!todo.length || n >= 25) return null;
+        if (!online()) {
           return Promise.all(todo.map(function (x) {
-            return x.state === "signin" ? null : upd(x.draftId, { state: "signin", msg: "" });
+            return x.state === "waiting" ? null : upd(x.draftId, { state: "waiting", msg: "" });
           }));
         }
-        return todo.reduce(function (chain, x) {
-          return chain.then(function () { return sendOne(x.draftId); });
-        }, Promise.resolve());
+        return authGet().then(function (a) {
+          if (!a) {
+            return Promise.all(todo.map(function (x) {
+              return x.state === "signin" ? null : upd(x.draftId, { state: "signin", msg: "" });
+            }));
+          }
+          return todo.reduce(function (chain, x) {
+            return chain.then(function () { tried[key(x)] = 1; return sendOne(x.draftId); });
+          }, Promise.resolve()).then(function () { return pass(n + 1); });
+        });
       });
-    }).then(list).then(function (l) {
+    }
+    running = pass(0).then(list).then(function (l) {
       var left = l.filter(function (x) { return x.state !== "sent"; });
       running = null;
       return {
@@ -425,12 +457,67 @@
     return running;
   }
 
+  /* take a sheet out of the outbox for good: its entry and its file, together */
+  function remove(id) {
+    return op("readwrite", function (st) { st.delete("ob:" + id); st.delete("outbox:" + id); })
+      .then(function () { return notify("kei-outbox"); });
+  }
+
+  /* Has the office dealt with this sheet in the Hydro Processor? Reads only. An upload waits in
+     _Staged\<station>\ until someone decides; the Processor then files it in
+     _Staged\_Done\<station>\ as "<time> <file>" and writes the decision into its .stage.json.
+     Only a record of THIS file (same sha256) counts. Result is kept in the entry:
+       procState  "queued" | "accepted" | "already in the record" | "set aside" | "missing"  */
+  function listAll(path) {
+    var out = [];
+    function page(p, n) {
+      return graph("GET", p).then(function (r) {
+        out = out.concat(r.value || []);
+        var next = r["@odata.nextLink"];
+        return (next && n < 10) ? page(next, n + 1) : out;
+      });
+    }
+    return page(path, 0);
+  }
+  function checkProcessor(id) {
+    return entry(id).then(function (e) {
+      if (!e || e.state !== "sent" || e.proc !== "staged") return null;
+      var pid = procId(e.site), nm = e.siteName || e.name, base = driveItem(CFG.staged);
+      var tail = " " + nm + ".stage.json";
+      return itemOrNull(base + ":/" + seg(pid) + "/" + seg(nm + ".stage.json") + ":").then(function (waiting) {
+        if (waiting) return { procState: "queued", procDecided: "" };
+        return listAll(base + ":/_Done/" + seg(pid) + ":/children?$top=200").catch(function (err) {
+          if (err.status === 404) return [];
+          throw err;
+        }).then(function (kids) {
+          var hits = kids.filter(function (k) {
+            return k.name && k.name.length > tail.length && k.name.slice(-tail.length) === tail;
+          }).sort(function (a, b) { return a.name < b.name ? 1 : -1; });       /* newest first */
+          function read(i) {
+            if (i >= hits.length) return { procState: "missing", procDecided: "" };
+            var url = hits[i]["@microsoft.graph.downloadUrl"];
+            if (!url) return read(i + 1);
+            return fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+              if (j && j.sha256 === e.sha) return { procState: String(j.decision || "filed"), procDecided: j.decidedUtc || "" };
+              return read(i + 1);
+            });
+          }
+          return read(0);
+        });
+      }).then(function (res) {
+        res.procChecked = new Date().toISOString();
+        return upd(id, res).then(function () { return res; });
+      });
+    });
+  }
+
   G.KEISEND = {
     CFG: CFG, AUTHORITY: AUTHORITY, SCOPES: SCOPES, SIGNED_OUT: SIGNED_OUT,
     list: list, entry: entry, upd: upd, queueHtml: queueHtml, pumpAll: pumpAll,
     authGet: authGet, authPut: authPut, redeemCode: redeemCode, token: token,
     graph: graph, itemOrNull: itemOrNull, childPath: childPath, driveItem: driveItem, seg: seg,
     sitesFolderId: sitesFolderId, procId: procId, getFile: function (id) { return get("outbox:" + id); },
-    resetFolderCache: function () { sitesFolder = null; }
+    resetFolderCache: function () { sitesFolder = null; },
+    remove: remove, checkProcessor: checkProcessor
   };
 })(self);
