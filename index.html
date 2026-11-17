@@ -23,6 +23,7 @@
   --bad:#b3261e; --bad-bg:#fbe6e4;
   --shadow:0 1px 2px rgba(16,20,24,.07), 0 4px 14px rgba(16,20,24,.06);
   --r:12px;
+  --accent-soft:#e1f0f5; --field:#f8fafb;
 }
 @media (prefers-color-scheme: dark){
   :root{
@@ -33,6 +34,7 @@
     --warn:#e8b25a; --warn-bg:#33260d;
     --bad:#f2867d; --bad-bg:#391916;
     --shadow:none;
+    --accent-soft:#12303a; --field:#141a1f;
   }
 }
 *{box-sizing:border-box}
@@ -296,6 +298,153 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
 
 /* The printed sheet is the archive copy that lands beside the old scans, so it
    wants to read like the paper form: dense, two columns, one big sketch box. */
+/* ---------- the live app's look (build 27) ----------
+   Everything here is for the paged, on-screen app only. A saved record, the print and the archive
+   PDF keep their own look, so nothing below may leak outside "@media screen" + body.paged. */
+.pg-head,.pg-nav,#preflight,.shot-main{display:none}
+@media screen{
+  body.paged .pg-head{display:block;margin:4px 2px 14px}
+  body.paged .pg-kicker{font-size:12px;font-weight:750;letter-spacing:.07em;text-transform:uppercase;color:var(--accent);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  body.paged .pg-title{font-size:27px;font-weight:800;letter-spacing:-.02em;line-height:1.15;margin:3px 0 0}
+  body.paged .pg-sub{font-size:14px;line-height:1.4;color:var(--ink2);margin:5px 0 0}
+  body.paged .pg-need{font-size:13px;line-height:1.4;margin:11px 0 0;padding:9px 12px;border-radius:11px;background:var(--line2);color:var(--ink2)}
+  body.paged .pg-need.done{background:var(--good-bg);color:var(--good);font-weight:650}
+  body.paged .pg-need:empty{display:none}
+
+  /* the header stays one line whatever the status says */
+  body.paged header.top .wrap{flex-wrap:nowrap}
+  body.paged .brand{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  body.paged .pill{flex:0 0 auto;max-width:62%;overflow:hidden;text-overflow:ellipsis}
+  /* tabs */
+  body.paged .tracker{gap:6px;padding:8px 12px 0}
+  body.paged .tracker button{display:inline-flex;align-items:center;min-height:38px;border-width:1.5px;padding:6px 13px 6px 7px;font-size:14px}
+  body.paged .tracker button[data-go="sheets"]{padding-left:13px}
+  body.paged .tracker button b{min-width:22px;height:22px;border-radius:11px;font-size:12px;line-height:22px;margin-right:6px}
+  body.paged .tracker button.done b{background:var(--good-bg);color:var(--good);font-size:13px}
+  body.paged .tracker button.on.done b{background:rgba(255,255,255,.3);color:inherit}
+
+  /* cards */
+  body.paged .card{border-radius:16px;padding:16px 14px 14px;margin:0 0 12px}
+  body.paged .card h2{font-size:17px;font-weight:750;letter-spacing:-.01em;min-height:0;margin:0 0 14px;gap:8px}
+  body.paged .card h2 .n{display:none}
+  body.paged .card h2::after{content:"";width:9px;height:9px;border:0;border-right:2.5px solid var(--ink3);border-bottom:2.5px solid var(--ink3);
+    border-radius:1px;background:none;font-size:0;transform:rotate(-135deg);margin:5px 6px 0 auto;transition:transform .15s}
+  body.paged .card.closed h2::after{transform:rotate(45deg);margin-top:-5px;border-color:var(--accent)}
+  body.paged .card.closed h2{margin-bottom:0}
+  body.paged #pg_check .card>h2,body.paged #pg_photos .card>h2,body.paged #pg_flow .card>h2{display:none}
+  body.paged h3.sub{font-size:12px;font-weight:750;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);margin:18px 2px 8px}
+  body.paged h3.sub:first-of-type{margin-top:0}
+  body.paged .rechead{display:none}
+  body.paged .panel{border:0;background:none;padding:0;margin:0}
+
+  /* fields */
+  body.paged label{font-size:13px;font-weight:650;color:var(--ink2);margin:0 0 6px}
+  body.paged .ext{font-size:12px}
+  body.paged input[type=text],body.paged select,body.paged textarea{min-height:50px;padding:12px 13px;border:1.5px solid var(--line);
+    border-radius:12px;background-color:var(--field);font-size:17px}
+  body.paged select{padding-right:40px;background-repeat:no-repeat;background-position:right 14px center;background-size:14px 9px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%238494a1' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+  body.paged textarea#notesF{min-height:120px}
+  body.paged input:focus,body.paged select:focus,body.paged textarea:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  body.paged input[readonly]{background-color:var(--line2);border-style:dashed;color:var(--ink2)}
+  body.paged input.warnf{border-color:var(--warn);background-color:var(--warn-bg)}
+  body.paged input.missing,body.paged select.missing,body.paged textarea.missing{border-color:var(--bad);background-color:var(--bad-bg)}
+  body.paged .row{gap:10px;margin:0 0 12px}
+  body.paged .row:last-child{margin-bottom:0}
+  body.paged .row.sgm>div{flex:1 1 0 !important;min-width:0}
+  body.paged .row.sgm>div:first-child{flex:1 1 100% !important}
+  body.paged .f{margin:0 0 12px}
+  body.paged .f:last-child{margin-bottom:0}
+  body.paged .withbtn{gap:8px}
+  body.paged .hint{font-size:12.5px;line-height:1.4;margin:8px 2px 0}
+
+  /* buttons */
+  body.paged .btn{min-height:50px;border-width:1.5px;border-radius:12px;padding:12px 14px;font-size:15px}
+  body.paged .btn.sm{min-height:44px;padding:10px 13px;font-size:14px}
+  body.paged .btn.now{min-width:66px;background:var(--accent-soft);border-color:transparent;color:var(--accent);font-size:15px}
+  body.paged .btn.pri{box-shadow:0 1px 2px rgba(0,0,0,.14)}
+  body.paged #revBtn_a,body.paged #revBtn_d,body.paged #revQBtn{display:none}     /* office only: shown in a record */
+
+  /* choices */
+  body.paged .seg{gap:8px}
+  body.paged .seg label{margin:0;min-height:46px;padding:10px 16px;border-width:1.5px;border-radius:12px;background:var(--field);font-size:15px}
+  body.paged .seg label.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  body.paged .seg label:has(input:checked){background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  body.paged .seg.missing label{border-color:var(--bad);background:var(--bad-bg)}
+  body.paged .flowq{gap:12px}
+  body.paged .flowq .seg label{min-width:72px}
+  body.paged .flabel{font-size:16px}
+
+  /* tick tiles */
+  body.paged .chk{gap:12px;align-items:center;margin:0 0 8px;padding:10px 12px;border:1.5px solid var(--line);border-radius:12px;background:var(--field)}
+  body.paged .chkgrid .chk{margin:0 0 8px}
+  body.paged .chkgrid .chk:last-child{margin-bottom:0}
+  body.paged .chk:has(input[type=checkbox]:checked){border-color:var(--accent);background:var(--accent-soft)}
+  body.paged .chk input[type=checkbox]{-webkit-appearance:none;appearance:none;flex:0 0 28px;width:28px;height:28px;margin:0;border:2px solid var(--ink3);
+    border-radius:8px;background:var(--panel);display:grid;place-content:center;cursor:pointer}
+  body.paged .chk input[type=checkbox]::after{content:"";width:13px;height:7px;margin-top:-3px;border-left:3px solid var(--accent-ink);
+    border-bottom:3px solid var(--accent-ink);transform:rotate(-45deg) scale(0);transition:transform .08s}
+  body.paged .chk input[type=checkbox]:checked{background:var(--accent);border-color:var(--accent)}
+  body.paged .chk input[type=checkbox]:checked::after{transform:rotate(-45deg) scale(1)}
+  body.paged .chk label.inline{font-size:15px;padding:4px 0}
+  body.paged .chk label.inline .ext{white-space:nowrap}
+
+  /* work lines: a to-do list */
+  body.paged #reqRows .chk{align-items:flex-start;padding:7px 10px 7px 12px}
+  body.paged #reqRows .chk input[type=checkbox]{margin-top:8px}
+  body.paged #reqRows textarea.reqtxt{min-height:0;border:0;border-radius:6px;background:none;box-shadow:none;padding:10px 4px;font-size:16px}
+  body.paged #reqRows .chk:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  body.paged #reqRows .chk.carried{border-left-width:5px;border-left-color:var(--accent)}
+  body.paged #reqRows .chk.carried textarea{border-left:0}
+  body.paged #reqRows .chk.confirm{border-color:var(--warn);background:var(--warn-bg)}
+  body.paged #reqRows .chk:has(textarea.missing){border-color:var(--bad);background:var(--bad-bg)}
+  body.paged #reqRows .qnote{margin:-2px 0 10px;padding:10px 12px;border-radius:12px;background:var(--warn-bg)}
+  body.paged #reqRows .qnote label{color:var(--warn)}
+  body.paged #todoBar .btn{width:100%}
+
+  /* phone photos: one compact row each */
+  body.paged .shot{display:flex;align-items:center;gap:12px;margin:0 0 10px;padding:10px 12px;border:1.5px solid var(--line);border-radius:14px;background:var(--field)}
+  body.paged .shot.done{border-color:var(--good);background:var(--good-bg)}
+  body.paged .shot .pgrid{flex:0 0 64px;width:64px;height:64px;margin:0;border-radius:10px;overflow:hidden;background-color:var(--line2);
+    background-repeat:no-repeat;background-position:center;background-size:28px 24px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 24'%3E%3Cpath d='M9.5 3.5l1.6-2.3h5.8l1.6 2.3H24a2.5 2.5 0 0 1 2.5 2.5v14A2.5 2.5 0 0 1 24 22.500H4A2.5 2.5 0 0 1 1.5 20V6A2.5 2.5 0 0 1 4 3.5z' fill='none' stroke='%238494a1' stroke-width='2'/%3E%3Ccircle cx='14' cy='12.5' r='5' fill='none' stroke='%238494a1' stroke-width='2'/%3E%3C/svg%3E")}
+  body.paged .shot .pgrid .ph{margin:0;width:64px;height:64px}
+  body.paged .shot .pgrid .ph img{width:64px;height:64px;max-height:none;object-fit:cover;border:0;border-radius:0;cursor:zoom-in}
+  body.paged .shot .phx,body.paged .shot .phcap{display:none}
+  body.paged .shot-main{display:block;flex:1 1 auto;min-width:0}
+  body.paged .shot-t{font-size:15px;font-weight:700;line-height:1.3;overflow-wrap:anywhere}
+  body.paged .shot-s{font-size:12.5px;color:var(--ink3);margin-top:2px}
+  body.paged .shot.done .shot-s{color:var(--good);font-weight:650}
+  body.paged .shot .btn{flex:0 0 auto}
+  body.paged .shot-add{display:flex;gap:8px;margin:0}
+  body.paged .shot-add input{flex:1 1 auto;min-width:0}
+  body.paged #photoGrid .ph img{border-radius:12px;cursor:zoom-in}
+  .lightbox{position:fixed;inset:0;z-index:99;display:flex;align-items:center;justify-content:center;padding:12px;background:rgba(0,0,0,.93);cursor:zoom-out}
+  .lightbox img{max-width:100%;max-height:100%;border-radius:8px}
+
+  /* the end of the sheet */
+  body.paged #preflight{display:block;margin:4px 0 12px}
+  body.paged .pf{border:1.5px solid var(--line);border-radius:16px;background:var(--panel);box-shadow:var(--shadow);padding:14px 14px 4px}
+  body.paged .pf.ok{border-color:var(--good);background:var(--good-bg);padding-bottom:14px}
+  body.paged .pf-t{font-size:17px;font-weight:750;letter-spacing:-.01em}
+  body.paged .pf.ok .pf-t{color:var(--good)}
+  body.paged .pf-s{font-size:13px;color:var(--ink2);margin:4px 0 8px}
+  body.paged .pf.ok .pf-s{margin-bottom:0}
+  body.paged .pf-row{display:flex;align-items:center;gap:10px;width:100%;border:0;border-top:1px solid var(--line2);background:none;padding:12px 2px;
+    font:inherit;text-align:left;color:var(--ink);cursor:pointer}
+  body.paged .pf-row b{flex:0 0 86px;font-size:13.5px;font-weight:750}
+  body.paged .pf-row span{flex:1 1 auto;min-width:0;font-size:13.5px;line-height:1.35;color:var(--ink2)}
+  body.paged .pf-row i{flex:0 0 auto;width:8px;height:8px;border-right:2.5px solid var(--ink3);border-bottom:2.5px solid var(--ink3);transform:rotate(-45deg);margin-right:4px}
+  body.paged .actions{flex-direction:column;gap:8px;margin:0}
+  body.paged #finishBtn{min-height:58px;font-size:17px}
+  body.paged .pg-nav{display:flex;gap:10px;margin:16px 0 0}
+  body.paged .pg-nav .btn{flex:1 1 0;min-width:0}
+  body.paged .pg-nav .btn.next{flex:2 1 0;background:var(--accent-soft);border-color:transparent;color:var(--accent);font-weight:700}
+  body.paged .pg-nav .btn.back{color:var(--ink2)}
+  body.paged .foot{margin:22px 0 0}
+}
+
 @media print{
   @page{ size:letter; margin:11mm 9mm; }
   body{background:#fff;color:#000;padding:0;font-size:10px;line-height:1.3}
@@ -401,11 +550,18 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
 
   <section class="page" id="pg_arrive" data-label="Arrival"><div class="wrap">
 
+  <div class="pg-head noprint">
+    <div class="pg-kicker" id="kick_arrive"></div>
+    <div class="pg-title">Arrival</div>
+    <p class="pg-sub">Everything to do when you first get to site.</p>
+    <div class="pg-need" id="need_arrive"></div>
+  </div>
+
   <!-- 1 visit -->
   <div class="card">
     <h2><span class="n">Step 1</span> Site Visit Details</h2>
     <div class="chk" style="margin-bottom:8px"><input type="checkbox" id="qrF" data-k="photos.qr">
-      <label class="inline" for="qrF">Clear photo of the QR code taken (do it first)</label></div>
+      <label class="inline" for="qrF">Clear photo of the QR code taken <span class="ext">(do it first)</span></label></div>
     <div class="f">
       <label for="siteSel">Station Name</label>
       <select id="siteSel" data-k="site"><option value="">— choose a station —</option></select>
@@ -497,20 +653,27 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
     <div class="chkgrid" id="videoChk"></div>
   </div>
 
+  <div class="pg-nav noprint" data-nav="arrive"></div>
+
   </div></section>
 
   <section class="page" id="pg_check" data-label="Checklist"><div class="wrap">
+
+  <div class="pg-head noprint">
+    <div class="pg-kicker" id="kick_check"></div>
+    <div class="pg-title">Checklist</div>
+    <p class="pg-sub">The work for this visit. Tick each line as you finish it.</p>
+    <div class="pg-need" id="need_check"></div>
+  </div>
 
   <!-- 2 requirements -->
   <div class="card">
     <h2><span class="n">Step 2</span> Checklist &mdash; Work Completed</h2>
     <div class="f">
-      <label for="purposeF">Main Purpose for Site Visit <span class="ext">(auto-fills from your first work item &mdash; type to override)</span></label>
+      <label for="purposeF">Main Purpose for Site Visit <span class="ext">(fills in from your first work line &mdash; type to change)</span></label>
       <input type="text" id="purposeF" data-k="purpose">
       <p class="hint bad hidden" id="purposeIncomplete"></p>
     </div>
-    <p class="hint" style="margin:0 0 8px">Your first work line below fills the purpose in automatically
-    &mdash; put the visit&rsquo;s main job on line one.</p>
     <div class="noprint" id="todoBar" style="margin:0 0 10px">
       <button class="btn" type="button" id="todoSyncBtn">&#8635; Sync with Hydro Processor to-dos</button>
       <p class="hint" id="todoNote" style="margin:6px 0 0"></p>
@@ -520,25 +683,46 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
     <p class="hint warn hidden" id="reqConfirm"></p>
   </div>
 
+  <div class="pg-nav noprint" data-nav="check"></div>
+
   </div></section>
 
   <section class="page" id="pg_photos" data-label="Photos"><div class="wrap">
 
+  <div class="pg-head noprint">
+    <div class="pg-kicker" id="kick_photos"></div>
+    <div class="pg-title">Photos</div>
+    <p class="pg-sub">Phone photos of the site. They travel inside the sheet.</p>
+    <div class="pg-need" id="need_photos"></div>
+  </div>
+
   <!-- 5 360 -->
   <div class="card">
     <h2><span class="n">Step 3</span> Photos</h2>
-    <h3 class="sub">Station photo (this phone) <span class="ext">(required)</span></h3>
-    <div class="pgrid" id="sphotoGrid"></div>
-    <button class="btn noprint" type="button" id="takeSPhotoBtn">&#128247; Take station photo</button>
+    <h3 class="sub rechead">Station photo (this phone) <span class="ext">(required)</span></h3>
+    <div class="shot" id="shot_station">
+      <div class="pgrid" id="sphotoGrid"></div>
+      <div class="shot-main noprint"><div class="shot-t">Station</div><div class="shot-s" id="sphotoState">Required</div></div>
+      <button class="btn noprint" type="button" id="takeSPhotoBtn">&#128247; Take</button>
+    </div>
     <input type="file" id="sphotoInput" accept="image/*" capture="environment" class="hidden">
     <p class="hint bad hidden" id="sphotoIncomplete"></p>
     <div id="xphotoArea"></div>
     <input type="file" id="xphotoInput" accept="image/*" capture="environment" class="hidden">
   </div>
 
+  <div class="pg-nav noprint" data-nav="photos"></div>
+
   </div></section>
 
   <section class="page" id="pg_flow" data-label="Flow"><div class="wrap">
+
+  <div class="pg-head noprint">
+    <div class="pg-kicker" id="kick_flow"></div>
+    <div class="pg-title">Flow measurement</div>
+    <p class="pg-sub">The flow sheet photo and your field numbers.</p>
+    <div class="pg-need" id="need_flow"></div>
+  </div>
 
   <!-- 6 discharge -->
   <div class="card hidden" id="cardQ">
@@ -549,26 +733,22 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
       <button class="btn noprint" type="button" id="takePhotoBtn">&#128247; Take photo</button>
       <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden" multiple>
       <p class="hint bad hidden" id="photoIncomplete"></p>
-      <p class="hint">Fill the paper flow sheet as usual, then photograph it &mdash; the detail gets read
-      from the photo, never retyped. For a bucket run, sketch where the measurement was
-      taken and photograph the sketch. The photo travels inside the sent sheet.</p>
+      <p class="hint">Photograph the filled-in paper flow sheet. For a bucket run, sketch where you measured and photograph the sketch.</p>
 
       <h3 class="sub">Staff Gauge during measurement</h3>
-      <div class="row">
+      <div class="row sgm">
         <div><label>Time</label><div class="withbtn">
           <input type="text" data-k="sg.m.time" data-time="1" class="mono" inputmode="numeric" placeholder="12:35">
           <button class="btn now" type="button" data-nowk="sg.m.time">Now</button></div></div>
         <div style="flex:0 1 130px"><label>Staff Gauge (m)</label><input type="text" data-k="sg.m.sg" class="mono" inputmode="decimal"></div>
         <div style="flex:0 1 120px"><label>Error (&plusmn;mm)</label><input type="text" data-k="sg.m.err" class="mono" inputmode="decimal"></div>
       </div>
-      <p class="hint">Read the staff gauge around the measurement if you can &mdash; otherwise an
-      arrival or departure reading covers the requirement.</p>
+      <p class="hint">If you can&rsquo;t read it during the measurement, the arrival or departure reading counts.</p>
       <h3 class="sub">Preliminary Q&rsquo;s</h3>
       <div class="row" id="qmRows"></div>
       <p class="hint bad hidden" id="qmIncomplete"></p>
       <p class="hint" id="qSpreadOut">Enter at least two Q&rsquo;s and the spread calculates itself.</p>
-      <p class="hint">Quick-and-dirty field values &mdash; enough to check the runs agree and to
-      have numbers on paper if equipment fails. The office fills Reviewed Q after processing.</p>
+      <p class="hint">Field values only. The office works out the final Q.</p>
       <button class="btn sm noprint" type="button" id="revQBtn" data-revq="1" style="margin-top:8px">Add reviewed Q <span class="ext">(office)</span></button>
       <div class="f hidden" id="revQRow" style="margin-top:8px;max-width:200px">
         <label>Reviewed Q (m&sup3;/s) <span class="ext">(office)</span></label>
@@ -577,9 +757,18 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
     </div>
   </div>
 
+  <div class="pg-nav noprint" data-nav="flow"></div>
+
   </div></section>
 
   <section class="page" id="pg_depart" data-label="Departure"><div class="wrap">
+
+  <div class="pg-head noprint">
+    <div class="pg-kicker" id="kick_depart"></div>
+    <div class="pg-title">Departure</div>
+    <p class="pg-sub">Last reading and notes, then send.</p>
+    <div class="pg-need" id="need_depart"></div>
+  </div>
 
   <!-- 7 departure SG — read on the way out, after the measurement -->
   <div class="card">
@@ -620,9 +809,7 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
     <h2><span class="n">Step 5</span> Notes &amp; Departure Time</h2>
     <div class="f">
       <label for="notesF">Notes</label>
-      <textarea id="notesF" data-k="notes"></textarea>
-      <p class="hint">A moment to reflect &mdash; how did the visit go, what should the office
-      or the next crew know?</p>
+      <textarea id="notesF" data-k="notes" placeholder="How did the visit go? What should the office or the next crew know?"></textarea>
     </div>
     <div class="f" style="max-width:240px">
       <label for="departF">Departure Time</label>
@@ -631,20 +818,22 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
         <button class="btn now" type="button" data-now="departF">Now</button>
       </div>
     </div>
-    <p class="hint">Fill this as you leave &mdash; then Finish &amp; send.</p>
   </div>
 
+  <div class="noprint" id="preflight"></div>
   <div class="actions noprint">
     <button class="btn pri" type="button" id="finishBtn">Finish &amp; send sheet</button>
     <button class="btn" type="button" id="printBtn">Print / PDF</button>
   </div>
-  <p class="hint noprint" id="sendHint">Finishing the sheet queues it; it sends itself to OneDrive and the Hydro Processor
-  as soon as there&rsquo;s signal. Its progress shows under &ldquo;Sheets on this phone&rdquo;.</p>
+  <p class="hint noprint" id="sendHint">It sends itself to OneDrive and the Hydro Processor as soon as there&rsquo;s signal.
+  Watch it on the Sheets page.</p>
 
   <p class="foot">
     cbwmf@LivingLakesCanada.ca<br>
     Slow is Smooth, &amp; Smooth is Fast
   </p>
+
+  <div class="pg-nav noprint" data-nav="depart"></div>
 
   </div></section>
 
@@ -691,7 +880,7 @@ var STORE="kei-fieldsheet-v1";
 var $=function(id){ return document.getElementById(id); };
 /* App build. Bump on every version handed over, so a phone can be checked at a glance
    against the filename it came from. Separate from v1.15, which is the paper form. */
-var BUILD="26";
+var BUILD="27";
 var RECORD=!!BAKED;                 /* opened as a finished record, not the blank app */
 /* file_field_sheets.py opens the sheet as ...html#print to render the archive PDF.
    Headless Chrome never fires beforeprint, so the hi-res sketch has to be explicit. */
@@ -770,6 +959,7 @@ function pill(txt,cls){
 function touch(){
   if(RECORD){ pill("Record — unsaved edits","dirty"); return; }
   var td=currentDraft(); if(td&&!td.edited&&obFind(td.id)) td.edited=true;
+  refreshProgress();
   pill("Saving…","dirty");
   clearTimeout(saveTimer);
   saveTimer=setTimeout(commit,400);
@@ -803,7 +993,7 @@ function reqRowHtml(i){
   var r=(S&&S.reqs&&S.reqs[i])||{};
   return '<div class="chk'+(r.todoId?' carried':'')+'" id="reqrow_'+i+'">'+
       '<input type="checkbox" data-k="reqs.'+i+'.on" aria-label="Requirement '+(i+1)+' done">'+
-      '<textarea rows="1" class="reqtxt" data-k="reqs.'+i+'.txt" autocomplete="off" aria-label="Requirement '+(i+1)+'"></textarea>'+
+      '<textarea rows="1" class="reqtxt" data-k="reqs.'+i+'.txt" autocomplete="off" aria-label="Requirement '+(i+1)+'"'+(RECORD?'':' placeholder="Add a line"')+'></textarea>'+
       '</div>'+
 
       '<div class="qnote hidden" id="reqwhy_'+i+'">'+
@@ -1024,36 +1214,50 @@ function drawXPhotos(clearLabel){
   xphotoUrls.forEach(function(u){ URL.revokeObjectURL(u); });
   xphotoUrls=[];
   var list=(RECORD?((BAKED&&BAKED.xphotos)||[]):((S&&S.xphotos)||[]));
+  var extra=list.filter(function(x){ return x.kind==="extra"; });
   var html="";
+  if(RECORD){
+    XSLOTS.forEach(function(sl){
+      var have=list.filter(function(x){ return xKindOf(x.kind)===sl[0]; });
+      html+='<h3 class="sub">'+esc(sl[1])+' <span class="ext">(required)</span></h3>'+
+        '<div class="pgrid rec">'+have.map(xCell).join("")+'</div>';
+      if(!have.length) html+='<p class="hint" style="margin:0 0 8px">Not taken.</p>';
+    });
+    html+='<h3 class="sub">More photos</h3><div class="pgrid rec">'+extra.map(xCell).join("")+'</div>';
+    if(!extra.length) html+='<p class="hint" style="margin:0 0 8px">No other photos.</p>';
+    host.innerHTML=html;
+    return;
+  }
+  /* on the phone: one compact row a photo - thumbnail, what it is, Taken or Required, and the button */
+  function thumb(x){ return '<div class="ph" data-xpid="'+x.id+'"><img alt="'+esc(x.label)+'"></div>'; }
   XSLOTS.forEach(function(sl){
     var have=list.filter(function(x){ return xKindOf(x.kind)===sl[0]; });
-    html+='<h3 class="sub">'+esc(sl[1])+' <span class="ext">(required)</span></h3>'+
-      '<div class="pgrid'+(RECORD?' rec':'')+'">'+have.map(xCell).join("")+'</div>';
-    if(!RECORD) html+='<button class="btn noprint" type="button" data-xtake="'+sl[0]+'">&#128247; '+
-      (have.length?'Retake ':'Take ')+esc(sl[1].toLowerCase())+' photo</button>'+
+    html+='<div class="shot'+(have.length?' done':'')+'"><div class="pgrid">'+have.map(thumb).join("")+'</div>'+
+      '<div class="shot-main"><div class="shot-t">'+esc(sl[1])+'</div><div class="shot-s">'+(have.length?'Taken ✓':'Required')+'</div></div>'+
+      '<button class="btn noprint" type="button" data-xtake="'+sl[0]+'">&#128247; '+(have.length?'Retake':'Take')+'</button></div>'+
       '<p class="hint bad hidden" id="xslot_'+sl[0]+'"></p>';
-    else if(!have.length) html+='<p class="hint" style="margin:0 0 8px">Not taken.</p>';
   });
-  var extra=list.filter(function(x){ return x.kind==="extra"; });
-  html+='<h3 class="sub">More photos</h3><div class="pgrid'+(RECORD?' rec':'')+'">'+extra.map(xCell).join("")+'</div>';
-  if(!RECORD){
-    html+='<div class="withbtn noprint"><input type="text" id="xLabel" autocomplete="off" '+
-      'placeholder="What is this a photo of? e.g. Repaired bellows">'+
-      '<button class="btn" type="button" data-xtake="extra">&#128247; Take photo</button></div>'+
-      '<p class="hint bad hidden noprint" id="xLabelNote"></p>';
-  }else if(!extra.length) html+='<p class="hint" style="margin:0 0 8px">No other photos.</p>';
+  html+='<h3 class="sub">More photos</h3>';
+  extra.forEach(function(x){
+    html+='<div class="shot done"><div class="pgrid">'+thumb(x)+'</div>'+
+      '<div class="shot-main"><div class="shot-t">'+esc(x.label)+'</div><div class="shot-s">Taken ✓</div></div>'+
+      '<button class="sh-x noprint" type="button" data-delxphoto="'+x.id+'" aria-label="Remove this photo">&times;</button></div>';
+  });
+  html+='<div class="shot-add noprint"><input type="text" id="xLabel" autocomplete="off" placeholder="What is it a photo of?">'+
+    '<button class="btn" type="button" data-xtake="extra">&#128247; Add</button></div>'+
+    '<p class="hint bad hidden noprint" id="xLabelNote"></p>';
   host.innerHTML=html;
-  if(!RECORD&&$("xLabel")&&!clearLabel) $("xLabel").value=oldLabel;
-  if(RECORD) return;
+  if($("xLabel")&&!clearLabel) $("xLabel").value=oldLabel;
   list.forEach(function(x){
     idbGet(photoKey(book.cur,x.id)).then(function(blob){
       var cell=host.querySelector('[data-xpid="'+x.id+'"] img');
       if(!cell) return;
-      if(!blob){ cell.parentNode.insertAdjacentHTML("afterbegin",'<span class="hint">photo missing</span>'); return; }
+      if(!blob){ cell.parentNode.innerHTML='<span class="hint">missing</span>'; return; }
       var u=URL.createObjectURL(blob);
       xphotoUrls.push(u); cell.src=u;
     }).catch(function(){});
   });
+  refreshProgress();
 }
 /* the labelled photos of one draft, as {kind,label,data} for the sent file */
 function loadXDataUrlsFor(draftId,list){
@@ -1078,7 +1282,11 @@ function drawSPhotos(){
     return;
   }
   var ids=(S&&S.sphotoIds)||[];
-  if(!ids.length){ host.innerHTML=""; return; }
+  var srow=$("shot_station"), sst=$("sphotoState"), sbtn=$("takeSPhotoBtn");
+  if(srow) srow.classList.toggle("done",ids.length>0);
+  if(sst) sst.textContent=ids.length?"Taken \u2713":"Required";
+  if(sbtn) sbtn.innerHTML="&#128247; "+(ids.length?"Retake":"Take");
+  if(!ids.length){ host.innerHTML=""; refreshProgress(); return; }
   host.innerHTML=ids.map(function(pid){
     return '<div class="ph" data-pid="'+pid+'"><img alt="station photo">'+
       '<button type="button" class="phx noprint" data-delsphoto="'+pid+'">&times;</button></div>';
@@ -1165,6 +1373,7 @@ function buildSegs(){
 /* ---------- render / bind ---------- */
 function render(){
   setTimeout(fitAllReqs,0);
+  setTimeout(refreshProgress,0);
   if(S&&!Array.isArray(S.xphotos)) S.xphotos=[];
   padReqs();
   if(document.querySelectorAll("#reqRows .chk").length!==reqCount()) buildReqs();
@@ -1744,7 +1953,7 @@ function validateVisit(){
   /* section 2: there is always something to write in */
   var anyReq=(S.reqs||[]).some(function(r){ return String(r.txt||"").trim()!==""; });
   var reqNote=$("reqIncomplete");
-  Array.prototype.forEach.call(document.querySelectorAll('#reqRows input[type=text]'),function(el){
+  Array.prototype.forEach.call(document.querySelectorAll('#reqRows textarea.reqtxt'),function(el){
     el.classList.toggle("missing",!anyReq);
   });
   if(reqNote){
@@ -1897,6 +2106,8 @@ function buildFileFor(st,photos,sphotos,xph){
   var tk=clone.querySelector("#tracker"); if(tk) tk.className="tracker noprint hidden";
   var tl=clone.querySelector("#trackLine"); if(tl) tl.className="trackline noprint hidden";
   Array.prototype.forEach.call(clone.querySelectorAll(".page"),function(pp){ pp.removeAttribute("style"); });
+  Array.prototype.forEach.call(clone.querySelectorAll(".lightbox"),function(x){ x.parentNode.removeChild(x); });
+  Array.prototype.forEach.call(clone.querySelectorAll(".pg-nav,#preflight,.pg-need,.pg-kicker"),function(x){ x.innerHTML=""; });
   function pick(s){ return clone.querySelector(s); }
   /* hide, never remove — init() in the saved copy still wires these up */
   var dc=pick("#draftsCard"); if(dc) dc.className="card noprint hidden";
@@ -2314,10 +2525,12 @@ function refreshTracker(){
     if(tab) tab.style.display=shown?"":"none";
     if(k==="sheets"||!shown) return;
     n++;
-    var b=tab&&tab.querySelector("b"); if(b) b.textContent=n;
+    var b=tab&&tab.querySelector("b"); if(b){ b.textContent=n; b.setAttribute("data-n",n); }
     Array.prototype.forEach.call(p.querySelectorAll(".card > h2 .n"),function(sp){ sp.textContent="Step "+n; });
   });
   markTab();
+  drawPageNav();
+  refreshProgress();
 }
 function markTab(){
   if(!pagerOn()) return;
@@ -2375,6 +2588,62 @@ function setupPager(){
   $("tracker").addEventListener("click",function(){ moved=true; });
   [0,150,600].forEach(function(ms){
     setTimeout(function(){ if(moved) return; sizePager(); goPage("arrive",true); markTab(); },ms);
+  });
+}
+
+/* ---------- what each page still needs (build 27) ----------
+   sheetProblems() says what the sheet lacks; this sorts that by page, so each page header, each
+   tab and the box above Finish all tell the same story. It never blocks anything: a page that still
+   needs something is grey, not red. Red is only for a Finish that was refused. */
+var NEED_PAGE={"station":"arrive","date":"arrive","time zone":"arrive","arrival time":"arrive","initials":"arrive",
+  "flow question":"arrive","method":"arrive",
+  "purpose":"check","work completed":"check","unticked work needs a reason":"check",
+  "station photo":"photos","upstream photo":"photos","downstream & control photo":"photos",
+  "flow sheet photo":"flow","preliminary Q":"flow","staff gauge reading":"flow",
+  "departure time":"depart"};
+var NEED_WORD={"initials":"your initials","flow question":"flow measurement yes or no","method":"the flow method",
+  "purpose":"the main purpose","work completed":"at least one work line","unticked work needs a reason":"tick each line, or say why not",
+  "preliminary Q":"at least one Q","staff gauge reading":"a timed staff gauge reading (arrival, during or departure)"};
+var PAGE_NAME={sheets:"Sheets",arrive:"Arrival",check:"Checklist",photos:"Photos",flow:"Flow",depart:"Departure"};
+function pageNeeds(st){
+  var by={arrive:[],check:[],photos:[],flow:[],depart:[]};
+  sheetProblems(st).forEach(function(l){ (by[NEED_PAGE[l]]||by.depart).push(NEED_WORD[l]||l); });
+  return by;
+}
+var pfHtml=null;
+function refreshProgress(){
+  if(!pagerOn()||!S) return;
+  var by=pageNeeds(S), kick=(S.site||"New sheet")+(S.date?" · "+S.date:"");
+  Object.keys(by).forEach(function(k){
+    var need=by[k], tab=document.querySelector('#tracker [data-go="'+k+'"]'), el=$("need_"+k), kk=$("kick_"+k);
+    if(kk&&kk.textContent!==kick) kk.textContent=kick;
+    if(el){
+      var t=need.length?"Still to do here: "+need.join(", ")+".":"✓ Everything needed on this page is done.";
+      if(el.textContent!==t){ el.textContent=t; el.className="pg-need"+(need.length?"":" done"); }
+    }
+    if(tab){
+      tab.classList.toggle("done",!need.length);
+      var b=tab.querySelector("b"), n=need.length?(b&&b.getAttribute("data-n"))||"":"✓";
+      if(b&&b.textContent!==n) b.textContent=n;
+    }
+  });
+  var host=$("preflight"); if(!host) return;
+  var rows=["arrive","check","photos","flow","depart"].filter(function(k){ return by[k].length; });
+  var h=rows.length
+    ? '<div class="pf"><div class="pf-t">Before you can send</div><div class="pf-s">Tap a line to go there.</div>'+rows.map(function(k){
+        return '<button type="button" class="pf-row" data-go="'+k+'"><b>'+PAGE_NAME[k]+'</b><span>'+esc(by[k].join(", "))+'</span><i></i></button>';
+      }).join("")+'</div>'
+    : '<div class="pf ok"><div class="pf-t">✓ Ready to send</div><div class="pf-s">Everything needed is in.</div></div>';
+  if(h!==pfHtml){ host.innerHTML=h; pfHtml=h; }
+}
+function drawPageNav(){
+  var vis=visiblePages().map(function(p){ return p.id.slice(3); });
+  vis.forEach(function(k,i){
+    var host=document.querySelector('[data-nav="'+k+'"]'); if(!host) return;
+    var prev=vis[i-1], next=vis[i+1], h="";
+    if(prev) h+='<button type="button" class="btn back" data-go="'+prev+'">‹ '+PAGE_NAME[prev]+'</button>';
+    if(next) h+='<button type="button" class="btn next" data-go="'+next+'">Next: '+PAGE_NAME[next]+' ›</button>';
+    if(host.innerHTML!==h) host.innerHTML=h;
   });
 }
 
@@ -2444,6 +2713,19 @@ function init(){
         if(e.data&&(e.data.type==="kei-outbox"||e.data.type==="kei-auth")) window.onKeiSend(e.data.type);
       });
     }else drawAccount();
+    document.addEventListener("click",function(e){
+      var go=e.target.closest?e.target.closest("[data-go]"):null;
+      if(go&&!go.closest("#tracker")){ goPage(go.getAttribute("data-go")); return; }
+      var im=e.target.closest?e.target.closest(".shot .ph img, #photoGrid .ph img"):null;
+      if(im&&im.src&&pagerOn()){
+        var lb=document.createElement("div");
+        lb.className="lightbox noprint";
+        lb.innerHTML='<img alt="">';
+        lb.firstChild.src=im.src;
+        lb.addEventListener("click",function(){ lb.parentNode.removeChild(lb); });
+        document.body.appendChild(lb);
+      }
+    });
     var shHost=$("sheetsHome");
     shHost.addEventListener("click",sheetsClick);
     shHost.addEventListener("pointerdown",function(){ shDown=Date.now(); });
