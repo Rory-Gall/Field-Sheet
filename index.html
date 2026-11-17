@@ -44,6 +44,26 @@ body{
   padding:0 0 96px;
 }
 .wrap{max-width:900px;margin:0 auto;padding:0 12px}
+/* side-to-side pages: only in the live app (body.paged). Records and print stay top-to-bottom. */
+.tracker{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;max-width:900px;margin:0 auto;padding:7px 12px 0}
+.tracker::-webkit-scrollbar{display:none}
+.tracker button{flex:0 0 auto;border:1px solid var(--line);background:var(--panel);color:var(--ink2);
+  border-radius:999px;padding:5px 10px 5px 6px;font-size:13px;font-weight:600;line-height:1.2;white-space:nowrap;cursor:pointer}
+.tracker button[data-go="sheets"]{padding-left:10px}
+.tracker button b{display:inline-block;min-width:19px;height:19px;border-radius:10px;background:var(--line2);color:var(--ink2);
+  font-size:11px;line-height:19px;text-align:center;margin-right:5px}
+.tracker button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tracker button.on b{background:rgba(255,255,255,.28);color:inherit}
+.tracker .tag{margin-left:4px}
+.trackline{height:3px;background:var(--line2);margin:7px 0 0}
+#trackBar{height:3px;width:0;background:var(--accent);transition:width .12s linear}
+body.paged{padding:0;height:100vh;height:100dvh;overflow:hidden}
+body.paged header.top{margin-bottom:0;padding-bottom:0}
+body.paged .pager{position:relative;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;
+  height:calc(100vh - var(--hdr,110px));height:calc(100dvh - var(--hdr,110px));overscroll-behavior-x:contain;scrollbar-width:none}
+body.paged .pager::-webkit-scrollbar{display:none}
+body.paged .page{flex:0 0 100%;width:100%;overflow-y:auto;overflow-x:hidden;scroll-snap-align:start;scroll-snap-stop:always;
+  padding:10px 0 110px;-webkit-overflow-scrolling:touch}
 
 header.top{
   background:var(--panel); border-bottom:1px solid var(--line);
@@ -241,6 +261,11 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
   .noprint,.pill,.hint,.btn,datalist{display:none !important}
 
   .wrap{max-width:none;padding:0;column-count:2;column-gap:7mm}
+  /* print as one two-column sheet, the way it always has: the pages melt away */
+  body.paged{height:auto;overflow:visible}
+  .pager{display:block !important;column-count:2;column-gap:7mm;height:auto !important;overflow:visible !important}
+  .page,.page>.wrap{display:contents !important}
+  .tracker,.trackline{display:none !important}
   .card{
     break-inside:avoid;-webkit-column-break-inside:avoid;
     box-shadow:none;border-color:#999;border-radius:5px;
@@ -300,6 +325,15 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
     <div class="brand">KEI <span>/ Field Sheet v1.15</span> <span class="build" id="buildTag"></span></div>
     <div class="pill" id="statePill">Ready</div>
   </div>
+  <nav class="tracker noprint hidden" id="tracker">
+    <button type="button" data-go="sheets">&#9776; Sheets <span class="tag" id="sendChip" style="display:none"></span></button>
+    <button type="button" data-go="arrive"><b>1</b>Arrival</button>
+    <button type="button" data-go="check"><b>2</b>Checklist</button>
+    <button type="button" data-go="photos"><b>3</b>Photos</button>
+    <button type="button" data-go="flow"><b>4</b>Flow</button>
+    <button type="button" data-go="depart"><b>5</b>Departure</button>
+  </nav>
+  <div class="trackline noprint hidden" id="trackLine"><div id="trackBar"></div></div>
 </header>
 
 <div class="wrap">
@@ -311,9 +345,15 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
     <button class="btn sm hidden" id="installBtn" type="button">Install</button>
   </div>
 
+</div>
+
+<div class="pager" id="pager">
+
+  <section class="page" id="pg_sheets" data-label="Sheets"><div class="wrap">
+
   <!-- drafts -->
-  <div class="card noprint closed" id="draftsCard">
-    <h2><span class="n">&#9776;</span> Sheets on this phone <span class="tag" id="sendChip" style="display:none"></span></h2>
+  <div class="card noprint" id="draftsCard">
+    <h2><span class="n">&#9776;</span> Sheets on this phone</h2>
     <div class="acct" id="acctRow"></div>
     <div id="draftList"></div>
     <div class="actions">
@@ -326,6 +366,10 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
     <p class="hint">Saved on this device as you type. Finished sheets send themselves to their site&rsquo;s
     Field Sheets folder and the Hydro Processor whenever there&rsquo;s signal &mdash; sign in once a day.</p>
   </div>
+
+  </div></section>
+
+  <section class="page" id="pg_arrive" data-label="Arrival"><div class="wrap">
 
   <!-- 1 visit -->
   <div class="card">
@@ -381,28 +425,9 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
     <p class="hint bad hidden" id="visitIncomplete"></p>
   </div>
 
-  <!-- 2 requirements -->
-  <div class="card">
-    <h2><span class="n">Step 2</span> Site Requirements / Work Completed</h2>
-    <div class="f">
-      <label for="purposeF">Main Purpose for Site Visit <span class="ext">(auto-fills from your first work item &mdash; type to override)</span></label>
-      <input type="text" id="purposeF" data-k="purpose">
-      <p class="hint bad hidden" id="purposeIncomplete"></p>
-    </div>
-    <p class="hint" style="margin:0 0 8px">Your first work line below fills the purpose in automatically
-    &mdash; put the visit&rsquo;s main job on line one.</p>
-    <div class="noprint" id="todoBar" style="margin:0 0 10px">
-      <button class="btn" type="button" id="todoSyncBtn">&#8635; Sync with Hydro Processor to-dos</button>
-      <p class="hint" id="todoNote" style="margin:6px 0 0"></p>
-    </div>
-    <div id="reqRows"></div>
-    <p class="hint bad hidden" id="reqIncomplete"></p>
-    <p class="hint warn hidden" id="reqConfirm"></p>
-  </div>
-
   <!-- 3 arrival SG -->
   <div class="card">
-    <h2><span class="n">Step 3</span> Arrival Staff Gauge</h2>
+    <h2><span class="n">Step 1</span> Arrival Staff Gauge</h2>
     <div class="panel" id="sgA">
         <div class="f">
           <label>Time</label>
@@ -433,9 +458,45 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
     <p class="hint" id="calcHint">The Calculated Staff Gauge fills in as reading &times; angle once you pick a station.</p>
   </div>
 
+  <!-- 360: done on arrival with everything else -->
+  <div class="card">
+    <h2><span class="n">Step 1</span> 360 Photos &amp; Videos</h2>
+    <h3 class="sub">360 Photos</h3>
+    <div class="chkgrid" id="photoChk"></div>
+    <h3 class="sub">360 Videos</h3>
+    <div class="chkgrid" id="videoChk"></div>
+  </div>
+
+  </div></section>
+
+  <section class="page" id="pg_check" data-label="Checklist"><div class="wrap">
+
+  <!-- 2 requirements -->
+  <div class="card">
+    <h2><span class="n">Step 2</span> Checklist &mdash; Work Completed</h2>
+    <div class="f">
+      <label for="purposeF">Main Purpose for Site Visit <span class="ext">(auto-fills from your first work item &mdash; type to override)</span></label>
+      <input type="text" id="purposeF" data-k="purpose">
+      <p class="hint bad hidden" id="purposeIncomplete"></p>
+    </div>
+    <p class="hint" style="margin:0 0 8px">Your first work line below fills the purpose in automatically
+    &mdash; put the visit&rsquo;s main job on line one.</p>
+    <div class="noprint" id="todoBar" style="margin:0 0 10px">
+      <button class="btn" type="button" id="todoSyncBtn">&#8635; Sync with Hydro Processor to-dos</button>
+      <p class="hint" id="todoNote" style="margin:6px 0 0"></p>
+    </div>
+    <div id="reqRows"></div>
+    <p class="hint bad hidden" id="reqIncomplete"></p>
+    <p class="hint warn hidden" id="reqConfirm"></p>
+  </div>
+
+  </div></section>
+
+  <section class="page" id="pg_photos" data-label="Photos"><div class="wrap">
+
   <!-- 5 360 -->
   <div class="card">
-    <h2><span class="n">Step 4</span> Photos</h2>
+    <h2><span class="n">Step 3</span> Photos</h2>
     <h3 class="sub">Station photo (this phone) <span class="ext">(required)</span></h3>
     <div class="pgrid" id="sphotoGrid"></div>
     <button class="btn noprint" type="button" id="takeSPhotoBtn">&#128247; Take station photo</button>
@@ -443,15 +504,15 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
     <p class="hint bad hidden" id="sphotoIncomplete"></p>
     <div id="xphotoArea"></div>
     <input type="file" id="xphotoInput" accept="image/*" capture="environment" class="hidden">
-    <h3 class="sub">360 Photos</h3>
-    <div class="chkgrid" id="photoChk"></div>
-    <h3 class="sub">360 Videos</h3>
-    <div class="chkgrid" id="videoChk"></div>
   </div>
+
+  </div></section>
+
+  <section class="page" id="pg_flow" data-label="Flow"><div class="wrap">
 
   <!-- 6 discharge -->
   <div class="card hidden" id="cardQ">
-    <h2><span class="n">Step 5</span> Discharge Measurement</h2>
+    <h2><span class="n">Step 4</span> Flow Measurement</h2>
     <div id="qBody">
       <h3 class="sub">Photo of the flow measurement sheet</h3>
       <div class="pgrid" id="photoGrid"></div>
@@ -486,9 +547,13 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
     </div>
   </div>
 
+  </div></section>
+
+  <section class="page" id="pg_depart" data-label="Departure"><div class="wrap">
+
   <!-- 7 departure SG — read on the way out, after the measurement -->
   <div class="card">
-    <h2><span class="n">Step 6</span> Departure Staff Gauge</h2>
+    <h2><span class="n">Step 5</span> Departure Staff Gauge</h2>
     <div class="panel" id="sgD">
         <div class="f">
           <label>Time</label>
@@ -520,7 +585,7 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
 
   <!-- 8 departure — last thing before sending, in the order the visit actually happens -->
   <div class="card">
-    <h2><span class="n">Step 7</span> Departure &amp; Notes</h2>
+    <h2><span class="n">Step 5</span> Notes &amp; Departure Time</h2>
     <div class="f">
       <label for="notesF">Notes</label>
       <textarea id="notesF" data-k="notes"></textarea>
@@ -548,6 +613,9 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
     cbwmf@LivingLakesCanada.ca<br>
     Slow is Smooth, &amp; Smooth is Fast
   </p>
+
+  </div></section>
+
 </div>
 
 <button id="updatePill" class="hidden noprint" type="button">Updated &mdash; tap to reload</button>
@@ -592,7 +660,7 @@ var STORE="kei-fieldsheet-v1";
 var $=function(id){ return document.getElementById(id); };
 /* App build. Bump on every version handed over, so a phone can be checked at a glance
    against the filename it came from. Separate from v1.15, which is the paper form. */
-var BUILD="23";
+var BUILD="24";
 var RECORD=!!BAKED;                 /* opened as a finished record, not the blank app */
 /* file_field_sheets.py opens the sheet as ...html#print to render the archive PDF.
    Headless Chrome never fires beforeprint, so the hi-res sketch has to be explicit. */
@@ -1515,6 +1583,10 @@ function fileName(){ return fileNameFor(S); }
 function buildFileFor(st,photos,sphotos,xph){
   var clone=document.documentElement.cloneNode(true);
   var sjs=clone.querySelector('script[src="sender.js"]'); if(sjs) sjs.parentNode.removeChild(sjs);
+  var cb=clone.querySelector("body"); if(cb){ cb.classList.remove("paged"); cb.removeAttribute("style"); }
+  var tk=clone.querySelector("#tracker"); if(tk) tk.className="tracker noprint hidden";
+  var tl=clone.querySelector("#trackLine"); if(tl) tl.className="trackline noprint hidden";
+  Array.prototype.forEach.call(clone.querySelectorAll(".page"),function(pp){ pp.removeAttribute("style"); });
   function pick(s){ return clone.querySelector(s); }
   /* hide, never remove — init() in the saved copy still wires these up */
   var dc=pick("#draftsCard"); if(dc) dc.className="card noprint hidden";
@@ -1652,7 +1724,7 @@ function finish(){
     if(!html){ alert("Couldn't prepare the file — the page source has been altered."); return; }
     return queueFinished(book.cur,S,html).then(function(){
       pill(navigator.onLine&&authLoad()?"Finished — sending":"Finished — sends when there's signal","ok");
-      var dc=$("draftsCard"); if(dc) dc.scrollIntoView({block:"start"});
+      if(pagerOn()) goPage("sheets"); else { var dc=$("draftsCard"); if(dc) dc.scrollIntoView({block:"start"}); }
     });
   }).catch(function(e){
     alert("Couldn't finish the sheet — "+(e&&e.message?e.message:e)+". Nothing was lost; try again.");
@@ -1974,6 +2046,99 @@ function shareCopy(id){
 /* the page's own sends (no worker) and the worker's both say when something changed */
 window.onKeiSend=function(kind){ if(kind==="kei-auth") refreshAuth(); else refreshOutbox(); };
 
+/* ---------- side-to-side pages (build 24) ----------
+   Only the live app is paged (body.paged); a finished record, the print and the archive PDF
+   keep the plain top-to-bottom layout. The Flow page shows only while a flow measurement is
+   being done; the step numbers on tabs and cards follow whichever pages are showing. */
+var PAGES=["sheets","arrive","check","photos","flow","depart"];
+function pagerOn(){ return document.body.classList.contains("paged"); }
+function visiblePages(){
+  return PAGES.map(function(k){ return $("pg_"+k); }).filter(function(p){ return p&&p.style.display!=="none"; });
+}
+function curPage(){
+  var pg=$("pager"), vis=visiblePages();
+  var i=Math.round(pg.scrollLeft/Math.max(1,pg.clientWidth));
+  return vis[Math.max(0,Math.min(vis.length-1,i))];
+}
+function goPage(key,instant){
+  if(!pagerOn()) return;
+  var p=$("pg_"+key);
+  if(!p||p.style.display==="none") return;
+  $("pager").scrollTo({left:p.offsetLeft,behavior:instant?"auto":"smooth"});
+}
+function refreshTracker(){
+  var fq=$("cardQ"), fp=$("pg_flow");
+  if(fq&&fp) fp.style.display=fq.classList.contains("hidden")?"none":"";
+  var n=0;
+  PAGES.forEach(function(k){
+    var p=$("pg_"+k), tab=document.querySelector('#tracker [data-go="'+k+'"]');
+    var shown=!!p&&p.style.display!=="none";
+    if(tab) tab.style.display=shown?"":"none";
+    if(k==="sheets"||!shown) return;
+    n++;
+    var b=tab&&tab.querySelector("b"); if(b) b.textContent=n;
+    Array.prototype.forEach.call(p.querySelectorAll(".card > h2 .n"),function(sp){ sp.textContent="Step "+n; });
+  });
+  markTab();
+}
+function markTab(){
+  if(!pagerOn()) return;
+  var pg=$("pager"), c=curPage(), key=c?c.id.slice(3):"";
+  Array.prototype.forEach.call(document.querySelectorAll("#tracker [data-go]"),function(t){
+    var on=t.getAttribute("data-go")===key;
+    if(on&&!t.classList.contains("on")){
+      var tr=$("tracker");
+      tr.scrollTo({left:t.offsetLeft-tr.clientWidth/2+t.offsetWidth/2});
+    }
+    t.classList.toggle("on",on);
+  });
+  var max=pg.scrollWidth-pg.clientWidth, bar=$("trackBar");
+  if(bar) bar.style.width=(max>0?Math.round(100*pg.scrollLeft/max):0)+"%";
+}
+function sizePager(){
+  if(!pagerOn()) return;
+  var top=$("pager").getBoundingClientRect().top;
+  document.documentElement.style.setProperty("--hdr",Math.max(0,Math.round(top))+"px");
+}
+function setupPager(){
+  if(RECORD||PRINTMODE) return;
+  document.body.classList.add("paged");
+  $("tracker").classList.remove("hidden");
+  $("trackLine").classList.remove("hidden");
+  window.scrollTo(0,0);
+  sizePager(); refreshTracker();
+  var pg=$("pager");
+  /* mark the tab while moving, and once more when the page has settled (snap can land after
+     the last scroll event) */
+  var settle=null;
+  pg.addEventListener("scroll",function(){
+    markTab(); clearTimeout(settle); settle=setTimeout(markTab,140);
+  },{passive:true});
+  pg.addEventListener("scrollend",markTab);
+  $("tracker").addEventListener("click",function(e){
+    var b=e.target.closest?e.target.closest("[data-go]"):null;
+    if(b) goPage(b.getAttribute("data-go"));
+  });
+  window.addEventListener("resize",function(){
+    var c=curPage(); sizePager(); if(c) pg.scrollLeft=c.offsetLeft; markTab();
+  });
+  if(window.MutationObserver){
+    var fq=$("cardQ"); if(fq) new MutationObserver(refreshTracker).observe(fq,{attributes:true,attributeFilter:["class"]});
+    /* a banner appearing above the pages changes how much room they have */
+    ["installBanner","recBanner"].forEach(function(id){
+      var el=$(id); if(el) new MutationObserver(sizePager).observe(el,{attributes:true,attributeFilter:["class"]});
+    });
+  }
+  /* open on Arrival. Layout settles over the first moments (fonts, the drafts list), so
+     place it again shortly after - unless the person has already moved */
+  var moved=false;
+  pg.addEventListener("touchstart",function(){ moved=true; },{passive:true});
+  $("tracker").addEventListener("click",function(){ moved=true; });
+  [0,150,600].forEach(function(ms){
+    setTimeout(function(){ if(moved) return; sizePager(); goPage("arrive",true); markTab(); },ms);
+  });
+}
+
 /* ---------- boot ---------- */
 function startSheet(state,id){
   S=state;
@@ -1981,6 +2146,10 @@ function startSheet(state,id){
   render();
   drawDrafts();
   window.scrollTo(0,0);
+  if(pagerOn()){
+    Array.prototype.forEach.call(document.querySelectorAll(".page"),function(pp){ pp.scrollTop=0; });
+    goPage("arrive",true);
+  }
 }
 function init(){
   buildSites(); buildReqs(); buildQm(); buildChecks(); buildSegs();
@@ -2183,6 +2352,7 @@ function init(){
 
   $("buildTag").textContent="build "+BUILD;
   setupApp();
+  setupPager();
   if(PRINTMODE) flattenForPrint();
 }
 init();
