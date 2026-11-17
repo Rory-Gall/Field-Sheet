@@ -301,7 +301,7 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
 /* ---------- the live app's look (build 27) ----------
    Everything here is for the paged, on-screen app only. A saved record, the print and the archive
    PDF keep their own look, so nothing below may leak outside "@media screen" + body.paged. */
-.pg-head,.pg-nav,#preflight,.shot-main{display:none}
+.pg-head,.pg-nav,#preflight,.shot-main,.req-no,.req-sum,.req-count{display:none}
 @media screen{
   body.paged .pg-head{display:block;margin:4px 2px 14px}
   body.paged .pg-kicker{font-size:12px;font-weight:750;letter-spacing:.07em;text-transform:uppercase;color:var(--accent);
@@ -323,6 +323,21 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
   body.paged .tracker button b{min-width:22px;height:22px;border-radius:11px;font-size:12px;line-height:22px;margin-right:6px}
   body.paged .tracker button.done b{background:var(--good-bg);color:var(--good);font-size:13px}
   body.paged .tracker button.on.done b{background:rgba(255,255,255,.3);color:inherit}
+
+  /* tabs, compact (build 28): every page shows at once - a dot with its number (or a tick) over a short name */
+  body.paged .tracker{gap:0;padding:8px 6px 0;overflow:visible}
+  body.paged .tracker button{position:relative;flex:1 1 0;min-width:0;min-height:0;display:flex;flex-direction:column;align-items:center;gap:3px;
+    padding:0 1px 6px;border:0;border-radius:0;background:none;color:var(--ink3);font-size:clamp(9.5px,2.9vw,11.5px);font-weight:650;
+    letter-spacing:-.01em;line-height:1.15}
+  body.paged .tracker button[data-go="sheets"]{padding-left:1px}
+  body.paged .tracker button b{display:block;width:26px;min-width:26px;height:26px;margin:0;border-radius:13px;background:var(--line2);color:var(--ink2);
+    font-size:12.5px;font-weight:750;line-height:26px;text-align:center}
+  body.paged .tracker .tl{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  body.paged .tracker button.done b{background:var(--good-bg);color:var(--good);font-size:13px}
+  body.paged .tracker button.on{background:none;color:var(--accent);font-weight:800}
+  body.paged .tracker button.on b,body.paged .tracker button.on.done b{background:var(--accent);color:var(--accent-ink)}
+  body.paged .tracker .tag{position:absolute;top:-4px;left:50%;margin:0 0 0 5px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;
+    font-size:10.5px;font-weight:750;line-height:17px;text-align:center}
 
   /* cards */
   body.paged .card{border-radius:16px;padding:16px 14px 14px;margin:0 0 12px}
@@ -402,6 +417,31 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
   body.paged #reqRows .qnote{margin:-2px 0 10px;padding:10px 12px;border-radius:12px;background:var(--warn-bg)}
   body.paged #reqRows .qnote label{color:var(--warn)}
   body.paged #todoBar .btn{width:100%}
+  /* the task list, compact (build 28): Done on the left, Can't on the right. A task that has been dealt
+     with shrinks to one small line and is drawn at the top (the data keeps its order). */
+  body.paged #reqRows{display:flex;flex-direction:column}
+  body.paged .req-count{display:block;font-size:12.5px;font-weight:650;color:var(--ink3);margin:0 2px 8px}
+  body.paged .req-count:empty{display:none}
+  body.paged #reqRows .chk{gap:10px;margin:0 0 6px;padding:4px 8px 4px 10px}
+  body.paged #reqRows .chk input[type=checkbox]{margin-top:7px}
+  body.paged #reqRows textarea.reqtxt{font-size:15.5px;line-height:1.3;padding:9px 2px}
+  body.paged #reqRows .req-no{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;min-height:32px;margin-top:5px;padding:0 9px;
+    border:1.5px solid var(--line);border-radius:9px;background:var(--panel);color:var(--ink2);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+  body.paged #reqRows .chk:has(textarea:placeholder-shown) .req-no{display:none}
+  body.paged #reqRows .chk.cant{border-color:var(--warn);background:var(--warn-bg)}
+  body.paged #reqRows .chk.cant .req-no{background:var(--warn);border-color:var(--warn);color:var(--panel)}
+  body.paged #reqRows .qnote{margin:-2px 0 8px;padding:8px 10px}
+  body.paged #reqRows .chk.settled{order:-1;align-items:center;margin:0 0 4px;padding:2px 8px 2px 10px;border-color:var(--line2);background:none;box-shadow:none}
+  body.paged #reqRows .chk.settled + .qnote{order:-1;display:none}
+  body.paged #reqRows .chk.settled textarea.reqtxt{display:none}
+  body.paged #reqRows .chk.settled .req-sum{display:block;flex:1 1 auto;min-width:0;padding:5px 0;font-size:14px;line-height:1.3;color:var(--ink2);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+  body.paged #reqRows .chk.settled input[type=checkbox]{flex-basis:22px;width:22px;height:22px;margin-top:0;border-radius:6px}
+  body.paged #reqRows .chk.settled input[type=checkbox]::after{width:10px;height:5px;border-left-width:2.5px;border-bottom-width:2.5px;margin-top:-2px}
+  body.paged #reqRows .chk.settled.done .req-no{display:none}
+  body.paged #reqRows .chk.settled.cant input[type=checkbox]{display:none}
+  body.paged #reqRows .chk.settled.cant .req-no{order:-1;min-height:22px;height:22px;margin:0;padding:0 6px;border-radius:6px;font-size:11px}
+  body.paged #reqRows .chk.settled.cant .req-sum{color:var(--warn)}
 
   /* phone photos: one compact row each */
   body.paged .shot{display:flex;align-items:center;gap:12px;margin:0 0 10px;padding:10px 12px;border:1.5px solid var(--line);border-radius:14px;background:var(--field)}
@@ -518,12 +558,12 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
     <div class="pill" id="statePill">Ready</div>
   </div>
   <nav class="tracker noprint hidden" id="tracker">
-    <button type="button" data-go="sheets">&#9776; Sheets <span class="tag" id="sendChip" style="display:none"></span></button>
-    <button type="button" data-go="arrive"><b>1</b>Arrival</button>
-    <button type="button" data-go="check"><b>2</b>Checklist</button>
-    <button type="button" data-go="photos"><b>3</b>Photos</button>
-    <button type="button" data-go="flow"><b>4</b>Flow</button>
-    <button type="button" data-go="depart"><b>5</b>Departure</button>
+    <button type="button" data-go="sheets"><b>&#9776;</b><span class="tl">Sheets</span><span class="tag" id="sendChip" style="display:none"></span></button>
+    <button type="button" data-go="arrive"><b>1</b><span class="tl">Arrival</span></button>
+    <button type="button" data-go="check"><b>2</b><span class="tl">Checklist</span></button>
+    <button type="button" data-go="photos"><b>3</b><span class="tl">Photos</span></button>
+    <button type="button" data-go="flow"><b>4</b><span class="tl">Flow</span></button>
+    <button type="button" data-go="depart"><b>5</b><span class="tl">Departure</span></button>
   </nav>
   <div class="trackline noprint hidden" id="trackLine"><div id="trackBar"></div></div>
 </header>
@@ -678,6 +718,7 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
       <button class="btn" type="button" id="todoSyncBtn">&#8635; Sync with Hydro Processor to-dos</button>
       <p class="hint" id="todoNote" style="margin:6px 0 0"></p>
     </div>
+    <p class="req-count noprint" id="reqCount"></p>
     <div id="reqRows"></div>
     <p class="hint bad hidden" id="reqIncomplete"></p>
     <p class="hint warn hidden" id="reqConfirm"></p>
@@ -880,7 +921,7 @@ var STORE="kei-fieldsheet-v1";
 var $=function(id){ return document.getElementById(id); };
 /* App build. Bump on every version handed over, so a phone can be checked at a glance
    against the filename it came from. Separate from v1.15, which is the paper form. */
-var BUILD="27";
+var BUILD="28";
 var RECORD=!!BAKED;                 /* opened as a finished record, not the blank app */
 /* file_field_sheets.py opens the sheet as ...html#print to render the archive PDF.
    Headless Chrome never fires beforeprint, so the hi-res sketch has to be explicit. */
@@ -994,6 +1035,8 @@ function reqRowHtml(i){
   return '<div class="chk'+(r.todoId?' carried':'')+'" id="reqrow_'+i+'">'+
       '<input type="checkbox" data-k="reqs.'+i+'.on" aria-label="Requirement '+(i+1)+' done">'+
       '<textarea rows="1" class="reqtxt" data-k="reqs.'+i+'.txt" autocomplete="off" aria-label="Requirement '+(i+1)+'"'+(RECORD?'':' placeholder="Add a line"')+'></textarea>'+
+      (RECORD?'':'<button type="button" class="req-no noprint" data-reqno="'+i+'" aria-label="Can\'t do this one">Can\u2019t</button>'+
+        '<div class="req-sum noprint" data-reqsum="'+i+'"></div>')+
       '</div>'+
 
       '<div class="qnote hidden" id="reqwhy_'+i+'">'+
@@ -1028,6 +1071,48 @@ function growReqs(){
   padReqs();
   var host=$("reqRows");
   for(var i=before;i<S.reqs.length;i++) host.insertAdjacentHTML("beforeend",reqRowHtml(i));
+  syncReqLook();
+}
+/* How each task is drawn (build 28). done = ticked; cant = marked "can't do"; settled = dealt with
+   (done, or can't + a reason) and not being edited: one small line, drawn at the top. */
+var reqOpen={};          /* settled lines the person has tapped open; they close when focus leaves the line */
+function syncReqLook(){
+  if(RECORD||!S||!S.reqs) return;
+  var done=0, cant=0, todo=0;
+  for(var i=0;i<reqCount();i++){
+    var r=S.reqs[i]||{}, row=$("reqrow_"+i), box=$("reqwhy_"+i);
+    if(!row) continue;
+    var txt=String(r.txt||"").trim(), why=String(r.why||"").trim();
+    var isDone=!!r.on&&txt!=="", isCant=!r.on&&!!r.no&&txt!=="";
+    var settled=(isDone||(isCant&&why!==""))&&!reqOpen[i];
+    row.classList.toggle("done",isDone);
+    row.classList.toggle("cant",isCant);
+    row.classList.toggle("settled",settled);
+    var nb=row.querySelector(".req-no"); if(nb) nb.setAttribute("aria-pressed",isCant?"true":"false");
+    var sm=row.querySelector(".req-sum");
+    if(sm){ var t=txt+(isCant&&why?" — "+why:""); if(sm.textContent!==t) sm.textContent=t; }
+    var lb=box&&box.querySelector("label"), lt=isCant?"Can’t do — why?":"Not done — why?";
+    if(lb&&lb.textContent!==lt) lb.textContent=lt;
+    if(txt!==""){ if(isDone) done++; else if(isCant&&why!=="") cant++; else todo++; }
+  }
+  var c=$("reqCount");
+  if(c){
+    var parts=[]; if(done) parts.push(done+" done"); if(cant) parts.push(cant+" can’t do"); if(todo) parts.push(todo+" to go");
+    var ct=parts.join(" · "); if(c.textContent!==ct) c.textContent=ct;
+  }
+  fitAllReqs();
+}
+function reqNoToggle(i){
+  var r=S.reqs[i];
+  if(!r||String(r.txt||"").trim()==="") return;
+  var wi=document.querySelector('[data-k="reqs.'+i+'.why"]');
+  if(r.no){ r.no=false; r.why=""; if(wi) wi.value=""; delete reqOpen[i]; }
+  else{
+    r.no=true; r.on=false; reqOpen[i]=1;
+    var cb=document.querySelector('[data-k="reqs.'+i+'.on"]'); if(cb) cb.checked=false;
+  }
+  touch(); syncReqWhy(false); syncReqLook(); revalidateIfFlagged();
+  if(r.no&&wi) wi.focus();
 }
 /* written-in but unticked rows: fine to leave unticked, but only with a reason.
    The "why" line appears on a send attempt, or whenever a saved reason exists. */
@@ -1039,7 +1124,8 @@ function syncReqWhy(showAll){
     var why=String(get("reqs."+i+".why")||"").trim();
     var needs=(txt!==""&&!on);
     var box=$("reqwhy_"+i), row=$("reqrow_"+i);
-    if(box) box.classList.toggle("hidden",!(needs&&(showAll||why!=="")));
+    var no=!!get("reqs."+i+".no");                       /* marked "can't do": ask for the reason right away */
+    if(box) box.classList.toggle("hidden",!(needs&&(showAll||why!==""||no)));
     var flag=needs&&showAll&&why==="";
     if(row) row.classList.toggle("confirm",flag);
     if(flag) unresolved.push(i);
@@ -1425,6 +1511,7 @@ function render(){
   drawXPhotos();
   autoSpread();
   syncReqWhy(false);
+  syncReqLook();
   ["a","d"].forEach(function(side){
     var row=$("angRow_"+side);
     if(row) row.classList.toggle("hidden",!SG_ANGLE[S.site]);
@@ -2112,6 +2199,8 @@ function buildFileFor(st,photos,sphotos,xph){
   /* hide, never remove — init() in the saved copy still wires these up */
   var dc=pick("#draftsCard"); if(dc) dc.className="card noprint hidden";
   var shh=pick("#sheetsHome"); if(shh) shh.innerHTML="";
+  var rqc=pick("#reqRows"); if(rqc) rqc.innerHTML="";           /* the record draws its own lines */
+  var rcc=pick("#reqCount"); if(rcc) rcc.innerHTML="";
   var t=pick("title"); if(t) t.textContent="Field Sheet — "+(st.site||"")+" "+(st.date||"");
   var b=pick("#recBanner");
   if(b){ b.className="banner"; b.textContent="Completed field sheet — "+(st.site||"")+"  "+(st.date||"")+
@@ -2475,11 +2564,9 @@ function drawAccount(){ drawSheets(); }
 function drawSendChip(){
   var chip=$("sendChip"); if(!chip||RECORD) return;
   var l=obLoad().filter(function(x){ return x.state!=="sent"; });
-  var bad=l.filter(function(x){ return x.state==="error"; }).length;
-  var sign=l.filter(function(x){ return x.state==="signin"; }).length;
-  var t=bad?bad+" not sent":sign?"sign in to send":l.length?l.length+" to send":"";
-  chip.textContent=t; chip.style.display=t?"":"none";
-  chip.style.background=(bad||sign)?"var(--bad-bg)":""; chip.style.color=(bad||sign)?"var(--bad)":"";
+  var bad=l.some(function(x){ return x.state==="error"||x.state==="signin"; });
+  chip.textContent=l.length?String(l.length):""; chip.style.display=l.length?"":"none";
+  chip.style.background=bad?"var(--bad)":"var(--accent)"; chip.style.color=bad?"var(--panel)":"var(--accent-ink)";
 }
 function drawOutbox(){ drawSheets(); }
 function shareCopy(id){
@@ -2602,7 +2689,7 @@ var NEED_PAGE={"station":"arrive","date":"arrive","time zone":"arrive","arrival 
   "flow sheet photo":"flow","preliminary Q":"flow","staff gauge reading":"flow",
   "departure time":"depart"};
 var NEED_WORD={"initials":"your initials","flow question":"flow measurement yes or no","method":"the flow method",
-  "purpose":"the main purpose","work completed":"at least one work line","unticked work needs a reason":"tick each line, or say why not",
+  "purpose":"the main purpose","work completed":"at least one work line","unticked work needs a reason":"mark each line Done or Can\u2019t",
   "preliminary Q":"at least one Q","staff gauge reading":"a timed staff gauge reading (arrival, during or departure)"};
 var PAGE_NAME={sheets:"Sheets",arrive:"Arrival",check:"Checklist",photos:"Photos",flow:"Flow",depart:"Departure"};
 function pageNeeds(st){
@@ -2649,7 +2736,7 @@ function drawPageNav(){
 
 /* ---------- boot ---------- */
 function startSheet(state,id,stay){
-  S=state;
+  S=state; reqOpen={};
   if(!RECORD){ book.cur=id; saveBook(); pruneBlank(); }
   render();
   drawDrafts();
@@ -2692,8 +2779,38 @@ function init(){
   if(!RECORD) pruneBlank();
   drawDrafts();
 
+  if(!RECORD){
+    var rq=$("reqRows");
+    function reqIdx(el){ var g=el&&el.closest?el.closest('[id^="reqrow_"],[id^="reqwhy_"]'):null; return g?g.id.split("_")[1]:null; }
+    rq.addEventListener("click",function(e){
+      var nb=e.target.closest?e.target.closest("[data-reqno]"):null, sm=e.target.closest?e.target.closest("[data-reqsum]"):null;
+      if(nb){ reqNoToggle(Number(nb.getAttribute("data-reqno"))); return; }
+      if(sm){
+        var i=Number(sm.getAttribute("data-reqsum"));
+        reqOpen[i]=1; syncReqLook();
+        var ta=document.querySelector('[data-k="reqs.'+i+'.txt"]'); if(ta) ta.focus();
+      }
+    });
+    rq.addEventListener("change",function(e){
+      var el=e.target;
+      if(el.type!=="checkbox") return;
+      var i=reqIdx(el);
+      setTimeout(function(){               /* after the sheet itself has taken the tick */
+        if(i!==null&&S.reqs[i]&&S.reqs[i].on){ S.reqs[i].no=false; delete reqOpen[i]; }    /* ticked: done with this line */
+        syncReqWhy(false); syncReqLook();
+      },0);
+    });
+    rq.addEventListener("focusout",function(e){
+      var i=reqIdx(e.target);
+      if(i===null) return;
+      setTimeout(function(){
+        if(reqIdx(document.activeElement)===i) return;      /* still inside this line */
+        delete reqOpen[i]; syncReqLook();
+      },0);
+    });
+  }
   $("reqRows").addEventListener("keydown",function(e){
-    if(e.key==="Enter"&&e.target.classList.contains("reqtxt")){ e.preventDefault(); e.target.blur(); }
+    if(e.key==="Enter"&&(e.target.classList.contains("reqtxt")||/^reqs\.\d+\.why$/.test(e.target.getAttribute("data-k")||""))){ e.preventDefault(); e.target.blur(); }
   });
   window.addEventListener("resize",fitAllReqs);
   document.addEventListener("click",function(e){
