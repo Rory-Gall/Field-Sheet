@@ -4,7 +4,7 @@
 "use strict";
 /* the sender: one copy of the code that sends finished sheets, shared with the page */
 importScripts("sender.js");
-var CACHE = "kei-fieldsheet-b30";
+var CACHE = "kei-fieldsheet-b31";
 var ASSETS = [
   "./",
   "./index.html",

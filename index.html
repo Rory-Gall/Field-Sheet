@@ -214,6 +214,19 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
   font-size:18px;font-weight:700;line-height:1;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.25)
 }
 
+/* GPS spots and talk-in boxes (build 31). The live look is in the paged block below; this is the
+   saved record and the print, where a spot is one line of text. */
+.loc-pin,.loc-live,.talkhint{display:none}
+.loc{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 8px;margin:0 0 6px}
+.loc-c{font-size:12px}
+.loc-t{font-weight:700;font-size:13px}
+.loc-s{font-size:12px;color:var(--ink2)}
+.locrec{font-size:13px;margin:0 0 6px;line-height:1.5}
+.locrec b{display:inline-block;min-width:118px}
+.locrec a{margin-left:6px;font-size:12px}
+textarea.talk{min-height:110px}
+.probe-each h3.sub{margin-top:12px}
+
 /* drafts */
 .draft{
   display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--line);
@@ -347,7 +360,7 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
     border-radius:1px;background:none;font-size:0;transform:rotate(-135deg);margin:5px 6px 0 auto;transition:transform .15s}
   body.paged .card.closed h2::after{transform:rotate(45deg);margin-top:-5px;border-color:var(--accent)}
   body.paged .card.closed h2{margin-bottom:0}
-  body.paged #pg_check .card>h2,body.paged #pg_photos .card>h2,body.paged #pg_flow .card>h2{display:none}
+  body.paged #pg_check .card>h2,body.paged #pg_photos .card>h2{display:none}
   body.paged h3.sub{font-size:12px;font-weight:750;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);margin:18px 2px 8px}
   body.paged h3.sub:first-of-type{margin-top:0}
   body.paged .rechead{display:none}
@@ -459,6 +472,38 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
   body.paged .shot .btn{flex:0 0 auto}
   body.paged .shot-add{display:flex;gap:8px;margin:0}
   body.paged .shot-add input{flex:1 1 auto;min-width:0}
+
+  /* GPS spots (build 31): one row each, like the photo rows; the open one grows a live panel */
+  body.paged .loc{align-items:center;gap:12px;margin:0 0 10px;padding:10px 12px;border:1.5px solid var(--line);border-radius:14px;background:var(--field)}
+  body.paged .loc.done{border-color:var(--good);background:var(--good-bg)}
+  body.paged .loc.active{border-color:var(--accent);background:var(--accent-soft);margin-bottom:0;border-radius:14px 14px 0 0}
+  body.paged .loc-pin{display:block;flex:0 0 64px;width:64px;height:64px;border-radius:10px;background-color:var(--line2);
+    background-repeat:no-repeat;background-position:center;background-size:26px 26px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 22s7-7.2 7-12.5A7 7 0 0 0 5 9.5C5 14.8 12 22 12 22z' fill='none' stroke='%238494a1' stroke-width='2'/%3E%3Ccircle cx='12' cy='9.5' r='2.6' fill='none' stroke='%238494a1' stroke-width='2'/%3E%3C/svg%3E")}
+  body.paged .loc.done .loc-pin{background-color:var(--panel);
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 22s7-7.2 7-12.5A7 7 0 0 0 5 9.5C5 14.8 12 22 12 22z' fill='%231a7f45' stroke='%231a7f45' stroke-width='2'/%3E%3Ccircle cx='12' cy='9.5' r='2.6' fill='%23ffffff'/%3E%3C/svg%3E")}
+  body.paged .loc-main{display:block;flex:1 1 auto;min-width:0}
+  body.paged .loc-t{font-size:15px;line-height:1.3}
+  body.paged .loc-s{font-size:12.5px;color:var(--ink3);margin-top:2px}
+  body.paged .loc.done .loc-s{color:var(--good);font-weight:650}
+  body.paged .loc-c{display:block;font-size:12px;color:var(--ink2);margin-top:2px}
+  body.paged .loc .btn{flex:0 0 auto}
+  body.paged .loc-live{display:block;margin:0 0 10px;padding:12px 14px 14px;border:1.5px solid var(--accent);border-top:0;border-radius:0 0 14px 14px;background:var(--panel)}
+  body.paged .loc-acc{font-size:36px;font-weight:800;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums;color:var(--ink3)}
+  body.paged .loc-acc.good{color:var(--good)}
+  body.paged .loc-acc.ok{color:var(--warn)}
+  body.paged .loc-acc.poor{color:var(--bad)}
+  body.paged .loc-msg{font-size:14px;line-height:1.4;color:var(--ink2);margin:3px 0 12px}
+  body.paged .loc-btns{display:flex;gap:8px}
+  body.paged .loc-btns .btn.pri{flex:1 1 auto}
+  body.paged .loc-btns .btn:disabled{opacity:.45}
+  body.paged .loc-none{display:block;margin:12px 0 0}
+  body.paged .loc-live .hint{margin-top:10px}
+  body.paged .talkhint{display:block;margin:-2px 2px 8px}
+  body.paged textarea.talk{min-height:132px}
+  body.paged .probe-each{border-top:1px solid var(--line2);padding-top:12px;margin-top:4px}
+  body.paged .probe-each h3.sub{margin-top:0}
+  body.paged .fx-gap{margin-top:18px}
   body.paged #photoGrid .ph img{border-radius:12px;cursor:zoom-in}
   .lightbox{position:fixed;inset:0;z-index:99;display:flex;align-items:center;justify-content:center;padding:12px;background:rgba(0,0,0,.93);cursor:zoom-out}
   .lightbox img{max-width:100%;max-height:100%;border-radius:8px}
@@ -536,6 +581,9 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
   .qnote{margin:4px 0 0}
 
   .pgrid.rec .ph img{max-width:100%}
+  .locrec{font-size:10px;margin:0 0 4px}
+  .locrec b{min-width:92px}
+  .loc-t,.loc-s,.loc-c{font-size:9px}
   .foot{margin:4px 0 0;column-span:all;font-size:9px;color:#000;break-before:avoid}
 
   /* a value longer than its box would be clipped, and this copy is the archive.
@@ -762,13 +810,73 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
   <div class="pg-head noprint">
     <div class="pg-kicker" id="kick_flow"></div>
     <div class="pg-title">Flow measurement</div>
-    <p class="pg-sub">The flow sheet photo and your field numbers.</p>
+    <p class="pg-sub" id="flowSub">The flow sheet photo and your field numbers.</p>
     <div class="pg-need" id="need_flow"></div>
+  </div>
+
+  <!-- salt dilution: where the probes and the dose were (build 31). In the order the work is done:
+       probes go in first, then the dose. -->
+  <div class="card qonly hidden" data-show="salt" id="cardProbes">
+    <h2><span class="n">Step 4</span> Probes</h2>
+    <div class="flowq" style="margin-bottom:12px">
+      <div class="flabel">Probe locations</div>
+      <div class="seg" id="probeSeg">
+        <label><input type="radio" name="probesplit" value="no" data-radio="probeSplit"><span>One for all</span></label>
+        <label><input type="radio" name="probesplit" value="yes" data-radio="probeSplit"><span>One each</span></label>
+      </div>
+    </div>
+    <div id="probeOne">
+      <div id="loc_probe"></div>
+      <div id="slot_probe"></div>
+    </div>
+    <div id="probeEach" class="hidden">
+      <p class="hint" style="margin:0 0 10px">For probes far apart: save a spot for each. At least one is needed.</p>
+      <div class="probe-each">
+        <h3 class="sub">Probe 1</h3>
+        <div class="row tight"><div style="max-width:180px"><label for="probeSen0">Sensor #</label><input type="text" id="probeSen0" data-k="probes.0.sen" class="mono" inputmode="numeric" autocomplete="off" placeholder="452"></div></div>
+        <div id="loc_p1"></div>
+        <div id="slot_p1"></div>
+      </div>
+      <div class="probe-each">
+        <h3 class="sub">Probe 2</h3>
+        <div class="row tight"><div style="max-width:180px"><label for="probeSen1">Sensor #</label><input type="text" id="probeSen1" data-k="probes.1.sen" class="mono" inputmode="numeric" autocomplete="off" placeholder="593"></div></div>
+        <div id="loc_p2"></div>
+        <div id="slot_p2"></div>
+      </div>
+      <div class="probe-each">
+        <h3 class="sub">Probe 3</h3>
+        <div class="row tight"><div style="max-width:180px"><label for="probeSen2">Sensor #</label><input type="text" id="probeSen2" data-k="probes.2.sen" class="mono" inputmode="numeric" autocomplete="off" placeholder="219"></div></div>
+        <div id="loc_p3"></div>
+        <div id="slot_p3"></div>
+      </div>
+    </div>
+    <p class="hint bad hidden" id="probeIncomplete"></p>
+    <h3 class="sub fx-gap">Where are the probes?</h3>
+    <p class="hint talkhint noprint">&#127908; Tap the box, then the microphone on your keyboard, and talk.</p>
+    <textarea id="probeNoteF" data-k="probeNote" class="talk" aria-label="Where are the probes?" placeholder="e.g. 452 on the left bank, 593 in the centre just upstream, 219 on the right bank behind the big boulder."></textarea>
+    <p class="hint bad hidden" id="probeNoteIncomplete"></p>
+  </div>
+
+  <div class="card qonly hidden" data-show="salt" id="cardDose">
+    <h2><span class="n">Step 4</span> Dose &amp; mixing reach</h2>
+    <div id="loc_dose"></div>
+    <div id="slot_dose"></div>
+    <div id="slot_mixing"></div>
+    <p class="hint bad hidden" id="doseIncomplete"></p>
+  </div>
+
+  <!-- midsection: the cross section, photographed three ways -->
+  <div class="card qonly hidden" data-show="mid" id="cardXs">
+    <h2><span class="n">Step 4</span> Cross section</h2>
+    <div id="slot_xs"></div>
+    <div id="slot_xsup"></div>
+    <div id="slot_xsdown"></div>
+    <p class="hint bad hidden" id="xsIncomplete"></p>
   </div>
 
   <!-- 6 discharge -->
   <div class="card hidden" id="cardQ">
-    <h2><span class="n">Step 4</span> Flow Measurement</h2>
+    <h2><span class="n">Step 4</span> Flow results</h2>
     <div id="qBody">
       <h3 class="sub">Photo of the flow measurement sheet</h3>
       <div class="pgrid" id="photoGrid"></div>
@@ -786,7 +894,7 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
         <div style="flex:0 1 120px"><label>Error (&plusmn;mm)</label><input type="text" data-k="sg.m.err" class="mono" inputmode="decimal"></div>
       </div>
       <p class="hint">If you can&rsquo;t read it during the measurement, the arrival or departure reading counts.</p>
-      <h3 class="sub">Preliminary Q&rsquo;s</h3>
+      <h3 class="sub" id="qmHead">Preliminary Q&rsquo;s</h3>
       <div class="row" id="qmRows"></div>
       <p class="hint bad hidden" id="qmIncomplete"></p>
       <p class="hint" id="qSpreadOut">Enter at least two Q&rsquo;s and the spread calculates itself.</p>
@@ -797,6 +905,14 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
         <input type="text" data-k="reviewedQ" class="mono" inputmode="decimal">
       </div>
     </div>
+  </div>
+
+  <!-- salt dilution: how it went, in the crew's own words (build 31) -->
+  <div class="card qonly hidden" data-show="salt" id="cardQNote">
+    <h2><span class="n">Step 4</span> How the measurement went</h2>
+    <p class="hint talkhint noprint">&#127908; Tap the box, then the microphone on your keyboard, and talk.</p>
+    <textarea id="qNoteF" data-k="qNote" class="talk" aria-label="How the measurement went" placeholder="A clean pulse on each probe? Any aeration, eddies or pooling? A probe cut off or out of the water? Anything the office should know."></textarea>
+    <p class="hint bad hidden" id="qNoteIncomplete"></p>
   </div>
 
   <div class="pg-nav noprint" data-nav="flow"></div>
@@ -922,7 +1038,7 @@ var STORE="kei-fieldsheet-v1";
 var $=function(id){ return document.getElementById(id); };
 /* App build. Bump on every version handed over, so a phone can be checked at a glance
    against the filename it came from. Separate from v1.15, which is the paper form. */
-var BUILD="30";
+var BUILD="31";
 var RECORD=!!BAKED;                 /* opened as a finished record, not the blank app */
 /* file_field_sheets.py opens the sheet as ...html#print to render the archive PDF.
    Headless Chrome never fires beforeprint, so the hi-res sketch has to be explicit. */
@@ -939,6 +1055,8 @@ function blank(){
     pq:["","","","",""], reviewedQ:"", qspread:"", qspreadPct:"", qphotoIds:[], sphotoIds:[]
   };
   s.dateAuto=s.date;                 /* the app put this date in; a different one was typed by a person */
+  /* build 31: where the probes and dose were (GPS), and how it went */
+  s.loc={}; s.probeSplit="no"; s.probes=[{sen:""},{sen:""},{sen:""}]; s.probeNote=""; s.qNote="";
   for(var i=0;i<REQ_MIN;i++) s.reqs.push({on:false,txt:""});
   PHOTOS.forEach(function(p){ s.photos[p[0]]=false; });
   VIDEOS.forEach(function(p){ s.videos[p[0]]=false; });
@@ -1136,7 +1254,7 @@ function syncReqWhy(showAll){
 }
 function buildQm(){
   $("qmRows").innerHTML=[0,1,2,3,4].map(function(i){
-    return '<div style="flex:1 1 30%;min-width:96px"><label>Q'+(i+1)+' (m³/s)</label>'+
+    return '<div style="flex:1 1 30%;min-width:96px"><label id="qmLab'+i+'">Q'+(i+1)+' (m³/s)</label>'+
       '<input type="text" data-k="pq.'+i+'" data-qspread="1" class="mono" inputmode="decimal"></div>';
   }).join("");
 }
@@ -1154,6 +1272,10 @@ function syncQCount(){
     el.parentNode.classList.toggle("hidden",hide);
     if(hide&&String(get("pq."+i)||"")!==""){ set("pq."+i,""); el.value=""; }
   }
+  /* midsection has one number: the result */
+  var mid=(get("ftype")==="mid");
+  var ql=$("qmLab0"); if(ql) ql.textContent=mid?"Result: discharge (m³/s)":"Q1 (m³/s)";
+  var qh=$("qmHead"); if(qh) qh.textContent=mid?"Result":"Preliminary Q’s";
   autoSpread();
 }
 /* the one number the office wants at a glance: how far apart the measurements are */
@@ -1314,6 +1436,7 @@ function drawXPhotos(clearLabel){
     html+='<h3 class="sub">More photos</h3><div class="pgrid rec">'+extra.map(xCell).join("")+'</div>';
     if(!extra.length) html+='<p class="hint" style="margin:0 0 8px">No other photos.</p>';
     host.innerHTML=html;
+    drawFlowSlots();
     return;
   }
   /* on the phone: one compact row a photo - thumbnail, what it is, Taken or Required, and the button */
@@ -1345,8 +1468,189 @@ function drawXPhotos(clearLabel){
       xphotoUrls.push(u); cell.src=u;
     }).catch(function(){});
   });
+  drawFlowSlots();
   refreshProgress();
 }
+/* ---------- the Flow page's own photos (build 31) ----------
+   Same store as the Upstream / Downstream photos (S.xphotos), one photo per kind, retaking replaces it.
+   [label, required on its own]. Probes 1-3 are needed as a group: at least one. */
+var FSLOTS={probe:["Probe location photo",true],p1:["Probe 1 photo",false],p2:["Probe 2 photo",false],p3:["Probe 3 photo",false],
+  dose:["Dose location photo",true],mixing:["Mixing reach photo",false],
+  xs:["Cross section",true],xsup:["Upstream of the cross section",true],xsdown:["Downstream of the cross section",true]};
+var XS_SLOTS=["xs","xsup","xsdown"];
+function slotLabel(k){
+  var l=""; XSLOTS.forEach(function(sl){ if(sl[0]===k) l=sl[1]; });
+  return l||(FSLOTS[k]?FSLOTS[k][0]:k);
+}
+var fslotUrls=[];
+function drawFlowSlots(){
+  fslotUrls.forEach(function(u){ URL.revokeObjectURL(u); });
+  fslotUrls=[];
+  var list=(RECORD?((BAKED&&BAKED.xphotos)||[]):((S&&S.xphotos)||[]));
+  Object.keys(FSLOTS).forEach(function(k){
+    var host=$("slot_"+k); if(!host) return;
+    var spec=FSLOTS[k], have=list.filter(function(x){ return xKindOf(x.kind)===k; });
+    if(RECORD){
+      host.innerHTML='<h3 class="sub">'+esc(spec[0])+'</h3><div class="pgrid rec">'+have.map(xCell).join("")+'</div>'+
+        (have.length?'':'<p class="hint" style="margin:0 0 8px">Not taken.</p>');
+      return;
+    }
+    var want=have.length?"Taken ✓":spec[1]?"Required":(k==="mixing"?"Best you can":"If this probe has its own spot");
+    host.innerHTML='<div class="shot'+(have.length?' done':'')+'"><div class="pgrid">'+
+      have.map(function(x){ return '<div class="ph" data-xpid="'+x.id+'"><img alt="'+esc(x.label)+'"></div>'; }).join("")+'</div>'+
+      '<div class="shot-main"><div class="shot-t">'+esc(spec[0])+'</div><div class="shot-s">'+want+'</div></div>'+
+      '<button class="btn noprint" type="button" data-xtake="'+k+'">&#128247; '+(have.length?'Retake':'Take')+'</button></div>';
+    have.forEach(function(x){
+      idbGet(photoKey(book.cur,x.id)).then(function(blob){
+        var cell=host.querySelector('[data-xpid="'+x.id+'"] img');
+        if(!cell) return;
+        if(!blob){ cell.parentNode.innerHTML='<span class="hint">missing</span>'; return; }
+        var u=URL.createObjectURL(blob); fslotUrls.push(u); cell.src=u;
+      }).catch(function(){});
+    });
+  });
+}
+
+/* ---------- GPS spots (build 31) ----------
+   Press Get GPS, watch the accuracy settle, press Save. It saves the best fix of the last 10 seconds
+   with how accurate it was, so a crew is never stuck: under trees +-2 m may never come. If nothing good
+   comes within 20 s (or location is refused) "No GPS here" saves the spot as "no fix". GPS turns itself
+   off after saving, on Cancel, when the method changes, on another sheet, and after 5 minutes. */
+var GPS_GOOD=2, GPS_OK=5;               /* metres: green at or under GOOD, amber to OK, red above */
+var LOC_LABEL={dose:"Dose location",probe:"Probe location",p1:"Probe 1 location",p2:"Probe 2 location",p3:"Probe 3 location"};
+var LOC_KINDS=["probe","p1","p2","p3","dose"];
+var gps={kind:null,watch:null,fixes:[],err:"",started:0,stopT:null,tick:null};
+function fmtAcc(a){ a=Number(a); return "±"+(a<10?a.toFixed(1):String(Math.round(a)))+" m"; }
+function accClass(a){ return a<=GPS_GOOD?"good":a<=GPS_OK?"ok":"poor"; }
+function hhmm(ms){ var d=new Date(ms),p=function(n){ return String(n).padStart(2,"0"); }; return p(d.getHours())+":"+p(d.getMinutes()); }
+function locOk(st,k){ var l=st&&st.loc&&st.loc[k]; return !!(l&&(l.none||isFinite(l.lat))); }
+function probeKinds(st){ return (st&&st.probeSplit==="yes")?["p1","p2","p3"]:["probe"]; }
+function bestFix(){
+  var now=Date.now(), recent=gps.fixes.filter(function(f){ return now-f.at<=10000; });
+  var pool=recent.length?recent:gps.fixes.slice(-1);
+  return pool.reduce(function(b,f){ return !b||f.acc<b.acc?f:b; },null);
+}
+function startGps(kind){
+  if(RECORD||!S) return;
+  if(gps.kind!==kind){ gps.fixes=[]; gps.err=""; }
+  gps.kind=kind; gps.started=Date.now();
+  if(!navigator.geolocation){
+    gps.err="This phone’s browser can’t reach the GPS.";
+  }else if(gps.watch===null){
+    gps.watch=navigator.geolocation.watchPosition(function(p){
+      gps.err="";
+      gps.fixes.push({lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy,ts:p.timestamp||Date.now(),at:Date.now()});
+      if(gps.fixes.length>90) gps.fixes.shift();
+      drawLive();
+    },function(e){
+      if(e&&e.code===1){
+        gps.err="Location is turned off for this app. Allow location for the browser, or use No GPS here.";
+        if(gps.watch!==null) navigator.geolocation.clearWatch(gps.watch);
+        gps.watch=null;
+      }else gps.err="No fix yet. Stand still with a clear view of the sky.";
+      drawLive();
+    },{enableHighAccuracy:true,maximumAge:0,timeout:30000});
+  }
+  clearTimeout(gps.stopT); gps.stopT=setTimeout(stopGps,5*60*1000);
+  clearInterval(gps.tick); gps.tick=setInterval(drawLive,1000);
+  drawLocs();
+  var row=$("loc_"+kind); if(row&&row.scrollIntoView) row.scrollIntoView({block:"nearest"});
+}
+function stopGps(){
+  if(gps.watch!==null&&navigator.geolocation) navigator.geolocation.clearWatch(gps.watch);
+  clearTimeout(gps.stopT); clearInterval(gps.tick);
+  var was=gps.kind;
+  gps.watch=null; gps.kind=null; gps.fixes=[]; gps.err="";
+  if(was) drawLocs();
+}
+function saveLoc(kind){
+  var f=bestFix(); if(!f||!S) return;
+  if(!S.loc||typeof S.loc!=="object") S.loc={};
+  S.loc[kind]={lat:Math.round(f.lat*1e7)/1e7,lon:Math.round(f.lon*1e7)/1e7,acc:Math.round(f.acc*10)/10,
+               at:new Date(f.ts).toISOString(),time:hhmm(f.ts)};
+  touch(); stopGps(); drawLocs(); revalidateIfFlagged(); refreshProgress();
+}
+function noGps(kind){
+  if(!S) return;
+  if(!confirm("Save the "+(LOC_LABEL[kind]||"spot").toLowerCase()+" as “no GPS fix”?\n\nThe sheet will say no location could be taken here.")) return;
+  if(!S.loc||typeof S.loc!=="object") S.loc={};
+  S.loc[kind]={none:true,at:new Date().toISOString(),time:nowHM()};
+  touch(); stopGps(); drawLocs(); revalidateIfFlagged(); refreshProgress();
+}
+function locRowHtml(k){
+  var l=S&&S.loc&&S.loc[k], lab=LOC_LABEL[k]||k, done=locOk(S,k);
+  var ll=done&&!l.none?Number(l.lat).toFixed(6)+", "+Number(l.lon).toFixed(6):"";
+  if(RECORD){
+    var r='<div class="locrec"><b>'+esc(lab)+'</b> ';
+    if(!done) return r+'<span class="ext">Not saved</span></div>';
+    if(l.none) return r+'<span>No GPS fix'+(l.time?' (marked '+esc(l.time)+')':'')+'</span></div>';
+    return r+'<span class="mono">'+ll+'</span> <span class="ext">'+fmtAcc(l.acc)+(l.time?' · '+esc(l.time):'')+'</span>'+
+      '<a class="noprint" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&amp;query='+encodeURIComponent(ll.replace(" ",""))+'">Map</a></div>';
+  }
+  var active=(gps.kind===k), req=(k==="dose"||k==="probe");
+  var st=active?"GPS on…":done?(l.none?"No GPS fix · marked "+esc(l.time||""):"Saved "+fmtAcc(l.acc)+" · "+esc(l.time||"")):(req?"Required":"Not saved");
+  return '<div class="loc'+(done?' done':'')+(active?' active':'')+'"><div class="loc-pin" aria-hidden="true"></div>'+
+    '<div class="loc-main"><div class="loc-t">'+esc(lab)+'</div><div class="loc-s">'+st+'</div>'+(ll?'<div class="loc-c mono">'+ll+'</div>':'')+'</div>'+
+    (active?'':'<button class="btn noprint" type="button" data-locstart="'+k+'">'+(done?'Redo':'&#128205; Get GPS')+'</button>')+'</div>'+
+    (active?'<div class="loc-live noprint" id="locLive"></div>':'');
+}
+function drawLocs(){
+  if(!S) return;
+  LOC_KINDS.forEach(function(k){
+    var host=$("loc_"+k); if(!host) return;
+    var h=locRowHtml(k);
+    if(host.innerHTML!==h||gps.kind===k) host.innerHTML=h;
+  });
+  drawLive();
+  refreshProgress();
+}
+function drawLive(){
+  var el=$("locLive"); if(!el||!gps.kind) return;
+  if(!el.firstChild){
+    el.innerHTML='<div class="loc-acc" id="locAcc">…</div><div class="loc-msg" id="locMsg"></div>'+
+      '<div class="loc-btns"><button class="btn pri" type="button" id="locSaveBtn" data-locsave="'+gps.kind+'" disabled>Save this spot</button>'+
+      '<button class="btn" type="button" data-locstop="1">Cancel</button></div>'+
+      '<button class="sh-link loc-none hidden" type="button" id="locNoneBtn" data-locnone="'+gps.kind+'">No GPS here? Save it as “no fix”</button>'+
+      '<p class="hint">Aim for ±'+GPS_GOOD+' m. You can save at any time; how accurate it was is saved with it.</p>';
+  }
+  var f=bestFix(), waited=Date.now()-gps.started;
+  var acc=$("locAcc"), msg=$("locMsg"), sb=$("locSaveBtn"), nb=$("locNoneBtn");
+  var cls=f?accClass(f.acc):"", txt=f?fmtAcc(f.acc):"…";
+  if(acc){ if(acc.textContent!==txt) acc.textContent=txt; acc.className="loc-acc "+cls; }
+  var m=gps.err?gps.err:!f?"Finding satellites…":cls==="good"?"Good. Save it."
+    :cls==="ok"?"Close. Give it a few seconds for ±"+GPS_GOOD+" m if you can."
+    :"Still settling. Stand still with a clear view of the sky.";
+  if(msg&&msg.textContent!==m) msg.textContent=m;
+  if(sb){ sb.disabled=!f; var bt=f?"Save this spot ("+fmtAcc(f.acc)+")":"Save this spot"; if(sb.textContent!==bt) sb.textContent=bt; }
+  if(nb) nb.classList.toggle("hidden",!(gps.err||(waited>20000&&(!f||f.acc>GPS_OK))));
+}
+function syncProbeSplit(){
+  var each=(get("probeSplit")==="yes");
+  var a=$("probeOne"), b=$("probeEach");
+  if(a) a.classList.toggle("hidden",each);
+  if(b) b.classList.toggle("hidden",!each);
+  if(gps.kind&&gps.kind!=="dose"&&probeKinds(S).indexOf(gps.kind)<0) stopGps();
+}
+/* What the Flow page still needs, for salt dilution and midsection. validateVisit and sheetProblems both
+   read this, so the two can't drift apart. note = the hint under the card; sel = where Finish takes you. */
+function flowExtras(st,xl){
+  var out=[];
+  if(!st||st.flow!=="yes") return out;
+  function add(ok,label,note,sel){ out.push({ok:ok,label:label,note:note,sel:sel}); }
+  if(st.ftype==="salt"){
+    var pk=probeKinds(st);
+    add(pk.some(function(k){ return locOk(st,k); }),"probe location","probeIncomplete","#loc_"+pk[0]);
+    add(pk.some(function(k){ return xHas(xl,k); }),"probe photo","probeIncomplete","#slot_"+pk[0]);
+    add(String(st.probeNote||"").trim()!=="","probe description","probeNoteIncomplete","#probeNoteF");
+    add(locOk(st,"dose"),"dose location","doseIncomplete","#loc_dose");
+    add(xHas(xl,"dose"),"dose photo","doseIncomplete","#slot_dose");
+    add(String(st.qNote||"").trim()!=="","how the measurement went","qNoteIncomplete","#qNoteF");
+  }else if(st.ftype==="mid"){
+    XS_SLOTS.forEach(function(k){ add(xHas(xl,k),FSLOTS[k][0].toLowerCase()+" photo","xsIncomplete","#slot_"+k); });
+  }
+  return out;
+}
+
 /* the labelled photos of one draft, as {kind,label,data} for the sent file */
 function loadXDataUrlsFor(draftId,list){
   list=list||[];
@@ -1481,6 +1785,11 @@ function render(){
   if(S&&S.sg&&S.sg.m&&S.sg.m.err===undefined) S.sg.m.err="";
   if(S&&S.sphotoIds===undefined) S.sphotoIds=[];
   if(S&&S.ftype===undefined) S.ftype="";
+  if(S&&(!S.loc||typeof S.loc!=="object")) S.loc={};                 /* sheets started before build 31 */
+  if(S&&!Array.isArray(S.probes)) S.probes=[{sen:""},{sen:""},{sen:""}];
+  if(S&&S.probeSplit===undefined) S.probeSplit="no";
+  if(S&&S.probeNote===undefined) S.probeNote="";
+  if(S&&S.qNote===undefined) S.qNote="";
   Array.prototype.forEach.call(document.querySelectorAll("[data-k]"),function(el){
     var v=get(el.getAttribute("data-k"));
     if(el.type==="checkbox") el.checked=!!v;
@@ -1511,6 +1820,7 @@ function render(){
   drawPhotos();
   drawSPhotos();
   drawXPhotos();
+  drawLocs();
   autoSpread();
   syncReqWhy(false);
   syncReqLook();
@@ -1531,6 +1841,11 @@ function syncQ(){
     var kinds=q.getAttribute("data-show");
     q.classList.toggle("hidden",!(on&&(!kinds||kinds===t)));
   });
+  var fsub=$("flowSub");
+  if(fsub) fsub.textContent=t==="salt"?"Where the probes and the dose were, the results, and how it went."
+    :t==="mid"?"The cross section, and the result.":"The flow sheet photo and your field numbers.";
+  syncProbeSplit();
+  if(gps.kind&&!(on&&t==="salt")) stopGps();
 }
 /* :has() does the highlight on modern browsers; this keeps it visible everywhere else */
 function paintSegs(){
@@ -1579,7 +1894,10 @@ function bind(){
   document.addEventListener("change",function(e){
     var el=e.target;
     if(el.hasAttribute&&el.hasAttribute("data-radio")){
-      if(el.checked){ set(el.getAttribute("data-radio"),el.value); paintSegs(); touch(); }
+      if(el.checked){
+        set(el.getAttribute("data-radio"),el.value); paintSegs(); touch();
+        if(el.getAttribute("data-radio")==="probeSplit"){ syncProbeSplit(); revalidateIfFlagged(); refreshProgress(); }
+      }
       return;
     }
     if(el.name==="pen"){ paintSegs(); return; }
@@ -1769,6 +2087,8 @@ function isBlankSheet(st){
   if((st.reqs||[]).some(function(r){ return r&&(has(r.txt)||r.on); })) return false;
   if((st.sphotoIds||[]).length||(st.qphotoIds||[]).length||(st.xphotos||[]).length) return false;
   if(st.flow==="yes"||st.flow==="no") return false;
+  if(st.loc&&Object.keys(st.loc).length) return false;
+  if(has(st.probeNote)||has(st.qNote)) return false;
   var sg=st.sg||{};
   if(["a","d","m"].some(function(k){ return sg[k]&&(has(sg[k].sg)||has(sg[k].time)); })) return false;
   var ticks=false;
@@ -2235,6 +2555,18 @@ function validateVisit(){
       el3.classList.remove("missing");
     });
   }
+  /* build 31: salt dilution says where the probes and dose were and how it went; midsection
+     photographs its cross section */
+  var fxl=RECORD?((BAKED&&BAKED.xphotos)||[]):((S.xphotos)||[]);
+  var fxBy={probeIncomplete:[],probeNoteIncomplete:[],doseIncomplete:[],qNoteIncomplete:[],xsIncomplete:[]};
+  flowExtras(S,fxl).forEach(function(f){ if(!f.ok){ fxBy[f.note].push(f.label); missing.push([f.sel,f.label]); } });
+  Object.keys(fxBy).forEach(function(id){
+    var n=$(id); if(!n) return;
+    if(fxBy[id].length){ n.textContent="Not sent — still needed: "+fxBy[id].join(", ")+"."; n.classList.remove("hidden"); }
+    else n.classList.add("hidden");
+  });
+  var pnF=$("probeNoteF"); if(pnF) pnF.classList.toggle("missing",fxBy.probeNoteIncomplete.length>0);
+  var qnF=$("qNoteF"); if(qnF) qnF.classList.toggle("missing",fxBy.qNoteIncomplete.length>0);
   return missing;
 }
 
@@ -2242,7 +2574,8 @@ function validateVisit(){
 function revalidateIfFlagged(){
   var flagged=["visitIncomplete","reqIncomplete","reqConfirm","purposeIncomplete",
                "flowIncomplete","ftypeIncomplete","photoIncomplete","qmIncomplete",
-               "sgIncomplete","sphotoIncomplete","xslot_up","xslot_downctl"].some(function(id){
+               "sgIncomplete","sphotoIncomplete","xslot_up","xslot_downctl",
+               "probeIncomplete","probeNoteIncomplete","doseIncomplete","qNoteIncomplete","xsIncomplete"].some(function(id){
     var el=$(id); return el&&el.className.indexOf("hidden")===-1;
   });
   if(flagged) validateVisit();
@@ -2269,6 +2602,7 @@ function buildFileFor(st,photos,sphotos,xph){
   var shh=pick("#sheetsHome"); if(shh) shh.innerHTML="";
   var rqc=pick("#reqRows"); if(rqc) rqc.innerHTML="";           /* the record draws its own lines */
   var rcc=pick("#reqCount"); if(rcc) rcc.innerHTML="";
+  Array.prototype.forEach.call(clone.querySelectorAll('[id^="loc_"],[id^="slot_"]'),function(x){ x.innerHTML=""; });  /* the record draws its own */
   var t=pick("title"); if(t) t.textContent="Field Sheet — "+(st.site||"")+" "+(st.date||"");
   var b=pick("#recBanner");
   if(b){ b.className="banner"; b.textContent="Completed field sheet — "+(st.site||"")+"  "+(st.date||"")+
@@ -2337,6 +2671,7 @@ function sheetProblems(st){
       return String(gv(st,"sg."+sd+".time")||"").trim()!==""&&String(gv(st,"sg."+sd+".sg")||"").trim()!=="";
     });
     if(!sgOK) out.push("staff gauge reading");
+    flowExtras(st,st.xphotos).forEach(function(f){ if(!f.ok) out.push(f.label); });
   }
   return out;
 }
@@ -2767,10 +3102,14 @@ var NEED_PAGE={"station":"arrive","date":"arrive","time zone":"arrive","arrival 
   "purpose":"check","work completed":"check","unticked work needs a reason":"check",
   "station photo":"photos","upstream photo":"photos","downstream & control photo":"photos",
   "flow sheet photo":"flow","preliminary Q":"flow","staff gauge reading":"flow",
+  "probe location":"flow","probe photo":"flow","probe description":"flow","dose location":"flow","dose photo":"flow",
+  "how the measurement went":"flow","cross section photo":"flow","upstream of the cross section photo":"flow",
+  "downstream of the cross section photo":"flow",
   "departure time":"depart"};
 var NEED_WORD={"initials":"your initials","flow question":"flow measurement yes or no","method":"the flow method",
   "purpose":"the main purpose","work completed":"at least one work line","unticked work needs a reason":"mark each line Done or Can\u2019t",
-  "preliminary Q":"at least one Q","staff gauge reading":"a timed staff gauge reading (arrival, during or departure)"};
+  "preliminary Q":"at least one Q","staff gauge reading":"a timed staff gauge reading (arrival, during or departure)",
+  "probe description":"where the probes are"};
 var PAGE_NAME={sheets:"Sheets",arrive:"Arrival",check:"Checklist",photos:"Photos",flow:"Flow",depart:"Departure"};
 function pageNeeds(st){
   var by={arrive:[],check:[],photos:[],flow:[],depart:[]};
@@ -2819,7 +3158,7 @@ function startSheet(state,id,stay){
   S=state; reqOpen={};
   if(!RECORD){ book.cur=id; saveBook(); pruneBlank(); }
   render();
-  dateNote(""); arrivalTyped=false;
+  dateNote(""); arrivalTyped=false; stopGps(); drawLocs();
   drawDrafts();
   window.scrollTo(0,0);
   if(pagerOn()){
@@ -2968,7 +3307,7 @@ function init(){
     this.value="";
     if(f) addStationPhoto(f);
   });
-  $("xphotoArea").addEventListener("click",function(e){
+  var xphotoClick=function(e){
     var t=e.target.closest?e.target.closest("[data-xtake]"):null;
     if(t){
       var kind=t.getAttribute("data-xtake"), label="";
@@ -2982,7 +3321,7 @@ function init(){
         }
         li.classList.remove("missing"); if(note) note.classList.add("hidden");
       }else{
-        XSLOTS.forEach(function(sl){ if(sl[0]===kind) label=sl[1]; });
+        label=slotLabel(kind);
       }
       xPending={kind:kind,label:label};
       $("xphotoInput").click();
@@ -2994,7 +3333,18 @@ function init(){
     var pid=b.getAttribute("data-delxphoto");
     S.xphotos=(S.xphotos||[]).filter(function(x){ return x.id!==pid; });
     idbDel(photoKey(book.cur,pid)).catch(function(){});
-    touch(); drawXPhotos();
+    touch(); drawXPhotos(); revalidateIfFlagged();
+  };
+  $("xphotoArea").addEventListener("click",xphotoClick);
+  $("pg_flow").addEventListener("click",xphotoClick);
+  /* GPS spots on the Flow page */
+  $("pg_flow").addEventListener("click",function(e){
+    var b=e.target.closest?e.target.closest("[data-locstart],[data-locsave],[data-locstop],[data-locnone]"):null;
+    if(!b||RECORD) return;
+    if(b.hasAttribute("data-locstart")) startGps(b.getAttribute("data-locstart"));
+    else if(b.hasAttribute("data-locsave")) saveLoc(b.getAttribute("data-locsave"));
+    else if(b.hasAttribute("data-locnone")) noGps(b.getAttribute("data-locnone"));
+    else stopGps();
   });
   $("xphotoInput").addEventListener("change",function(){
     var f=this.files&&this.files[0];
