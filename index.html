@@ -616,6 +616,7 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
         <input type="text" id="tzF" data-k="tz" class="mono" inputmode="text" placeholder="-7">
       </div>
     </div>
+    <p class="hint hidden noprint" id="dateNote"></p>
     <div class="row">
       <div style="flex:0 1 130px">
         <label for="techF">Technician&rsquo;s Initials</label>
@@ -921,7 +922,7 @@ var STORE="kei-fieldsheet-v1";
 var $=function(id){ return document.getElementById(id); };
 /* App build. Bump on every version handed over, so a phone can be checked at a glance
    against the filename it came from. Separate from v1.15, which is the paper form. */
-var BUILD="29";
+var BUILD="30";
 var RECORD=!!BAKED;                 /* opened as a finished record, not the blank app */
 /* file_field_sheets.py opens the sheet as ...html#print to render the archive PDF.
    Headless Chrome never fires beforeprint, so the hi-res sketch has to be explicit. */
@@ -937,6 +938,7 @@ function blank(){
     photos:{}, videos:{},
     pq:["","","","",""], reviewedQ:"", qspread:"", qspreadPct:"", qphotoIds:[], sphotoIds:[]
   };
+  s.dateAuto=s.date;                 /* the app put this date in; a different one was typed by a person */
   for(var i=0;i<REQ_MIN;i++) s.reqs.push({on:false,txt:""});
   PHOTOS.forEach(function(p){ s.photos[p[0]]=false; });
   VIDEOS.forEach(function(p){ s.videos[p[0]]=false; });
@@ -1567,6 +1569,9 @@ function bind(){
       if(el.getAttribute("data-k")==="reqs.0.txt") autoPurpose();
       if(/^reqs\.\d+\.txt$/.test(el.getAttribute("data-k"))){ growReqs(); fitReq(el); }
       if(el.hasAttribute("data-qspread")) autoSpread();
+      var dk=el.getAttribute("data-k");
+      if(dk==="arrive"||dk==="sg.a.time") arrivalTyped=true;
+      if(dk==="date") dateNote("");
       revalidateIfFlagged();
       touch();
     }
@@ -1590,6 +1595,11 @@ function bind(){
     if(el.hasAttribute&&el.hasAttribute("data-time")){
       var t=normTime(el.value);
       if(t!==el.value){ el.value=t; set(el.getAttribute("data-k"),t); touch(); }
+      var bk=el.getAttribute("data-k");
+      if(arrivalTyped&&(bk==="arrive"||bk==="sg.a.time")){
+        arrivalTyped=false;
+        if(String(el.value||"").trim()!=="") dateOnArrival(false,false);
+      }
     }
     if(el.hasAttribute&&el.hasAttribute("data-dateiso")){
       var d=String(el.value||"").replace(/[^\d]/g,"");
@@ -1601,9 +1611,13 @@ function bind(){
   },true);
   /* Now buttons */
   document.addEventListener("click",function(e){
+    if(e.target&&e.target.id==="dateTodayBtn"){ setDateToday(); return; }
     var b=e.target.closest?e.target.closest("[data-now],[data-nowk]"):null;
     if(!b) return;
     var t=nowHM();
+    /* the first sign of arriving: neither arrival time is filled in yet */
+    var firstArrival=String(get("arrive")||"")===""&&String(get("sg.a.time")||"")==="";
+    var isArrival=b.getAttribute("data-now")==="arriveF"||b.getAttribute("data-nowk")==="sg.a.time";
     if(b.hasAttribute("data-now")){
       var el=$(b.getAttribute("data-now"));
       el.value=t; set(el.getAttribute("data-k"),t);
@@ -1614,7 +1628,46 @@ function bind(){
       set(path,t);
     }
     touch();
+    if(isArrival) dateOnArrival(true,firstArrival);
   });
+}
+/* ---------- the date follows the arrival (build 30) ----------
+   A sheet is often started the day before, in the office, to plan the visit. It used to keep the
+   day it was STARTED (Selous LB: planned 16 Nov 2026, visited the 17th, filed under the 16th).
+   Arriving is what dates a sheet:
+   - the first arrival stamped with Now, on a date nobody typed by hand: the date becomes today, and says so
+   - anything less certain (arrival typed by hand, a second Now, a date somebody typed): ask, one tap
+   dateAuto is the last date the app itself put in; a date that differs from it was typed by a person. */
+var arrivalTyped=false;
+function dateNote(kind,was){
+  var n=$("dateNote"); if(!n) return;
+  if(!kind){ n.className="hint hidden noprint"; n.innerHTML=""; return; }
+  var t=todayISO();
+  if(kind==="set"){
+    n.className="hint noprint";
+    n.textContent="Date changed from "+(was||"blank")+" to today, "+t+", because you arrived today.";
+  }else{
+    n.className="hint warn noprint";
+    n.innerHTML="This sheet is dated "+esc(was||"blank")+" and today is "+t+". If the visit is today:"+
+      '<br><button class="btn sm" type="button" id="dateTodayBtn" style="margin-top:6px">Change the date to today</button>';
+  }
+}
+function setDateToday(){
+  var t=todayISO(), was=String(get("date")||"");
+  if(RECORD||was===t){ dateNote(""); return; }
+  set("date",t); set("dateAuto",t);
+  var f=$("dateF"); if(f) f.value=t;
+  dateNote("set",was);
+  revalidateIfFlagged(); touch(); drawDrafts();
+}
+function dateOnArrival(viaNow,first){
+  if(RECORD) return;
+  var t=todayISO(), d=String(get("date")||""), auto=String(get("dateAuto")||"");
+  if(d===t){ dateNote(""); return; }
+  var typed=(auto!==""&&d!==auto);          /* somebody typed this date: it was meant */
+  if(viaNow&&first&&!typed){ setDateToday(); return; }
+  if(!viaNow&&typed) return;                 /* typing up an old visit */
+  dateNote("ask",d);
 }
 function normTime(s){
   s=String(s||"").trim();
@@ -2226,6 +2279,7 @@ function buildFileFor(st,photos,sphotos,xph){
      never carry them, it is the archive copy of a visit, not an app */
   var ib=pick("#installBanner"); if(ib) ib.className="banner warn hidden noprint";
   var up=pick("#updatePill"); if(up) up.className="hidden noprint";
+  var dn=pick("#dateNote"); if(dn){ dn.className="hint hidden noprint"; dn.innerHTML=""; }
 
   var html="<!doctype html>\n"+clone.outerHTML;
   var payload=JSON.parse(JSON.stringify(st));
@@ -2765,6 +2819,7 @@ function startSheet(state,id,stay){
   S=state; reqOpen={};
   if(!RECORD){ book.cur=id; saveBook(); pruneBlank(); }
   render();
+  dateNote(""); arrivalTyped=false;
   drawDrafts();
   window.scrollTo(0,0);
   if(pagerOn()){
