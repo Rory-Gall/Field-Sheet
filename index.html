@@ -199,6 +199,13 @@ textarea.reqtxt{flex:1 1 auto;min-width:0;resize:none;overflow:hidden;min-height
 
 /* the flow question */
 .flowq{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.b32off{display:none!important}
+.gtxt{font-weight:700;color:var(--accent);margin-left:4px}
+.vidbox{margin:8px 0 4px}
+.vidbox .vmeta{font-size:13px;font-weight:600;color:var(--good);margin:6px 0 0}
+.vidbox video{display:block;width:100%;max-height:260px;border-radius:9px;margin-top:6px;background:#000}
+.techrow{display:flex;gap:6px}
+.techrow input{flex:1 1 auto;min-width:0}
 .flabel{font-size:14px;font-weight:700;flex:1 1 auto}
 
 /* flow sheet photos */
@@ -648,13 +655,13 @@ textarea.talk{min-height:110px}
   <!-- 1 visit -->
   <div class="card">
     <h2><span class="n">Step 1</span> Site Visit Details</h2>
-    <div class="chk" style="margin-bottom:8px"><input type="checkbox" id="qrF" data-k="photos.qr">
+    <div class="chk b32off" style="margin-bottom:8px"><input type="checkbox" id="qrF" data-k="photos.qr">
       <label class="inline" for="qrF">Clear photo of the QR code taken <span class="ext">(do it first)</span></label></div>
     <div class="f">
       <label for="siteSel">Station Name</label>
       <select id="siteSel" data-k="site"><option value="">— choose a station —</option></select>
     </div>
-    <div class="row">
+    <div class="row b32off">
       <div>
         <label for="dateF">Date <span class="ext">(YYYY-MM-DD)</span></label>
         <input type="text" id="dateF" data-k="date" data-dateiso="1" class="mono" inputmode="numeric" placeholder="2026-09-04">
@@ -664,11 +671,12 @@ textarea.talk{min-height:110px}
         <input type="text" id="tzF" data-k="tz" class="mono" inputmode="text" placeholder="-7">
       </div>
     </div>
-    <p class="hint hidden noprint" id="dateNote"></p>
+    <p class="hint hidden noprint b32off" id="dateNote"></p>
     <div class="row">
       <div style="flex:0 1 130px">
         <label for="techF">Technician&rsquo;s Initials</label>
-        <input type="text" id="techF" data-k="tech" autocapitalize="characters" autocomplete="off">
+        <div class="techrow"><input type="text" id="techF" data-k="tech" autocapitalize="characters" autocomplete="off" list="techList"><button class="btn now noprint" type="button" id="techAdd" title="Add another person">+ add</button></div>
+        <datalist id="techList"></datalist>
       </div>
       <div>
         <label for="arriveF">Arrival Time</label>
@@ -679,14 +687,23 @@ textarea.talk{min-height:110px}
       </div>
     </div>
     <div style="border-top:1px solid var(--line2);margin-top:10px;padding-top:10px">
-    <div class="flowq">
+    <div class="flowq" style="margin-bottom:8px">
+      <div class="flabel">Flow measurement</div>
+      <div class="seg" id="flowAll">
+        <label><input type="radio" name="flowall" value="no"><span>No flow</span></label>
+        <label><input type="radio" name="flowall" value="salt"><span>Salt dilution</span></label>
+        <label><input type="radio" name="flowall" value="mid"><span>Midsection</span></label>
+        <label><input type="radio" name="flowall" value="bucket"><span>Bucket</span></label>
+      </div>
+    </div>
+    <div class="flowq b32off">
       <div class="flabel">Flow measurement this visit?</div>
       <div class="seg" id="flowSeg">
         <label><input type="radio" name="flowq" value="yes"><span>Yes</span></label>
         <label><input type="radio" name="flowq" value="no"><span>No</span></label>
       </div>
     </div>
-    <div class="flowq hidden" id="ftypeRow" style="margin-top:8px">
+    <div class="flowq hidden b32off" id="ftypeRow" style="margin-top:8px">
       <div class="flabel">Which method?</div>
       <div class="seg" id="ftypeSeg">
         <label><input type="radio" name="ftypeq" value="salt"><span>Salt dilution</span></label>
@@ -713,29 +730,31 @@ textarea.talk{min-height:110px}
         </div>
         <div class="row tight">
           <div><label>Staff Gauge (m)</label><input type="text" data-k="sg.a.sg" data-calc="a" class="mono" inputmode="decimal"></div>
-          <div><label>Error (&plusmn;mm)</label><input type="text" data-k="sg.a.err" data-grade="a" class="mono" inputmode="decimal"></div>
+          <div><label>Error (&plusmn;mm)<span class="gtxt" id="gtxt_a"></span></label><input type="text" data-k="sg.a.err" data-grade="a" class="mono" inputmode="decimal"></div>
         </div>
         <div class="row tight hidden" id="angRow_a">
           <div><label>Staff Gauge Angle <span class="ext">(set per station)</span></label><input type="text" data-k="sg.a.ang" class="mono" readonly tabindex="-1"></div>
           <div><label>Calculated Staff Gauge <span class="ext">(auto)</span></label><input type="text" data-k="sg.a.calc" class="mono" readonly tabindex="-1"></div>
         </div>
-        <div class="f">
+        <div class="vidbox noprint-off" id="vid_a"></div>
+        <div class="f b32off">
           <label>Staff Gauge Read Grade <span class="ext">(auto from Error &mdash; tap to override)</span></label>
           <div class="seg" data-seg="sg.a.grade" data-opts="Poor|Fair|Good|Very Good|Excellent"></div>
         </div>
-        <button class="btn sm noprint" type="button" id="revBtn_a" data-revside="a">Add reviewed reading <span class="ext">(office)</span></button>
+        <button class="btn sm noprint b32off" type="button" id="revBtn_a" data-revside="a">Add reviewed reading <span class="ext">(office)</span></button>
         <div class="f hidden" id="revRow_a" style="max-width:240px">
           <label>Reviewed Staff Gauge (m) <span class="ext">(office)</span></label>
           <input type="text" data-k="sg.a.rev" class="mono" inputmode="decimal">
         </div>
       </div>
     <p class="hint bad hidden" id="sgIncomplete"></p>
-    <p class="hint" id="calcHint">The Calculated Staff Gauge fills in as reading &times; angle once you pick a station.</p>
+    <p class="hint b32off" id="calcHint">The Calculated Staff Gauge fills in as reading &times; angle once you pick a station.</p>
   </div>
 
-  <!-- 360: done on arrival with everything else -->
-  <div class="card">
+  <!-- 360: done on arrival with everything else (hidden from build 32: 360 camera only at hard sites) -->
+  <div class="card b32off">
     <h2><span class="n">Step 1</span> 360 Photos &amp; Videos</h2>
+    <!--b32: card hidden-->
     <h3 class="sub">360 Photos</h3>
     <div class="chkgrid" id="photoChk"></div>
     <h3 class="sub">360 Videos</h3>
@@ -799,6 +818,7 @@ textarea.talk{min-height:110px}
     <p class="hint bad hidden" id="sphotoIncomplete"></p>
     <div id="xphotoArea"></div>
     <input type="file" id="xphotoInput" accept="image/*" capture="environment" class="hidden">
+    <input type="file" id="vidInput" accept="video/*" capture="environment" class="hidden">
   </div>
 
   <div class="pg-nav noprint" data-nav="photos"></div>
@@ -931,7 +951,7 @@ textarea.talk{min-height:110px}
   <!-- 7 departure SG — read on the way out, after the measurement -->
   <div class="card">
     <h2><span class="n">Step 5</span> Departure Staff Gauge</h2>
-    <div class="chk" style="margin-bottom:8px"><input type="checkbox" id="depsgF" data-k="videos.depsg">
+    <div class="chk b32off" style="margin-bottom:8px"><input type="checkbox" id="depsgF" data-k="videos.depsg">
       <label class="inline" for="depsgF">10-Second Departure Staff Gauge 360 video taken</label></div>
     <div class="panel" id="sgD">
         <div class="f">
@@ -943,18 +963,19 @@ textarea.talk{min-height:110px}
         </div>
         <div class="row tight">
           <div><label>Staff Gauge (m)</label><input type="text" data-k="sg.d.sg" data-calc="d" class="mono" inputmode="decimal"></div>
-          <div><label>Error (&plusmn;mm)</label><input type="text" data-k="sg.d.err" data-grade="d" class="mono" inputmode="decimal"></div>
+          <div><label>Error (&plusmn;mm)<span class="gtxt" id="gtxt_d"></span></label><input type="text" data-k="sg.d.err" data-grade="d" class="mono" inputmode="decimal"></div>
         </div>
         <div class="row tight hidden" id="angRow_d">
           <div><label>Staff Gauge Angle <span class="ext">(set per station)</span></label><input type="text" data-k="sg.d.ang" class="mono" readonly tabindex="-1"></div>
           <div><label>Calculated Staff Gauge <span class="ext">(auto)</span></label><input type="text" data-k="sg.d.calc" class="mono" readonly tabindex="-1"></div>
         </div>
-        <div class="f">
+        <div class="vidbox noprint-off" id="vid_d"></div>
+        <div class="f b32off">
           <label>Staff Gauge Read Grade <span class="ext">(auto from Error &mdash; tap to override)</span></label>
           <div class="seg" data-seg="sg.d.grade" data-opts="Poor|Fair|Good|Very Good|Excellent"></div>
         </div>
         <button class="btn sm noprint" type="button" id="sameAsArrival">Same reading as arrival</button>
-        <button class="btn sm noprint" type="button" id="revBtn_d" data-revside="d">Add reviewed reading <span class="ext">(office)</span></button>
+        <button class="btn sm noprint b32off" type="button" id="revBtn_d" data-revside="d">Add reviewed reading <span class="ext">(office)</span></button>
         <div class="f hidden" id="revRow_d" style="max-width:240px">
           <label>Reviewed Staff Gauge (m) <span class="ext">(office)</span></label>
           <input type="text" data-k="sg.d.rev" class="mono" inputmode="decimal">
@@ -1038,7 +1059,7 @@ var STORE="kei-fieldsheet-v1";
 var $=function(id){ return document.getElementById(id); };
 /* App build. Bump on every version handed over, so a phone can be checked at a glance
    against the filename it came from. Separate from v1.15, which is the paper form. */
-var BUILD="31";
+var BUILD="32";
 var RECORD=!!BAKED;                 /* opened as a finished record, not the blank app */
 /* file_field_sheets.py opens the sheet as ...html#print to render the archive PDF.
    Headless Chrome never fires beforeprint, so the hi-res sketch has to be explicit. */
@@ -1049,7 +1070,7 @@ var S=null, saveTimer=null, book=null;
 function blank(){
   function sgSide(){ return {time:"",sg:"",err:"",ang:"",calc:"",rev:"",grade:""}; }
   var s={
-    v:"1.15", site:"", date:todayISO(), tz:"-7", arrive:"", depart:"", tech:"", flow:"", ftype:"",
+    v:"1.15", site:"", date:todayISO(), tz:phoneTz(), arrive:"", depart:"", tech:"", flow:"", ftype:"",
     reqs:[], sg:{a:sgSide(),d:sgSide(),m:{time:"",sg:"",err:""}}, purpose:"", notes:"",
     photos:{}, videos:{},
     pq:["","","","",""], reviewedQ:"", qspread:"", qspreadPct:"", qphotoIds:[], sphotoIds:[]
@@ -1132,6 +1153,9 @@ function commit(){
   d.state=S;
   d.updated=Date.now();
   book.tz=S.tz||book.tz;
+  if(S.tech){ var tk=String(S.tech).toUpperCase().split(/[^A-Z]+/).filter(function(x){ return x.length>=2&&x.length<=4; });
+    if(tk.length){ if(!book.me) book.me=tk[0]; book.techs=(book.techs||[]).filter(function(x){ return tk.indexOf(x)<0; }); book.techs=tk.concat(book.techs).slice(0,20); } }
+  paintB32();
   saveBook();
   drawDrafts();
   pill("Saved "+nowHM(),"ok");
@@ -1335,9 +1359,52 @@ function idbGet(k){ return idbOp("readonly",function(st){ return st.get(k); }); 
 function idbDel(k){ return idbOp("readwrite",function(st){ return st.delete(k); }); }
 
 function photoKey(draftId,photoId){ return draftId+":"+photoId; }
+/* build 32: the time zone the phone is on now, as the sheet writes it ("-8" in winter, "-7" in summer) */
+function phoneTz(){ var h=-new Date().getTimezoneOffset()/60; return (h>0?"+":"")+String(h); }
+/* build 32: the 10-second staff gauge videos, full size, one per side (a = arrival, d = departure) */
+function vidsOf(st){ return (st&&Array.isArray(st.vids))?st.vids:[]; }
+function loadVidsFor(draftId,list){
+  return Promise.all((list||[]).map(function(v){
+    return loadDataUrlsFor(draftId,[v.id]).then(function(d){ return d.length?{side:v.side,time:v.time,type:v.type,size:v.size,data:d[0]}:null; });
+  })).then(function(o){ return o.filter(Boolean); });
+}
+var vidUrls=[], vidSide=null;
+function addVideo(file,side){
+  var vid="v"+Date.now().toString(36)+Math.floor(Math.random()*4096).toString(36);
+  return idbPut(photoKey(book.cur,vid),file).then(function(){
+    if(!Array.isArray(S.vids)) S.vids=[];
+    S.vids.filter(function(v){ return v.side===side; }).forEach(function(v){ idbDel(photoKey(book.cur,v.id)).catch(function(){}); });
+    S.vids=S.vids.filter(function(v){ return v.side!==side; });
+    S.vids.push({id:vid,side:side,time:nowHM(),type:file.type||"video/mp4",size:file.size||0});
+    if(!S.videos) S.videos={};
+    S.videos[side==="a"?"arrsg":"depsg"]=true;
+    touch(); drawVids();
+  }).catch(function(e){ alert("Couldn't keep that video - "+(e&&e.message?e.message:e)+". The sheet itself is unaffected."); });
+}
+function drawVids(){
+  vidUrls.forEach(function(u){ URL.revokeObjectURL(u); }); vidUrls=[];
+  ["a","d"].forEach(function(sd){
+    var host=$("vid_"+sd); if(!host) return;
+    var list=RECORD?((BAKED&&BAKED.sgvideos)||[]):vidsOf(S);
+    var v=list.filter(function(x){ return x.side===sd; })[0];
+    var mb=function(n){ return n?(" \u00b7 "+(n/1048576).toFixed(1)+" MB"):""; };
+    if(RECORD){ host.innerHTML=v?'<div class="vmeta">10-second staff gauge video '+esc(v.time||"")+'</div><video controls preload="metadata" src="'+v.data+'"></video>':""; return; }
+    host.innerHTML='<button class="btn sm" type="button" data-vidtake="'+sd+'">'+(v?"Retake":"Take")+' a 10-second staff gauge video</button>'+
+      (v?'<div class="vmeta">Video taken '+esc(v.time)+mb(v.size)+'</div><video controls preload="metadata"></video>':"");
+    if(v){ idbGet(photoKey(book.cur,v.id)).then(function(b){ if(!b) return; var u=URL.createObjectURL(b); vidUrls.push(u); var el=host.querySelector("video"); if(el) el.src=u; }).catch(function(){}); }
+  });
+}
+function paintB32(){
+  if(!S) return;
+  var fa=S.flow==="no"?"no":(S.flow==="yes"?S.ftype:"");
+  Array.prototype.forEach.call(document.querySelectorAll('input[name="flowall"]'),function(i){ i.checked=(i.value===fa); i.closest("label").classList.toggle("on",i.checked); });
+  ["a","d"].forEach(function(sd){ var g=$("gtxt_"+sd); if(g){ var v=(S.sg&&S.sg[sd]&&S.sg[sd].grade)||""; g.textContent=v?" \u00b7 "+v:""; } });
+  var dl=$("techList"); if(dl&&book){ dl.innerHTML=(book.techs||[]).map(function(x){ return '<option value="'+esc(x)+'"></option>'; }).join(""); }
+}
 function deleteDraftPhotos(draft){
   var ids=((draft.state&&draft.state.qphotoIds)||[]).concat((draft.state&&draft.state.sphotoIds)||[])
-    .concat(((draft.state&&draft.state.xphotos)||[]).map(function(x){ return x.id; }));
+    .concat(((draft.state&&draft.state.xphotos)||[]).map(function(x){ return x.id; }))
+    .concat(vidsOf(draft.state).map(function(v){ return v.id; }));
   ids.forEach(function(pid){ idbDel(photoKey(draft.id,pid)).catch(function(){}); });
 }
 
@@ -1820,6 +1887,7 @@ function render(){
   drawPhotos();
   drawSPhotos();
   drawXPhotos();
+  drawVids();
   drawLocs();
   autoSpread();
   syncReqWhy(false);
@@ -1853,6 +1921,7 @@ function paintSegs(){
     var i=l.querySelector("input");
     l.classList.toggle("on",!!(i&&i.checked));
   });
+  paintB32();
 }
 function bind(){
   document.addEventListener("click",function(e){
@@ -2085,7 +2154,7 @@ function isBlankSheet(st){
   function has(v){ return String(v==null?"":v).trim()!==""; }
   if(has(st.site)||has(st.arrive)||has(st.depart)||has(st.tech)||has(st.purpose)||has(st.notes)) return false;
   if((st.reqs||[]).some(function(r){ return r&&(has(r.txt)||r.on); })) return false;
-  if((st.sphotoIds||[]).length||(st.qphotoIds||[]).length||(st.xphotos||[]).length) return false;
+  if((st.sphotoIds||[]).length||(st.qphotoIds||[]).length||(st.xphotos||[]).length||vidsOf(st).length) return false;
   if(st.flow==="yes"||st.flow==="no") return false;
   if(st.loc&&Object.keys(st.loc).length) return false;
   if(has(st.probeNote)||has(st.qNote)) return false;
@@ -2271,7 +2340,7 @@ function newSheet(){
   commit();
   var cur=currentDraft();
   if(cur&&isBlankSheet(cur.state)&&!obFind(cur.id)){ if(pagerOn()) goPage("arrive"); return; }
-  var s=blank(); s.tz=book.tz||"-7";
+  var s=blank(); s.tz=phoneTz(); s.tech=book.me||"";
   var id=newId();
   book.drafts.unshift({id:id,state:s,updated:Date.now()});
   startSheet(s,id);
@@ -2282,7 +2351,7 @@ function ensureCurrent(){
   if(draftById(book.cur)) return;
   var w=sheetGroups().work, pick=w.length?w[0].d:null;
   if(!pick){
-    var s=blank(); s.tz=book.tz||"-7";
+    var s=blank(); s.tz=phoneTz(); s.tech=book.me||"";
     pick={id:newId(),state:s,updated:Date.now()};
     book.drafts.unshift(pick);
   }
@@ -2343,13 +2412,14 @@ function finishDraft(id){
   Promise.all([
     loadDataUrlsFor(d.id,(d.state.qphotoIds)||[]),
     loadDataUrlsFor(d.id,(d.state.sphotoIds)||[]),
-    loadXDataUrlsFor(d.id,d.state.xphotos)
+    loadXDataUrlsFor(d.id,d.state.xphotos),
+    loadVidsFor(d.id,vidsOf(d.state))
   ]).then(function(both){
     var expect=((d.state.qphotoIds||[]).length)+((d.state.sphotoIds||[]).length)+((d.state.xphotos||[]).length);
     if(both[0].length+both[1].length+both[2].length<expect){
       if(!confirm("Some photos could not be read from storage and will be missing from the sent sheet. Send anyway?")) return;
     }
-    var html=buildFileFor(d.state,both[0],both[1],both[2]);
+    var html=buildFileFor(d.state,both[0],both[1],both[2],both[3]);
     if(!html) throw new Error("the page source has been altered");
     return queueFinished(d.id,d.state,html);
   }).catch(function(e){
@@ -2587,7 +2657,7 @@ function fileNameFor(st){
   return (st.date||todayISO())+"_"+site+".html";
 }
 function fileName(){ return fileNameFor(S); }
-function buildFileFor(st,photos,sphotos,xph){
+function buildFileFor(st,photos,sphotos,xph,vids){
   var clone=document.documentElement.cloneNode(true);
   var sjs=clone.querySelector('script[src="sender.js"]'); if(sjs) sjs.parentNode.removeChild(sjs);
   var cb=clone.querySelector("body"); if(cb){ cb.classList.remove("paged"); cb.removeAttribute("style"); }
@@ -2624,12 +2694,14 @@ function buildFileFor(st,photos,sphotos,xph){
   payload.qphotos=photos||[];
   payload.sphotos=sphotos||[];
   payload.xphotos=xph||[];
+  delete payload.vids;
+  payload.sgvideos=vids||[];
   var json=JSON.stringify(payload).replace(/<\//g,"<\\/");
   var re=/var BAKED=[^\n]*?;\/\*BAKEDCFG\*\//;
   if(!re.test(html)) return null;
   return html.replace(re,function(){ return "var BAKED="+json+";/*"+"BAKEDCFG"+"*/"; });
 }
-function buildFile(photos,sphotos,xph){ return buildFileFor(S,photos,sphotos,xph); }
+function buildFile(photos,sphotos,xph,vids){ return buildFileFor(S,photos,sphotos,xph,vids); }
 
 /* ---------- send everything in one go ----------
    sheetProblems mirrors validateVisit's rules but reads a plain state object, so
@@ -2691,13 +2763,13 @@ function finish(){
     pill("Sheet not sent","dirty");
     return;
   }
-  if(RECORD){ finishWith((BAKED&&BAKED.qphotos)||[],(BAKED&&BAKED.sphotos)||[],(BAKED&&BAKED.xphotos)||[]); return; }
-  Promise.all([loadPhotoDataUrls(),loadStationDataUrls(),loadXDataUrlsFor(book.cur,S.xphotos)]).then(function(both){
+  if(RECORD){ finishWith((BAKED&&BAKED.qphotos)||[],(BAKED&&BAKED.sphotos)||[],(BAKED&&BAKED.xphotos)||[],(BAKED&&BAKED.sgvideos)||[]); return; }
+  Promise.all([loadPhotoDataUrls(),loadStationDataUrls(),loadXDataUrlsFor(book.cur,S.xphotos),loadVidsFor(book.cur,vidsOf(S))]).then(function(both){
     var expect=((S.qphotoIds||[]).length)+((S.sphotoIds||[]).length)+((S.xphotos||[]).length);
     if(both[0].length+both[1].length+both[2].length<expect){
       if(!confirm("Some photos could not be read from storage and will be missing from the sent sheet. Send anyway?")) return;
     }
-    var html=buildFile(both[0],both[1],both[2]);
+    var html=buildFile(both[0],both[1],both[2],both[3]);
     if(!html){ alert("Couldn't prepare the file — the page source has been altered."); return; }
     return queueFinished(book.cur,S,html).then(function(){
       pill(navigator.onLine&&authLoad()?"Finished — sending":"Finished — sends when there's signal","ok");
@@ -2707,8 +2779,8 @@ function finish(){
     alert("Couldn't finish the sheet — "+(e&&e.message?e.message:e)+". Nothing was lost; try again.");
   });
 }
-function finishWith(photos,sphotos,xph){
-  var html=buildFile(photos,sphotos,xph);
+function finishWith(photos,sphotos,xph,vids){
+  var html=buildFile(photos,sphotos,xph,vids);
   if(!html){ alert("Couldn't prepare the file — the page source has been altered."); return; }
   var name=fileName();
   var blob=new Blob([html],{type:"text/html"});
@@ -3186,7 +3258,7 @@ function init(){
     if(d){ S=d.state; }
     else{
       S=blank();
-      S.tz=book.tz||"-7";
+      S.tz=phoneTz();
       book.cur=newId();
       book.drafts.unshift({id:book.cur,state:S,updated:Date.now()});
       saveBook();
@@ -3290,6 +3362,17 @@ function init(){
   });
   $("printBtn").addEventListener("click",function(){ window.print(); });
   $("finishBtn").addEventListener("click",finish);
+  $("flowAll").addEventListener("change",function(e){
+    if(e.target.name!=="flowall") return;
+    var v=e.target.value;
+    set("flow",v==="no"?"no":"yes"); set("ftype",v==="no"?"":v);
+    Array.prototype.forEach.call(document.querySelectorAll('input[name="flowq"]'),function(i){ i.checked=(i.value===get("flow")); });
+    Array.prototype.forEach.call(document.querySelectorAll('input[name="ftypeq"]'),function(i){ i.checked=(i.value===get("ftype")); });
+    paintSegs(); syncQ(); revalidateIfFlagged(); touch();
+  });
+  $("techAdd").addEventListener("click",function(){ var f=$("techF"); var v=String(f.value||"").trim(); f.value=v?v+", ":""; f.focus(); });
+  document.addEventListener("click",function(e){ var b=e.target.closest?e.target.closest("[data-vidtake]"):null; if(!b) return; vidSide=b.getAttribute("data-vidtake"); $("vidInput").click(); });
+  $("vidInput").addEventListener("change",function(){ var f=this.files&&this.files[0]; this.value=""; if(f&&vidSide) addVideo(f,vidSide); });
   $("flowSeg").addEventListener("change",function(e){
     if(e.target.name!=="flowq") return;
     set("flow",e.target.value);
