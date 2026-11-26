@@ -10,6 +10,9 @@
      1. _KEI Monitoring Sites\<site>\Field Sheets\  (the folder must already exist)
      2. Hydro Processor\Sites\_Staged\<station>\ + <file>.stage.json (kei-stage/1), only when
         Sites\<station>.keisite.json exists - the Processor's "Approve the latest uploads".
+   Build 33: before either, a small notice <draftId>.waiting.json (kei-waiting/1) goes to that same
+   _Staged\<station>\ folder, so the office sees a sheet is on its way while the big file is still
+   uploading; it carries the progress and is taken away once both uploads are done.
    Folders are reached by their OneDrive ids: a renamed folder makes the send fail loudly,
    never misfile. Sign-in is the KEI Board's "KEI Task Board" Microsoft app (delegated
    Sites.ReadWrite.All: a person can only write where they already can). Microsoft caps a
@@ -378,12 +381,63 @@
     });
   }
 
+  /* ---------- build 33: "a sheet is on its way" notice ----------
+     A ~1 KB file in the Processor's queue folder, written BEFORE the big uploads. Best effort: nothing about
+     it may ever stop or delay the sheet itself, so every failure here is swallowed. */
+  var NOTICE_EVERY = 120000;            /* progress refresh at most every 2 minutes (G.KEI_NOTICE_EVERY: tests only) */
+  function noticeName(e) { return e.draftId + ".waiting.json"; }
+  function noticeFolder(e) {
+    var pid = procId(e.site);
+    return sitesFolderId().then(function (sid) {
+      return itemOrNull(childPath(sid, pid + ".keisite.json"));
+    }).then(function (st) { return st ? ensureFolder(CFG.staged, pid) : null; });
+  }
+  function putNotice(e, who, sent) {
+    return noticeFolder(e).then(function (fid) {
+      if (!fid) return false;
+      var n = {
+        format: "kei-waiting/1", station: procId(e.site), draftId: e.draftId, file: e.siteName || e.name,
+        site: e.site, date: e.date || "", by: e.tech || "",
+        sender: (who && (who.name || who.email)) || "", finishedUtc: e.queued || "",
+        bytes: e.bytes || 0, totalBytes: (e.bytes || 0) * 2, sentBytes: Math.max(0, Math.round(sent || 0)),
+        sha256: e.sha || "", updatedUtc: new Date().toISOString().replace(/\.\d+Z$/, "Z")
+      };
+      return graph("PUT", childPath(fid, noticeName(e)) + "/content", JSON.stringify(n, null, 1), "application/json")
+        .then(function () { return true; });
+    }).catch(function () { return false; });
+  }
+  function dropNotice(e) {
+    var path = driveItem(CFG.staged) + ":/" + seg(procId(e.site)) + "/" + seg(noticeName(e)) + ":";
+    return graph("DELETE", path).then(function () { return true; }, function (err) {
+      return err && err.status === 404;              /* already gone counts as gone */
+    });
+  }
+
   function online() { return !G.navigator || G.navigator.onLine !== false; }
   function sendOne(id) {
     return entry(id).then(function (e) {
       if (!e || e.state === "sent") return null;
       var rev = e.rev || "";
       function save(patch) { return updRev(id, rev, patch); }
+      /* build 33: the notice. noticeQ keeps its writes in order, so a late progress refresh can never land
+         after the notice was taken away. */
+      var noticeQ = Promise.resolve(), noticeAt = 0, siteAt = 0, procAt = 0, base = e.siteDone ? (e.bytes || 0) : 0, live = null;
+      function notice(sent) {
+        var l = live;                                 /* this sheet as it is now: never read later, when it may be gone */
+        if (!l) return noticeQ;
+        noticeAt = Date.now();
+        noticeQ = noticeQ.then(function () { return putNotice(l, l.who, sent); }).then(function (ok) {
+          return ok && !l.noticeUp ? (l.noticeUp = true, save({ noticeUp: true, noticeGone: false }).catch(function () {})) : null;
+        }).catch(function () { return null; });       /* the queue itself never fails */
+        return noticeQ;
+      }
+      function saveUp(patch) {
+        return save(patch).then(function () {
+          if (patch.siteUp && patch.siteUp.at != null) siteAt = patch.siteUp.at;
+          if (patch.procUp && patch.procUp.at != null) procAt = patch.procUp.at;
+          if (live && Date.now() - noticeAt >= (G.KEI_NOTICE_EVERY || NOTICE_EVERY)) notice(base + siteAt + procAt);   /* not waited for */
+        });
+      }
       return save({ state: "sending", msg: "" }).then(function () {
         return Promise.all([get("outbox:" + id), authGet()]);
       }).then(function (got) {
@@ -391,19 +445,32 @@
         if (!blob) throw new Error("the finished file is missing from this phone - open the sheet and press Finish again");
         return entry(id).then(function (cur) {
           if (!cur || (cur.rev || "") !== rev) throw new Error(SUPERSEDED);
-          return cur.siteDone ? null : sendToSite(cur, blob, save).then(function (it) {
-            return save({ siteDone: true, siteItemId: it.id, siteName: it.name || cur.name });
+          live = cur; live.who = who;
+          return (cur.procDone ? null : notice(base)).then(function () {
+            return cur.siteDone ? null : sendToSite(cur, blob, saveUp).then(function (it) {
+              live.siteName = it.name || cur.name; base = cur.bytes || 0; siteAt = 0;
+              return save({ siteDone: true, siteItemId: it.id, siteName: it.name || cur.name });
+            });
           });
         }).then(function () {
           return entry(id).then(function (c2) {
             if (!c2 || (c2.rev || "") !== rev) throw new Error(SUPERSEDED);
-            return c2.procDone ? null : sendToProcessor(c2, blob, who, save).then(function (r) {
+            return c2.procDone ? null : sendToProcessor(c2, blob, who, saveUp).then(function (r) {
               return save({ procDone: true, proc: r, procStaged: r === "staged" || c2.procStaged });
             });
           });
         });
       }).then(function () {
-        return save({ state: "sent", msg: "", sentAt: new Date().toISOString() });
+        var l = live; live = null;                    /* no more refreshes */
+        return noticeQ.then(function () {
+          return entry(id).then(function (c3) {
+            return (c3 && c3.noticeUp && !c3.noticeGone) || (l && l.noticeUp) ? dropNotice(l).then(function (gone) {
+              return gone ? save({ noticeGone: true }) : null;
+            }) : null;
+          });
+        }).catch(function () { return null; }).then(function () {
+          return save({ state: "sent", msg: "", sentAt: new Date().toISOString() });
+        });
       }).catch(function (err) {
         var m = err && err.message ? err.message : String(err);
         if (m === SUPERSEDED) return null;          /* finished again or removed: the next pass sends the new one */
@@ -459,8 +526,13 @@
 
   /* take a sheet out of the outbox for good: its entry and its file, together */
   function remove(id) {
-    return op("readwrite", function (st) { st.delete("ob:" + id); st.delete("outbox:" + id); })
-      .then(function () { return notify("kei-outbox"); });
+    return entry(id).then(function (e) {
+      return op("readwrite", function (st) { st.delete("ob:" + id); st.delete("outbox:" + id); })
+        .then(function () { return notify("kei-outbox"); })
+        .then(function () {                          /* build 33: its notice, best effort, not waited on by the page */
+          if (e && e.noticeUp && !e.noticeGone) dropNotice(e).catch(function () {});
+        });
+    });
   }
 
   /* Has the office dealt with this sheet in the Hydro Processor? Reads only. An upload waits in
@@ -481,6 +553,9 @@
   }
   function checkProcessor(id) {
     return entry(id).then(function (e) {
+      if (e && e.state === "sent" && e.noticeUp && !e.noticeGone) {      /* build 33: a notice left behind */
+        dropNotice(e).then(function (gone) { return gone ? upd(id, { noticeGone: true }) : null; }).catch(function () {});
+      }
       if (!e || e.state !== "sent" || e.proc !== "staged") return null;
       var pid = procId(e.site), nm = e.siteName || e.name, base = driveItem(CFG.staged);
       var tail = " " + nm + ".stage.json";
@@ -518,6 +593,7 @@
     graph: graph, itemOrNull: itemOrNull, childPath: childPath, driveItem: driveItem, seg: seg,
     sitesFolderId: sitesFolderId, procId: procId, getFile: function (id) { return get("outbox:" + id); },
     resetFolderCache: function () { sitesFolder = null; },
-    remove: remove, checkProcessor: checkProcessor
+    remove: remove, checkProcessor: checkProcessor,
+    putNotice: putNotice, dropNotice: dropNotice      /* build 33 */
   };
 })(self);
